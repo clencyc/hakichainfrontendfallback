@@ -11,6 +11,7 @@ import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
+import { NGOBounties } from './pages/ngo/NGOBounties';
 import { NGOProjectBoard } from './pages/ngo/NGOProjectBoard';
 import { DonorDashboard } from './pages/donor/DonorDashboard';
 import { Profile } from './pages/Profile';
@@ -99,6 +100,14 @@ function App() {
             element={
               <ProtectedRoute allowed={userRole === 'ngo'}>
                 <NGOLawyers />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="ngo-bounties" 
+            element={
+              <ProtectedRoute allowed={userRole === 'ngo'}>
+                <NGOBounties />
               </ProtectedRoute>
             } 
           />

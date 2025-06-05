@@ -23,36 +23,17 @@ interface SidebarLink {
 }
 
 const getLinksByRole = (role: string): SidebarLink[] => {
-  const commonLinks = [
-    { name: 'Overview', path: '/dashboard', icon: Home },
-    { name: 'Profile', path: '/profile', icon: Users },
-    { name: 'Settings', path: '/settings', icon: Settings },
-  ];
-
   switch (role) {
-    case 'lawyer':
-      return [
-        ...commonLinks,
-        { name: 'My Cases', path: '/lawyer/cases', icon: GavelIcon },
-        { name: 'Available Bounties', path: '/bounties', icon: FileText },
-        { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
-      ];
     case 'ngo':
       return [
-        ...commonLinks,
-        { name: 'Bounties', path: '/ngo/bounties', icon: FileText },
-        { name: 'Lawyers', path: '/ngo/lawyers', icon: Users },
-        { name: 'Analytics', path: '/ngo/analytics', icon: BarChart3 },
-      ];
-    case 'donor':
-      return [
-        ...commonLinks,
-        { name: 'Explore Bounties', path: '/bounties', icon: FileText },
-        { name: 'My Contributions', path: '/donor/contributions', icon: GavelIcon },
-        { name: 'Impact', path: '/donor/impact', icon: BarChart3 },
+        { name: 'Dashboard', path: '/ngo-dashboard', icon: Home },
+        { name: 'Bounties', path: '/ngo-bounties', icon: FileText },
+        { name: 'Lawyers', path: '/ngo-lawyers', icon: Users },
+        { name: 'Analytics', path: '/ngo-analytics', icon: BarChart3 },
+        { name: 'Project Board', path: '/ngo-project-board', icon: GavelIcon },
       ];
     default:
-      return commonLinks;
+      return [];
   }
 };
 
@@ -113,6 +94,28 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               );
             })}
           </nav>
+
+          {/* User Profile */}
+          <div className="p-4 border-t border-gray-200">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
+                <span className="text-lg font-medium text-primary-600">
+                  {user?.name.charAt(0)}
+                </span>
+              </div>
+              <div>
+                <p className="font-medium">{user?.name}</p>
+                <p className="text-sm text-gray-500">{user?.role}</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <LogOut className="w-5 h-5 mr-3" />
+              Sign Out
+            </button>
+          </div>
         </div>
       </aside>
 
