@@ -20,9 +20,9 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className="w-72 bg-white fixed inset-y-0 z-30 border-r border-gray-200">
+    <div className="min-h-screen bg-gray-50">
+      {/* Fixed Sidebar */}
+      <aside className="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-200 z-30">
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-gray-200">
@@ -37,7 +37,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-4 py-8">
+          <nav className="flex-1 overflow-y-auto px-4 py-8">
             <div className="space-y-1">
               {sidebarLinks.map((link) => {
                 const Icon = link.icon;
@@ -105,11 +105,11 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
             </button>
           </div>
         </div>
-      </div>
+      </aside>
 
       {/* Main Content */}
-      <div className="flex-1 ml-72">
-        <main className="py-8 px-8">
+      <main className="ml-72">
+        <div className="min-h-screen py-8 px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -117,8 +117,8 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
           >
             {children}
           </motion.div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
