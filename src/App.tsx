@@ -6,6 +6,7 @@ import { BountyDetails } from './pages/BountyDetails';
 import { CreateBounty } from './pages/CreateBounty';
 import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
 import { NGODashboard } from './pages/ngo/NGODashboard';
+import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { DonorDashboard } from './pages/donor/DonorDashboard';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
@@ -52,6 +53,15 @@ function App() {
             element={
               <ProtectedRoute allowed={userRole === 'ngo'}>
                 <NGODashboard />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="ngo-analytics" 
+            element={
+              <ProtectedRoute allowed={userRole === 'ngo'}>
+                <NGOAnalytics />
               </ProtectedRoute>
             } 
           />
