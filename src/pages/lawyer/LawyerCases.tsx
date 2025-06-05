@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -11,7 +12,8 @@ import {
   CheckCircle, 
   XCircle,
   Upload,
-  FileText
+  FileText,
+  ArrowRight
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
@@ -147,9 +149,14 @@ export const LawyerCases = () => {
   return (
     <LawyerDashboardLayout>
       <div className="space-y-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-gray-900">My Cases</h1>
-          <p className="text-lg text-gray-600">Manage your active cases and track progress</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-serif font-bold text-gray-900">My Cases</h1>
+            <p className="text-lg text-gray-600">Manage your active cases and track progress</p>
+          </div>
+          <Link to="/bounties" className="btn btn-primary">
+            Browse Available Cases
+          </Link>
         </div>
 
         <div className="card">
@@ -270,7 +277,10 @@ export const LawyerCases = () => {
                 <div className="text-center py-12">
                   <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-600 mb-2">No cases found</h3>
-                  <p className="text-gray-500">Start by browsing available bounties</p>
+                  <p className="text-gray-500 mb-4">Start by browsing available bounties</p>
+                  <Link to="/bounties" className="btn btn-primary">
+                    Browse Available Cases
+                  </Link>
                 </div>
               )}
             </div>
