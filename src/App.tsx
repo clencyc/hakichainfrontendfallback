@@ -8,6 +8,7 @@ import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
+import { NGOProjectBoard } from './pages/ngo/NGOProjectBoard';
 import { DonorDashboard } from './pages/donor/DonorDashboard';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
@@ -72,6 +73,15 @@ function App() {
             element={
               <ProtectedRoute allowed={userRole === 'ngo'}>
                 <NGOLawyers />
+              </ProtectedRoute>
+            } 
+          />
+
+          <Route 
+            path="ngo-project-board" 
+            element={
+              <ProtectedRoute allowed={userRole === 'ngo'}>
+                <NGOProjectBoard />
               </ProtectedRoute>
             } 
           />
