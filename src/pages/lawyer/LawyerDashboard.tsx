@@ -29,10 +29,15 @@ export const LawyerDashboard = () => {
     successRate: 92
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
+        if (!user?.id) {
+          throw new Error('User not authenticated');
+        }
+
         // Load active cases
         const { data: bounties, error: bountiesError } = await supabase
           .from('bounties')
@@ -40,10 +45,12 @@ export const LawyerDashboard = () => {
             *,
             milestones (*)
           `)
-          .eq('assigned_lawyer_id', user?.id)
+          .eq('assigned_lawyer_id', user.id)
           .eq('status', 'in-progress');
 
-        if (bountiesError) throw bountiesError;
+        if (bountiesError) {
+          throw bountiesError;
+        }
 
         // Load upcoming events
         const { data: events, error: eventsError } = await supabase
@@ -55,12 +62,14 @@ export const LawyerDashboard = () => {
               lawyer_id
             )
           `)
-          .eq('lawyer_cases.lawyer_id', user?.id)
+          .eq('lawyer_cases.lawyer_id', user.id)
           .gte('start_time', new Date().toISOString())
           .order('start_time', { ascending: true })
           .limit(5);
 
-        if (eventsError) throw eventsError;
+        if (eventsError) {
+          throw eventsError;
+        }
 
         setData({
           activeCases: bounties || [],
@@ -70,16 +79,16 @@ export const LawyerDashboard = () => {
           rating: 4.8,
           successRate: 92
         });
+        setError(null);
       } catch (error) {
         console.error('Error loading data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load data');
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (user?.id) {
-      loadData();
-    }
+    loadData();
   }, [user]);
 
   if (isLoading) {
@@ -87,6 +96,26 @@ export const LawyerDashboard = () => {
       <LawyerDashboardLayout>
         <div className="flex justify-center items-center min-h-screen">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+        </div>
+      </LawyerDashboardLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <LawyerDashboardLayout>
+        <div className="flex flex-col justify-center items-center min-h-screen">
+          <div className="text-error-600 mb-4">
+            <FileText className="h-12 w-12" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-gray-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="btn btn-primary"
+          >
+            Try Again
+          </button>
         </div>
       </LawyerDashboardLayout>
     );
