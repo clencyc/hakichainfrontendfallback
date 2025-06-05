@@ -11,11 +11,9 @@ import {
   BarChart3, 
   Settings,
   LogOut,
-  Wallet,
   Bell
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useWallet } from '../../hooks/useWallet';
 import { cn } from '../../utils/cn';
 
 interface SidebarLink {
@@ -61,7 +59,6 @@ const getLinksByRole = (role: string): SidebarLink[] => {
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { isConnected, walletAddress, connectWallet, disconnectWallet } = useWallet();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -116,34 +113,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               );
             })}
           </nav>
-
-          <div className="p-4 border-t border-gray-200">
-            {!isConnected ? (
-              <button 
-                onClick={connectWallet}
-                className="w-full btn btn-outline flex items-center justify-center space-x-2 mb-4"
-              >
-                <Wallet className="w-4 h-4" />
-                <span>Connect Wallet</span>
-              </button>
-            ) : (
-              <button 
-                onClick={disconnectWallet}
-                className="w-full btn btn-outline flex items-center justify-center space-x-2 mb-4"
-              >
-                <Wallet className="w-4 h-4" />
-                <span className="truncate">{walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)}</span>
-              </button>
-            )}
-
-            <button 
-              onClick={handleLogout}
-              className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <LogOut className="w-5 h-5 mr-3" />
-              Sign Out
-            </button>
-          </div>
         </div>
       </aside>
 
