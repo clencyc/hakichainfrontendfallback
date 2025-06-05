@@ -18,11 +18,11 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   ];
 
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-gray-50 pt-16">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row gap-8">
           <div className="lg:w-64 flex-shrink-0">
-            <nav className="space-y-1">
+            <nav className="space-y-1 sticky top-20">
               {sidebarLinks.map((link) => {
                 const Icon = link.icon;
                 return (
@@ -48,6 +48,6 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
           </div>
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };

@@ -12,7 +12,8 @@ import {
   MapPin,
   Calendar,
   GavelIcon,
-  Award
+  Award,
+  Star
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
@@ -22,104 +23,61 @@ export const LawyerDashboard = () => {
   const { user } = useAuth();
   const [data, setData] = useState({
     activeCases: [],
-    upcomingEvents: [],
-    totalEarnings: 0,
-    completedCases: 0,
+    matchingBounties: [],
+    totalEarnings: 15900,
+    successRate: 92,
     rating: 4.8,
-    successRate: 92
+    applications: [
+      { id: 1, status: 'accepted', bountyTitle: 'Land Rights Case', ngo: 'Justice Africa' },
+      { id: 2, status: 'pending', bountyTitle: 'Environmental Justice', ngo: 'EcoRights Kenya' }
+    ]
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
       try {
-        if (!user?.id) {
-          throw new Error('User not authenticated');
-        }
-
         // Load active cases
-        const { data: bounties, error: bountiesError } = await supabase
-          .from('bounties')
+        const { data: cases, error: casesError } = await supabase
+          .from('lawyer_cases')
           .select(`
             *,
-            milestones (*)
-          `)
-          .eq('assigned_lawyer_id', user.id)
-          .eq('status', 'in-progress');
-
-        if (bountiesError) {
-          throw bountiesError;
-        }
-
-        // Load upcoming events
-        const { data: events, error: eventsError } = await supabase
-          .from('case_events')
-          .select(`
-            *,
-            lawyer_cases!inner(
-              bounty_id,
-              lawyer_id
+            bounties (
+              id,
+              title,
+              category,
+              location,
+              due_date,
+              total_amount
             )
           `)
-          .eq('lawyer_cases.lawyer_id', user.id)
-          .gte('start_time', new Date().toISOString())
-          .order('start_time', { ascending: true })
-          .limit(5);
+          .eq('lawyer_id', user?.id)
+          .eq('status', 'active');
 
-        if (eventsError) {
-          throw eventsError;
-        }
+        if (casesError) throw casesError;
 
-        setData({
-          activeCases: bounties || [],
-          upcomingEvents: events || [],
-          totalEarnings: 15900, // Mock data
-          completedCases: 24,
-          rating: 4.8,
-          successRate: 92
-        });
-        setError(null);
+        // Load matching bounties
+        const { data: matches, error: matchesError } = await supabase
+          .rpc('get_matching_lawyers', { bounty_id: null, limit_count: 3 });
+
+        if (matchesError) throw matchesError;
+
+        setData(prev => ({
+          ...prev,
+          activeCases: cases || [],
+          matchingBounties: matches || []
+        }));
       } catch (error) {
-        console.error('Error loading data:', error);
-        setError(error instanceof Error ? error.message : 'Failed to load data');
+        console.error('Error loading dashboard data:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadData();
+    if (user?.id) {
+      loadData();
+    }
   }, [user]);
-
-  if (isLoading) {
-    return (
-      <LawyerDashboardLayout>
-        <div className="flex justify-center items-center min-h-screen">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-        </div>
-      </LawyerDashboardLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <LawyerDashboardLayout>
-        <div className="flex flex-col justify-center items-center min-h-screen">
-          <div className="text-error-600 mb-4">
-            <FileText className="h-12 w-12" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="btn btn-primary"
-          >
-            Try Again
-          </button>
-        </div>
-      </LawyerDashboardLayout>
-    );
-  }
 
   return (
     <LawyerDashboardLayout>
@@ -138,25 +96,7 @@ export const LawyerDashboard = () => {
           >
             <div className="flex items-center mb-4">
               <div className="rounded-full bg-primary-100 p-3 mr-3">
-                <DollarSign className="h-6 w-6 text-primary-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-500">Total Earnings</p>
-                <p className="text-2xl font-bold">${data.totalEarnings}</p>
-              </div>
-            </div>
-            <p className="text-sm text-success-600">+12.5% from last month</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="card bg-white p-6"
-          >
-            <div className="flex items-center mb-4">
-              <div className="rounded-full bg-secondary-100 p-3 mr-3">
-                <GavelIcon className="h-6 w-6 text-secondary-600" />
+                <GavelIcon className="h-6 w-6 text-primary-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Active Cases</p>
@@ -169,7 +109,7 @@ export const LawyerDashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
             className="card bg-white p-6"
           >
             <div className="flex items-center mb-4">
@@ -187,12 +127,12 @@ export const LawyerDashboard = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
             className="card bg-white p-6"
           >
             <div className="flex items-center mb-4">
               <div className="rounded-full bg-accent-100 p-3 mr-3">
-                <Award className="h-6 w-6 text-accent-600" />
+                <Star className="h-6 w-6 text-accent-600" />
               </div>
               <div>
                 <p className="text-sm text-gray-500">Rating</p>
@@ -200,6 +140,24 @@ export const LawyerDashboard = () => {
               </div>
             </div>
             <p className="text-sm text-success-600">Top 10% of lawyers</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.4 }}
+            className="card bg-white p-6"
+          >
+            <div className="flex items-center mb-4">
+              <div className="rounded-full bg-secondary-100 p-3 mr-3">
+                <DollarSign className="h-6 w-6 text-secondary-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Total Earnings</p>
+                <p className="text-2xl font-bold">${data.totalEarnings}</p>
+              </div>
+            </div>
+            <p className="text-sm text-success-600">+12.5% from last month</p>
           </motion.div>
         </div>
 
@@ -218,36 +176,29 @@ export const LawyerDashboard = () => {
               </div>
 
               <div className="space-y-4">
-                {data.activeCases.map((bounty) => (
+                {data.activeCases.map((caseItem) => (
                   <Link
-                    key={bounty.id}
-                    to={`/bounties/${bounty.id}`}
+                    key={caseItem.id}
+                    to={`/bounties/${caseItem.bounty_id}`}
                     className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="font-medium">{bounty.title}</h3>
-                        <p className="text-sm text-gray-600">{bounty.category}</p>
+                        <h3 className="font-medium">{caseItem.bounties?.title}</h3>
+                        <p className="text-sm text-gray-600">{caseItem.bounties?.category}</p>
                       </div>
-                      <span className="text-accent-600 font-medium">${bounty.total_amount}</span>
+                      <span className="text-accent-600 font-medium">${caseItem.bounties?.total_amount}</span>
                     </div>
 
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                    <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <div className="flex items-center">
                         <MapPin className="w-4 h-4 mr-1" />
-                        <span>{bounty.location}</span>
+                        <span>{caseItem.bounties?.location}</span>
                       </div>
                       <div className="flex items-center">
                         <Calendar className="w-4 h-4 mr-1" />
-                        <span>Due: {new Date(bounty.due_date).toLocaleDateString()}</span>
+                        <span>Due: {new Date(caseItem.bounties?.due_date).toLocaleDateString()}</span>
                       </div>
-                    </div>
-
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-600">
-                        {bounty.milestones.filter(m => m.status === 'completed').length} of {bounty.milestones.length} milestones completed
-                      </span>
-                      <span className="text-primary-600">View Details →</span>
                     </div>
                   </Link>
                 ))}
@@ -269,7 +220,7 @@ export const LawyerDashboard = () => {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold">Recent Activity</h2>
                 <Link 
-                  to="/lawyer/activity" 
+                  to="/lawyer/cases" 
                   className="text-sm text-primary-600 hover:text-primary-700 flex items-center"
                 >
                   View All
@@ -307,90 +258,45 @@ export const LawyerDashboard = () => {
 
           <div>
             <div className="card mb-6">
-              <h2 className="text-xl font-bold mb-6">Upcoming Events</h2>
+              <h2 className="text-xl font-bold mb-6">Recommended Cases</h2>
               <div className="space-y-4">
-                {data.upcomingEvents.map((event) => (
-                  <div key={event.id} className="p-4 border border-gray-200 rounded-lg">
+                {data.matchingBounties.map((match) => (
+                  <Link 
+                    key={match.id}
+                    to={`/bounties/${match.id}`}
+                    className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:bg-primary-50 transition-colors"
+                  >
                     <div className="flex items-center justify-between mb-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        event.event_type === 'hearing' ? 'bg-primary-100 text-primary-700' :
-                        event.event_type === 'meeting' ? 'bg-secondary-100 text-secondary-700' :
-                        event.event_type === 'deadline' ? 'bg-error-100 text-error-700' :
-                        'bg-gray-100 text-gray-700'
-                      }`}>
-                        {event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1)}
-                      </span>
-                      <span className="text-sm text-gray-500">
-                        {new Date(event.start_time).toLocaleDateString()}
-                      </span>
+                      <h3 className="font-medium">{match.title}</h3>
+                      <span className="text-sm text-primary-600">{Math.round(match.matching_score)}% match</span>
                     </div>
-                    <h3 className="font-medium mb-1">{event.title}</h3>
-                    <p className="text-sm text-gray-600">{event.description}</p>
-                    {event.location && (
-                      <div className="flex items-center mt-2 text-sm text-gray-500">
-                        <MapPin className="w-4 h-4 mr-1" />
-                        <span>{event.location}</span>
-                      </div>
-                    )}
-                  </div>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Perfect match for your expertise in {match.specializations?.join(', ')}
+                    </p>
+                    <span className="text-primary-600 text-sm">View Details →</span>
+                  </Link>
                 ))}
-
-                {data.upcomingEvents.length === 0 && (
-                  <div className="text-center py-4">
-                    <p className="text-gray-500">No upcoming events</p>
-                  </div>
-                )}
               </div>
             </div>
 
             <div className="card">
-              <h2 className="text-xl font-bold mb-6">Performance Overview</h2>
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Case Completion Rate</span>
-                    <span className="text-sm font-medium">{data.successRate}%</span>
+              <h2 className="text-xl font-bold mb-6">Application Status</h2>
+              <div className="space-y-4">
+                {data.applications.map((app) => (
+                  <div key={app.id} className="p-4 border border-gray-200 rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-medium">{app.bountyTitle}</h3>
+                      <span className={`px-2 py-1 text-xs rounded-full font-medium ${
+                        app.status === 'accepted' 
+                          ? 'bg-success-100 text-success-700'
+                          : 'bg-warning-100 text-warning-700'
+                      }`}>
+                        {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600">{app.ngo}</p>
                   </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-success-500"
-                      style={{ width: `${data.successRate}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Client Satisfaction</span>
-                    <span className="text-sm font-medium">{data.rating}/5.0</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary-500"
-                      style={{ width: `${(data.rating / 5) * 100}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm text-gray-600">Response Time</span>
-                    <span className="text-sm font-medium">95%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-accent-500"
-                      style={{ width: '95%' }}
-                    ></div>
-                  </div>
-                </div>
-
-                <Link
-                  to="/lawyer/analytics"
-                  className="btn btn-outline w-full justify-center"
-                >
-                  View Detailed Analytics
-                </Link>
+                ))}
               </div>
             </div>
           </div>
