@@ -58,6 +58,7 @@ interface Case {
     due_date: string;
     total_amount: number;
     status: string;
+    milestones: Milestone[];
   };
   status: string;
   priority: 'high' | 'medium' | 'low';
@@ -93,17 +94,17 @@ export const LawyerCases = () => {
               location,
               due_date,
               total_amount,
-              status
-            ),
-            milestones (
-              id,
-              title,
-              description,
-              amount,
-              due_date,
               status,
-              proof_required,
-              proof_submitted
+              milestones (
+                id,
+                title,
+                description,
+                amount,
+                due_date,
+                status,
+                proof_required,
+                proof_submitted
+              )
             ),
             documents (
               id,
@@ -122,11 +123,14 @@ export const LawyerCases = () => {
         // Transform the data
         const transformedCases = (casesData || []).map(c => ({
           id: c.id,
-          bounty: c.bounties,
+          bounty: {
+            ...c.bounties,
+            milestones: c.bounties.milestones || []
+          },
           status: c.status,
           priority: determinePriority(c.bounties.due_date),
           billable_hours: c.billable_hours || 0,
-          milestones: c.milestones || [],
+          milestones: c.bounties.milestones || [], // Access milestones through bounties
           documents: c.documents || [],
           last_activity: new Date().toISOString(),
         }));
@@ -209,8 +213,10 @@ export const LawyerCases = () => {
         .from('lawyer_cases')
         .select(`
           *,
-          bounties (*),
-          milestones (*),
+          bounties (
+            *,
+            milestones (*)
+          ),
           documents (*)
         `)
         .eq('id', caseId)
@@ -221,7 +227,7 @@ export const LawyerCases = () => {
       setCases(prev => prev.map(c => 
         c.id === caseId ? {
           ...c,
-          milestones: updatedCase.milestones || [],
+          milestones: updatedCase.bounties.milestones || [],
           documents: updatedCase.documents || [],
         } : c
       ));
@@ -229,7 +235,7 @@ export const LawyerCases = () => {
       if (selectedCase?.id === caseId) {
         setSelectedCase(prev => prev ? {
           ...prev,
-          milestones: updatedCase.milestones || [],
+          milestones: updatedCase.bounties.milestones || [],
           documents: updatedCase.documents || [],
         } : null);
       }
