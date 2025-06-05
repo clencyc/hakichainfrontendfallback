@@ -13,13 +13,40 @@ import {
   XCircle,
   Upload,
   FileText,
-  ArrowRight
+  ArrowRight,
+  Download,
+  Trash2
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { cn } from '../../utils/cn';
 import { useToast } from '../../components/common/Toaster';
+
+interface Milestone {
+  id: string;
+  title: string;
+  description: string;
+  amount: number;
+  dueDate: string;
+  status: 'pending' | 'in-review' | 'completed';
+  proofRequired: string;
+  proofSubmitted?: {
+    documentHash: string;
+    timestamp: string;
+    url: string;
+  };
+}
+
+interface Document {
+  id: string;
+  name: string;
+  path: string;
+  size: number;
+  type: string;
+  createdAt: string;
+  milestoneId?: string;
+}
 
 interface Case {
   id: string;
@@ -35,8 +62,8 @@ interface Case {
   status: string;
   priority: 'high' | 'medium' | 'low';
   billable_hours: number;
-  milestones_completed: number;
-  total_milestones: number;
+  milestones: Milestone[];
+  documents: Document[];
   last_activity: string;
 }
 
@@ -50,11 +77,12 @@ export const LawyerCases = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [selectedMilestone, setSelectedMilestone] = useState<string | null>(null);
 
   useEffect(() => {
     const loadCases = async () => {
       try {
-        const { data, error } = await supabase
+        const { data: casesData, error: casesError } = await supabase
           .from('lawyer_cases')
           .select(`
             *,
@@ -66,21 +94,40 @@ export const LawyerCases = () => {
               due_date,
               total_amount,
               status
+            ),
+            milestones (
+              id,
+              title,
+              description,
+              amount,
+              due_date,
+              status,
+              proof_required,
+              proof_submitted
+            ),
+            documents (
+              id,
+              name,
+              path,
+              size,
+              type,
+              created_at,
+              milestone_id
             )
           `)
           .eq('lawyer_id', user?.id);
 
-        if (error) throw error;
+        if (casesError) throw casesError;
 
-        // Transform and add mock data for demo
-        const transformedCases = (data || []).map(c => ({
+        // Transform the data
+        const transformedCases = (casesData || []).map(c => ({
           id: c.id,
           bounty: c.bounties,
           status: c.status,
           priority: determinePriority(c.bounties.due_date),
-          billable_hours: c.billable_hours,
-          milestones_completed: 2, // Mock data
-          total_milestones: 4, // Mock data
+          billable_hours: c.billable_hours || 0,
+          milestones: c.milestones || [],
+          documents: c.documents || [],
           last_activity: new Date().toISOString(),
         }));
 
@@ -108,7 +155,7 @@ export const LawyerCases = () => {
     return 'low';
   };
 
-  const handleFileUpload = async (file: File, caseId: string) => {
+  const handleFileUpload = async (file: File, caseId: string, milestoneId?: string) => {
     try {
       setIsUploadingDocument(true);
 
@@ -131,18 +178,131 @@ export const LawyerCases = () => {
           path: filePath,
           uploaded_by: user?.id,
           case_id: caseId,
+          milestone_id: milestoneId,
           size: file.size,
           type: file.type,
         });
 
       if (dbError) throw dbError;
 
+      // If this is a milestone document, update the milestone status
+      if (milestoneId) {
+        const { error: milestoneError } = await supabase
+          .from('milestones')
+          .update({
+            status: 'in-review',
+            proof_submitted: {
+              documentHash: fileName,
+              timestamp: new Date().toISOString(),
+              url: filePath,
+            },
+          })
+          .eq('id', milestoneId);
+
+        if (milestoneError) throw milestoneError;
+      }
+
       showToast('success', 'Document uploaded successfully');
+
+      // Refresh the case data
+      const { data: updatedCase, error: caseError } = await supabase
+        .from('lawyer_cases')
+        .select(`
+          *,
+          bounties (*),
+          milestones (*),
+          documents (*)
+        `)
+        .eq('id', caseId)
+        .single();
+
+      if (caseError) throw caseError;
+
+      setCases(prev => prev.map(c => 
+        c.id === caseId ? {
+          ...c,
+          milestones: updatedCase.milestones || [],
+          documents: updatedCase.documents || [],
+        } : c
+      ));
+
+      if (selectedCase?.id === caseId) {
+        setSelectedCase(prev => prev ? {
+          ...prev,
+          milestones: updatedCase.milestones || [],
+          documents: updatedCase.documents || [],
+        } : null);
+      }
+
     } catch (error) {
       console.error('Error uploading document:', error);
       showToast('error', 'Failed to upload document');
     } finally {
       setIsUploadingDocument(false);
+      setSelectedMilestone(null);
+    }
+  };
+
+  const handleDownloadDocument = async (document: Document) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('case-documents')
+        .download(document.path);
+
+      if (error) throw error;
+
+      // Create a download link
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = document.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      showToast('error', 'Failed to download document');
+    }
+  };
+
+  const handleDeleteDocument = async (document: Document) => {
+    if (!confirm('Are you sure you want to delete this document?')) return;
+
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from('case-documents')
+        .remove([document.path]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from('documents')
+        .delete()
+        .eq('id', document.id);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setCases(prev => prev.map(c => ({
+        ...c,
+        documents: c.documents.filter(d => d.id !== document.id)
+      })));
+
+      if (selectedCase) {
+        setSelectedCase(prev => prev ? {
+          ...prev,
+          documents: prev.documents.filter(d => d.id !== document.id)
+        } : null);
+      }
+
+      showToast('success', 'Document deleted successfully');
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      showToast('error', 'Failed to delete document');
     }
   };
 
@@ -258,14 +418,14 @@ export const LawyerCases = () => {
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600">Progress</span>
                       <span className="text-gray-600">
-                        {caseItem.milestones_completed} of {caseItem.total_milestones} milestones
+                        {caseItem.milestones.filter(m => m.status === 'completed').length} of {caseItem.milestones.length} milestones
                       </span>
                     </div>
                     <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-primary-500"
                         style={{ 
-                          width: `${(caseItem.milestones_completed / caseItem.total_milestones) * 100}%` 
+                          width: `${(caseItem.milestones.filter(m => m.status === 'completed').length / caseItem.milestones.length) * 100}%` 
                         }}
                       ></div>
                     </div>
@@ -318,13 +478,15 @@ export const LawyerCases = () => {
                     <div>
                       <div className="flex justify-between text-sm mb-1">
                         <span>Overall Progress</span>
-                        <span>{Math.round((selectedCase.milestones_completed / selectedCase.total_milestones) * 100)}%</span>
+                        <span>
+                          {Math.round((selectedCase.milestones.filter(m => m.status === 'completed').length / selectedCase.milestones.length) * 100)}%
+                        </span>
                       </div>
                       <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-primary-500"
                           style={{ 
-                            width: `${(selectedCase.milestones_completed / selectedCase.total_milestones) * 100}%` 
+                            width: `${(selectedCase.milestones.filter(m => m.status === 'completed').length / selectedCase.milestones.length) * 100}%` 
                           }}
                         ></div>
                       </div>
@@ -347,25 +509,115 @@ export const LawyerCases = () => {
                   </div>
                 </div>
 
+                {/* Milestones */}
+                <div>
+                  <h3 className="text-lg font-bold mb-4">Milestones</h3>
+                  <div className="space-y-4">
+                    {selectedCase.milestones.map((milestone) => (
+                      <div 
+                        key={milestone.id}
+                        className={cn(
+                          "p-4 rounded-lg border",
+                          milestone.status === 'completed' ? 'bg-success-50 border-success-200' :
+                          milestone.status === 'in-review' ? 'bg-warning-50 border-warning-200' :
+                          'bg-white border-gray-200'
+                        )}
+                      >
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h4 className="font-medium">{milestone.title}</h4>
+                            <p className="text-sm text-gray-600">{milestone.description}</p>
+                          </div>
+                          <span className="text-accent-600 font-medium">${milestone.amount}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            <span>Due: {new Date(milestone.dueDate).toLocaleDateString()}</span>
+                          </div>
+                          <span className={cn(
+                            "px-2 py-1 text-xs rounded-full font-medium",
+                            milestone.status === 'completed' ? 'bg-success-100 text-success-700' :
+                            milestone.status === 'in-review' ? 'bg-warning-100 text-warning-700' :
+                            'bg-gray-100 text-gray-700'
+                          )}>
+                            {milestone.status.charAt(0).toUpperCase() + milestone.status.slice(1)}
+                          </span>
+                        </div>
+
+                        <div className="text-sm text-gray-600 mb-3">
+                          <strong>Required Proof:</strong> {milestone.proofRequired}
+                        </div>
+
+                        {milestone.status === 'pending' && (
+                          <div className="mt-3">
+                            <button
+                              onClick={() => setSelectedMilestone(milestone.id)}
+                              className="btn btn-primary text-sm py-1.5"
+                            >
+                              Upload Proof
+                            </button>
+                          </div>
+                        )}
+
+                        {milestone.proofSubmitted && (
+                          <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="text-sm font-medium">Proof Submitted</p>
+                                <p className="text-xs text-gray-500">
+                                  {new Date(milestone.proofSubmitted.timestamp).toLocaleString()}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => {
+                                  const doc = selectedCase.documents.find(d => d.milestoneId === milestone.id);
+                                  if (doc) handleDownloadDocument(doc);
+                                }}
+                                className="text-primary-600 hover:text-primary-700"
+                              >
+                                <Download className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Documents */}
                 <div>
-                  <h3 className="text-lg font-bold mb-4">Documents</h3>
+                  <h3 className="text-lg font-bold mb-4">Case Documents</h3>
                   <div className="space-y-4">
-                    <div className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4">
+                    {selectedCase.documents.map((document) => (
+                      <div key={document.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                         <div className="flex items-center">
-                          <FileText className="w-5 h-5 text-gray-400 mr-2" />
-                          <span className="font-medium">Initial Filing.pdf</span>
+                          <FileText className="w-5 h-5 text-gray-400 mr-3" />
+                          <div>
+                            <p className="font-medium">{document.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(document.createdAt).toLocaleDateString()} • {(document.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
                         </div>
-                        <span className="text-sm text-gray-500">Uploaded 2 days ago</span>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => handleDownloadDocument(document)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Download className="w-5 h-5 text-gray-500" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDocument(document)}
+                            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-5 h-5 text-gray-500" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">2.3 MB</span>
-                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                          Download
-                        </button>
-                      </div>
-                    </div>
+                    ))}
 
                     <div className="border border-dashed border-gray-300 rounded-lg p-6">
                       <div className="text-center">
@@ -378,7 +630,7 @@ export const LawyerCases = () => {
                           className="hidden"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) handleFileUpload(file, selectedCase.id);
+                            if (file) handleFileUpload(file, selectedCase.id, selectedMilestone);
                           }}
                           disabled={isUploadingDocument}
                         />
@@ -391,30 +643,6 @@ export const LawyerCases = () => {
                           {isUploadingDocument ? 'Uploading...' : 'Upload Document'}
                         </button>
                       </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Milestones */}
-                <div>
-                  <h3 className="text-lg font-bold mb-4">Milestones</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center p-4 bg-success-50 border border-success-200 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-success-500 mr-3" />
-                      <div>
-                        <p className="font-medium">Initial Documentation</p>
-                        <p className="text-sm text-gray-600">Completed on March 15, 2025</p>
-                      </div>
-                      <span className="ml-auto text-success-600 font-medium">$500</span>
-                    </div>
-
-                    <div className="flex items-center p-4 bg-primary-50 border border-primary-200 rounded-lg">
-                      <Clock className="w-5 h-5 text-primary-500 mr-3" />
-                      <div>
-                        <p className="font-medium">Court Appearance</p>
-                        <p className="text-sm text-gray-600">Due on March 30, 2025</p>
-                      </div>
-                      <span className="ml-auto text-primary-600 font-medium">$800</span>
                     </div>
                   </div>
                 </div>
