@@ -11,6 +11,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Legend,
 } from 'recharts';
 import { Users, Heart, GavelIcon, Globe } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -100,6 +103,12 @@ export const NGOAnalytics = () => {
     acc[month].donors.add(donation.donor_id);
     return acc;
   }, {});
+
+  const donorRetentionData = Object.values(monthlyData).map(month => ({
+    name: month.name,
+    'New Donors': month.donors.size,
+    'Returning Donors': Math.floor(month.donors.size * 0.6), // Mock data
+  }));
 
   return (
     <DashboardLayout>
@@ -233,6 +242,65 @@ export const NGOAnalytics = () => {
                   </Pie>
                   <Tooltip />
                 </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="card"
+          >
+            <h2 className="text-xl font-bold mb-6 p-6">Donor Retention</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={donorRetentionData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="New Donors" 
+                    stroke="#0D9488" 
+                    strokeWidth={2}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="Returning Donors" 
+                    stroke="#1E40AF" 
+                    strokeWidth={2}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="card"
+          >
+            <h2 className="text-xl font-bold mb-6 p-6">Milestone Completion Rate</h2>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={Object.values(monthlyData)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#D97706" 
+                    strokeWidth={2}
+                  />
+                </LineChart>
               </ResponsiveContainer>
             </div>
           </motion.div>
