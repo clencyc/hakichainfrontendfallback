@@ -5,6 +5,9 @@ import { BountyExplorer } from './pages/BountyExplorer';
 import { BountyDetails } from './pages/BountyDetails';
 import { CreateBounty } from './pages/CreateBounty';
 import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
+import { LawyerAnalytics } from './pages/lawyer/LawyerAnalytics';
+import { LawyerCases } from './pages/lawyer/LawyerCases';
+import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
@@ -40,7 +43,7 @@ function App() {
             } 
           />
           
-          {/* Role-specific dashboards */}
+          {/* Lawyer routes */}
           <Route 
             path="lawyer-dashboard" 
             element={
@@ -49,7 +52,32 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route 
+            path="lawyer/analytics" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerAnalytics />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/cases" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerCases />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/documents" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerDocuments />
+              </ProtectedRoute>
+            } 
+          />
           
+          {/* NGO routes */}
           <Route 
             path="ngo-dashboard" 
             element={
@@ -58,7 +86,6 @@ function App() {
               </ProtectedRoute>
             } 
           />
-
           <Route 
             path="ngo-analytics" 
             element={
@@ -67,7 +94,6 @@ function App() {
               </ProtectedRoute>
             } 
           />
-
           <Route 
             path="ngo-lawyers" 
             element={
@@ -76,7 +102,6 @@ function App() {
               </ProtectedRoute>
             } 
           />
-
           <Route 
             path="ngo-project-board" 
             element={
@@ -86,6 +111,7 @@ function App() {
             } 
           />
           
+          {/* Donor routes */}
           <Route 
             path="donor-dashboard" 
             element={
