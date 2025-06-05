@@ -45,10 +45,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      // Generate a proper UUID v4 format
+      const uuid = crypto.randomUUID();
+      
       // This would be replaced with actual API call in production
       // Simulating successful login for demo purposes
       const mockUser: User = {
-        id: '123e4567-e89b-12d3-a456-426614174000', // Valid UUID format
+        id: uuid,
         name: email.split('@')[0],
         email,
         role: email.includes('lawyer') ? 'lawyer' : email.includes('ngo') ? 'ngo' : 'donor',
@@ -65,10 +68,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (userData: Omit<User, 'id'> & { password: string }) => {
     try {
+      // Generate a proper UUID v4 format
+      const uuid = crypto.randomUUID();
+      
       // This would be replaced with actual API call in production
       // Simulating successful registration for demo purposes
       const mockUser: User = {
-        id: '123e4567-e89b-12d3-a456-426614174001', // Valid UUID format
+        id: uuid,
         name: userData.name,
         email: userData.email,
         role: userData.role,
