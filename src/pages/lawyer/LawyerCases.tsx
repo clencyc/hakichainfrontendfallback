@@ -11,11 +11,12 @@ import {
   getPaginationRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { Search, Filter, MapPin, Calendar, DollarSign, Clock, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
+import { Search, Filter, MapPin, Calendar, DollarSign, Clock, AlertCircle, CheckCircle, XCircle, Upload, FileText } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { cn } from '../../utils/cn';
+import { useToast } from '../../components/common/Toaster';
 
 interface Case {
   id: string;
@@ -40,24 +41,27 @@ const columnHelper = createColumnHelper<Case>();
 
 export const LawyerCases = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [cases, setCases] = useState<Case[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
+  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
 
   const columns = useMemo(
     () => [
       columnHelper.accessor('bounty.title', {
         header: 'Case Title',
         cell: info => (
-          <Link
-            to={`/bounties/${info.row.original.bounty.id}`}
+          <button
+            onClick={() => setSelectedCase(info.row.original)}
             className="font-medium text-primary-600 hover:text-primary-700"
           >
             {info.getValue()}
-          </Link>
+          </button>
         ),
       }),
       columnHelper.accessor('bounty.category', {
@@ -228,6 +232,44 @@ export const LawyerCases = () => {
     return 'low';
   };
 
+  const handleFileUpload = async (file: File, caseId: string) => {
+    try {
+      setIsUploadingDocument(true);
+
+      // Upload file to Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user?.id}/${caseId}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('case-documents')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Create document record
+      const { error: dbError } = await supabase
+        .from('documents')
+        .insert({
+          name: file.name,
+          path: filePath,
+          uploaded_by: user?.id,
+          case_id: caseId,
+          size: file.size,
+          type: file.type,
+        });
+
+      if (dbError) throw dbError;
+
+      showToast('success', 'Document uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      showToast('error', 'Failed to upload document');
+    } finally {
+      setIsUploadingDocument(false);
+    }
+  };
+
   return (
     <LawyerDashboardLayout>
       <div className="space-y-6">
@@ -365,6 +407,156 @@ export const LawyerCases = () => {
             </div>
           </div>
         </div>
+
+        {/* Case Details Modal */}
+        {selectedCase && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-xl shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="p-6 border-b border-gray-200">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-2xl font-bold">{selectedCase.bounty.title}</h2>
+                    <p className="text-gray-600">{selectedCase.bounty.category}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedCase(null)}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    <XCircle className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6 space-y-6">
+                {/* Case Progress */}
+                <div>
+                  <h3 className="text-lg font-bold mb-4">Progress</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Overall Progress</span>
+                        <span>{Math.round((selectedCase.milestones_completed / selectedCase.total_milestones) * 100)}%</span>
+                      </div>
+                      <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-primary-500"
+                          style={{ 
+                            width: `${(selectedCase.milestones_completed / selectedCase.total_milestones) * 100}%` 
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Status</p>
+                        <p className="text-lg font-semibold">{selectedCase.status}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Hours Billed</p>
+                        <p className="text-lg font-semibold">{selectedCase.billable_hours}</p>
+                      </div>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm text-gray-600">Amount</p>
+                        <p className="text-lg font-semibold">${selectedCase.bounty.total_amount}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documents */}
+                <div>
+                  <h3 className="text-lg font-bold mb-4">Documents</h3>
+                  <div className="space-y-4">
+                    <div className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center">
+                          <FileText className="w-5 h-5 text-gray-400 mr-2" />
+                          <span className="font-medium">Initial Filing.pdf</span>
+                        </div>
+                        <span className="text-sm text-gray-500">Uploaded 2 days ago</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-500">2.3 MB</span>
+                        <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                          Download
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="border border-dashed border-gray-300 rounded-lg p-6">
+                      <div className="text-center">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600 mb-2">
+                          Drag and drop files here, or click to select files
+                        </p>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) handleFileUpload(file, selectedCase.id);
+                          }}
+                          disabled={isUploadingDocument}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => document.querySelector('input[type="file"]')?.click()}
+                          className="btn btn-outline text-sm py-1.5"
+                          disabled={isUploadingDocument}
+                        >
+                          {isUploadingDocument ? 'Uploading...' : 'Upload Document'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Milestones */}
+                <div>
+                  <h3 className="text-lg font-bold mb-4">Milestones</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center p-4 bg-success-50 border border-success-200 rounded-lg">
+                      <CheckCircle className="w-5 h-5 text-success-500 mr-3" />
+                      <div>
+                        <p className="font-medium">Initial Documentation</p>
+                        <p className="text-sm text-gray-600">Completed on March 15, 2025</p>
+                      </div>
+                      <span className="ml-auto text-success-600 font-medium">$500</span>
+                    </div>
+
+                    <div className="flex items-center p-4 bg-primary-50 border border-primary-200 rounded-lg">
+                      <Clock className="w-5 h-5 text-primary-500 mr-3" />
+                      <div>
+                        <p className="font-medium">Court Appearance</p>
+                        <p className="text-sm text-gray-600">Due on March 30, 2025</p>
+                      </div>
+                      <span className="ml-auto text-primary-600 font-medium">$800</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-gray-200 bg-gray-50">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setSelectedCase(null)}
+                    className="btn btn-outline"
+                  >
+                    Close
+                  </button>
+                  <button className="btn btn-primary">
+                    Update Case
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
       </div>
     </LawyerDashboardLayout>
   );
