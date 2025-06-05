@@ -1,17 +1,18 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  SortingState,
-  getPaginationRowModel,
-  getFilteredRowModel,
-} from '@tanstack/react-table';
-import { Search, Filter, MapPin, Calendar, DollarSign, Clock, AlertCircle, CheckCircle, XCircle, Upload, FileText } from 'lucide-react';
+import { 
+  Search, 
+  Filter, 
+  MapPin, 
+  Calendar, 
+  DollarSign, 
+  Clock, 
+  AlertCircle, 
+  CheckCircle, 
+  XCircle,
+  Upload,
+  FileText
+} from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
@@ -37,149 +38,21 @@ interface Case {
   last_activity: string;
 }
 
-const columnHelper = createColumnHelper<Case>();
-
 export const LawyerCases = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
   const [cases, setCases] = useState<Case[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [sorting, setSorting] = useState<SortingState>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
 
-  const columns = useMemo(
-    () => [
-      columnHelper.accessor('bounty.title', {
-        header: 'Case Title',
-        cell: info => (
-          <button
-            onClick={() => setSelectedCase(info.row.original)}
-            className="font-medium text-primary-600 hover:text-primary-700"
-          >
-            {info.getValue()}
-          </button>
-        ),
-      }),
-      columnHelper.accessor('bounty.category', {
-        header: 'Type',
-        cell: info => (
-          <span className="px-2 py-1 bg-gray-100 rounded-full text-sm">
-            {info.getValue()}
-          </span>
-        ),
-      }),
-      columnHelper.accessor('status', {
-        header: 'Status',
-        cell: info => {
-          const status = info.getValue();
-          return (
-            <span className={cn(
-              "px-2 py-1 rounded-full text-sm font-medium",
-              status === 'active' ? 'bg-primary-100 text-primary-700' :
-              status === 'completed' ? 'bg-success-100 text-success-700' :
-              'bg-gray-100 text-gray-700'
-            )}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor('priority', {
-        header: 'Priority',
-        cell: info => {
-          const priority = info.getValue();
-          return (
-            <span className={cn(
-              "px-2 py-1 rounded-full text-sm font-medium",
-              priority === 'high' ? 'bg-error-100 text-error-700' :
-              priority === 'medium' ? 'bg-warning-100 text-warning-700' :
-              'bg-success-100 text-success-700'
-            )}>
-              {priority.charAt(0).toUpperCase() + priority.slice(1)}
-            </span>
-          );
-        },
-      }),
-      columnHelper.accessor(row => `${row.milestones_completed}/${row.total_milestones}`, {
-        id: 'progress',
-        header: 'Progress',
-        cell: info => {
-          const [completed, total] = info.getValue().split('/').map(Number);
-          const percentage = (completed / total) * 100;
-          return (
-            <div>
-              <div className="flex justify-between text-sm mb-1">
-                <span>{info.getValue()} milestones</span>
-                <span>{Math.round(percentage)}%</span>
-              </div>
-              <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-primary-500"
-                  style={{ width: `${percentage}%` }}
-                ></div>
-              </div>
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('bounty.due_date', {
-        header: 'Due Date',
-        cell: info => {
-          const dueDate = new Date(info.getValue());
-          const today = new Date();
-          const daysRemaining = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          
-          return (
-            <div className="flex items-center">
-              <Clock className={cn(
-                "w-4 h-4 mr-2",
-                daysRemaining <= 3 ? 'text-error-500' :
-                daysRemaining <= 7 ? 'text-warning-500' :
-                'text-success-500'
-              )} />
-              <div>
-                <div className="font-medium">
-                  {dueDate.toLocaleDateString()}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {daysRemaining} days left
-                </div>
-              </div>
-            </div>
-          );
-        },
-      }),
-      columnHelper.accessor('billable_hours', {
-        header: 'Hours',
-        cell: info => (
-          <span className="font-medium">{info.getValue()}</span>
-        ),
-      }),
-    ],
-    []
-  );
-
-  const table = useReactTable({
-    data: cases,
-    columns,
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-  });
-
   useEffect(() => {
     const loadCases = async () => {
       try {
-        const { data: lawyerCases, error: casesError } = await supabase
+        const { data, error } = await supabase
           .from('lawyer_cases')
           .select(`
             *,
@@ -195,10 +68,10 @@ export const LawyerCases = () => {
           `)
           .eq('lawyer_id', user?.id);
 
-        if (casesError) throw casesError;
+        if (error) throw error;
 
-        // Transform the data
-        const transformedCases: Case[] = (lawyerCases || []).map(c => ({
+        // Transform and add mock data for demo
+        const transformedCases = (data || []).map(c => ({
           id: c.id,
           bounty: c.bounties,
           status: c.status,
@@ -210,8 +83,9 @@ export const LawyerCases = () => {
         }));
 
         setCases(transformedCases);
-      } catch (error) {
-        console.error('Error loading cases:', error);
+      } catch (err) {
+        console.error('Error loading cases:', err);
+        showToast('error', 'Failed to load cases');
       } finally {
         setIsLoading(false);
       }
@@ -274,8 +148,8 @@ export const LawyerCases = () => {
     <LawyerDashboardLayout>
       <div className="space-y-6">
         <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-gray-900">Active Cases</h1>
-          <p className="text-lg text-gray-600">Manage and track your legal cases</p>
+          <h1 className="text-3xl font-serif font-bold text-gray-900">My Cases</h1>
+          <p className="text-lg text-gray-600">Manage your active cases and track progress</p>
         </div>
 
         <div className="card">
@@ -328,82 +202,77 @@ export const LawyerCases = () => {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                {table.getHeaderGroups().map(headerGroup => (
-                  <tr key={headerGroup.id} className="border-b border-gray-200">
-                    {headerGroup.headers.map(header => (
-                      <th
-                        key={header.id}
-                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </th>
-                    ))}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map(row => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    {row.getVisibleCells().map(cell => (
-                      <td
-                        key={cell.id}
-                        className="px-6 py-4 whitespace-nowrap"
-                      >
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {cases.length === 0 && !isLoading && (
-              <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-600 mb-2">No cases found</h3>
-                <p className="text-gray-500 mb-6">Start by browsing available bounties</p>
-                <Link to="/bounties" className="btn btn-primary">
-                  Browse Bounties
-                </Link>
-              </div>
-            )}
-          </div>
-
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => table.previousPage()}
-                  disabled={!table.getCanPreviousPage()}
-                  className="btn btn-outline py-1 px-3 disabled:opacity-50"
+          <div className="p-6">
+            <div className="space-y-4">
+              {cases.map((caseItem) => (
+                <motion.div
+                  key={caseItem.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all cursor-pointer"
+                  onClick={() => setSelectedCase(caseItem)}
                 >
-                  Previous
-                </button>
-                <button
-                  onClick={() => table.nextPage()}
-                  disabled={!table.getCanNextPage()}
-                  className="btn btn-outline py-1 px-3 disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-              <span className="text-sm text-gray-600">
-                Page {table.getState().pagination.pageIndex + 1} of{' '}
-                {table.getPageCount()}
-              </span>
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-lg font-medium">{caseItem.bounty.title}</h3>
+                      <p className="text-gray-600">{caseItem.bounty.category}</p>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <span className={cn(
+                        "px-2 py-1 text-xs rounded-full font-medium",
+                        caseItem.priority === 'high' ? 'bg-error-100 text-error-700' :
+                        caseItem.priority === 'medium' ? 'bg-warning-100 text-warning-700' :
+                        'bg-success-100 text-success-700'
+                      )}>
+                        {caseItem.priority.charAt(0).toUpperCase() + caseItem.priority.slice(1)} Priority
+                      </span>
+                      <span className="text-accent-600 font-medium">${caseItem.bounty.total_amount}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span>{caseItem.bounty.location}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Calendar className="w-4 h-4 mr-1" />
+                      <span>Due: {new Date(caseItem.bounty.due_date).toLocaleDateString()}</span>
+                    </div>
+                    
+                    <div className="flex items-center text-sm text-gray-600">
+                      <Clock className="w-4 h-4 mr-1" />
+                      <span>{caseItem.billable_hours} hours billed</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="text-gray-600">
+                        {caseItem.milestones_completed} of {caseItem.total_milestones} milestones
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary-500"
+                        style={{ 
+                          width: `${(caseItem.milestones_completed / caseItem.total_milestones) * 100}%` 
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {cases.length === 0 && !isLoading && (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-600 mb-2">No cases found</h3>
+                  <p className="text-gray-500">Start by browsing available bounties</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
