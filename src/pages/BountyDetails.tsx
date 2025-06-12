@@ -223,6 +223,12 @@ export const BountyDetails = () => {
                 >
                   {isConnected ? 'Donate Now' : 'Connect Wallet to Donate'}
                 </button>
+                <button 
+                  onClick={handleDonate}
+                  className="btn btn-primary w-full py-2.5"
+                >
+                  {isConnected ? 'Donate Now' : 'connect to Mpesa'}
+                </button>
               </div>
             </div>
             
