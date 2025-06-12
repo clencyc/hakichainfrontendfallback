@@ -94,7 +94,7 @@ export const Footer = () => {
                 Support: support@hakichain.com
               </li>
               <li className="text-gray-400">
-                Phone: +1 (555) 123-4567
+                Phone: +2540113015464
               </li>
             </ul>
           </div>
