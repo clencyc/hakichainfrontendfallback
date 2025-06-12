@@ -74,7 +74,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </button>
           </div>
 
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {/* <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {links.map((link) => {
               const Icon = link.icon;
               return (
@@ -93,7 +93,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 </Link>
               );
             })}
-          </nav>
+          </nav> */}
 
           {/* User Profile */}
           <div className="p-4 border-t border-gray-200">
