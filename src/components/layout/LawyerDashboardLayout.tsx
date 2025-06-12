@@ -25,7 +25,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
       <aside className="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-200 z-30">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="h-16 flex items-center px-6 border-b border-gray-200">
+          {/* <div className="h-16 flex items-center px-6 border-b border-gray-200">
             <Link to="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
                 <GavelIcon className="w-6 h-6 text-white" />
@@ -34,7 +34,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
                 HakiChain
               </span>
             </Link>
-          </div>
+          </div> */}
 
           {/* Navigation */}
           <nav className="flex-1 overflow-y-auto px-4 py-8">

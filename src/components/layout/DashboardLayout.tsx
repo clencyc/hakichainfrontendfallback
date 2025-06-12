@@ -64,7 +64,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link to="/" className="flex items-center space-x-2">
               <GavelIcon className="w-8 h-8 text-primary-500" />
-              <span className="text-xl font-serif font-bold text-primary-500">HakiChain1212121221</span>
+              <span className="text-xl font-serif font-bold text-primary-500">HakiChain</span>
             </Link>
             <button 
               onClick={() => setIsSidebarOpen(false)}
