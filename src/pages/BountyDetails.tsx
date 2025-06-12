@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { MapPin, Calendar, Users, Tag, ArrowLeft, DollarSign } from 'lucide-react';
+import { MapPin, Calendar, Users, Tag, ArrowLeft, DollarSign, X, Phone } from 'lucide-react';
 import { fetchBountyById } from '../services/mockData';
 import { MilestonesList } from '../components/bounties/MilestonesList';
 import { Bounty } from '../types';
@@ -15,6 +15,8 @@ export const BountyDetails = () => {
   const [donationAmount, setDonationAmount] = useState('');
   const { isAuthenticated, userRole } = useAuth();
   const { isConnected, connectWallet } = useWallet();
+  const [showMpesaModal, setShowMpesaModal] = useState(false);
+  const [mpesaNumber, setMpesaNumber] = useState('');
 
   useEffect(() => {
     const loadBounty = async () => {
@@ -56,7 +58,6 @@ export const BountyDetails = () => {
   }
 
   const handleApplyToBounty = () => {
-    // In a real application, this would send an application to the blockchain
     alert('Your application has been submitted. The NGO will review your application.');
   };
 
@@ -71,13 +72,32 @@ export const BountyDetails = () => {
       return;
     }
 
-    // In a real application, this would initiate a blockchain transaction
     alert(`Thank you for your donation of $${donationAmount}!`);
     setDonationAmount('');
   };
 
+  const handleMpesaModal = () => {
+    setShowMpesaModal(true);
+  };
+
+  const handleMpesaPayment = () => {
+    if (!donationAmount || parseFloat(donationAmount) <= 0) {
+      alert('Please enter a valid donation amount');
+      return;
+    }
+    
+    if (!mpesaNumber || mpesaNumber.length < 10) {
+      alert('Please enter a valid M-Pesa number');
+      return;
+    }
+    
+    alert(`Processing M-Pesa payment of $${donationAmount} from ${mpesaNumber}. You will receive an STK push shortly.`);
+    setDonationAmount('');
+    setMpesaNumber('');
+    setShowMpesaModal(false);
+  };
+
   const handleMilestoneAction = (milestoneId: string, action: 'submit' | 'verify') => {
-    // In a real application, this would interact with the blockchain
     if (action === 'submit') {
       alert(`Proof submitted for milestone ${milestoneId}. Waiting for NGO verification.`);
     } else {
@@ -87,6 +107,57 @@ export const BountyDetails = () => {
 
   return (
     <div className="pt-20 pb-12">
+      {showMpesaModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">M-Pesa Payment</h3>
+              <button 
+                onClick={() => setShowMpesaModal(false)}
+                className="p-1 rounded-full hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="mb-4">
+              <p className="text-gray-600 text-sm mb-4">
+                Enter your M-Pesa number to make a payment of ${donationAmount}
+              </p>
+              
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="tel"
+                  placeholder="e.g. 07XXXXXXXX"
+                  value={mpesaNumber}
+                  onChange={(e) => setMpesaNumber(e.target.value)}
+                  className="input pl-10 w-full"
+                  maxLength={12}
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setShowMpesaModal(false)}
+                className="btn btn-outline flex-1"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleMpesaPayment}
+                className="btn btn-primary flex-1"
+              >
+                Pay Now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <Link to="/bounties" className="flex items-center text-gray-600 hover:text-primary-500 transition-colors">
@@ -174,7 +245,7 @@ export const BountyDetails = () => {
             <div className="card">
               <MilestonesList 
                 milestones={bounty.milestones}
-                isLawyer={isAuthenticated && userRole === 'lawyer' && bounty.assignedLawyer?.id === 'user_1'} // This would normally use actual user ID
+                isLawyer={isAuthenticated && userRole === 'lawyer' && bounty.assignedLawyer?.id === 'user_1'}
                 onMilestoneAction={handleMilestoneAction}
               />
             </div>
@@ -222,6 +293,12 @@ export const BountyDetails = () => {
                   className="btn btn-primary w-full py-2.5"
                 >
                   {isConnected ? 'Donate Now' : 'Connect Wallet to Donate'}
+                </button>
+                <button 
+                  onClick={handleMpesaModal}
+                  className="btn btn-secondary w-full py-2.5"
+                >
+                  Pay with M-Pesa
                 </button>
               </div>
             </div>
