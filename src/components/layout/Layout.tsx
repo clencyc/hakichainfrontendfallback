@@ -23,7 +23,7 @@ export const Layout = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
-      <Navbar scrolled={scrolled} />
+      {/* <Navbar scrolled={scrolled} /> */}
       <main className="flex-grow">
         <Outlet />
       </main>
