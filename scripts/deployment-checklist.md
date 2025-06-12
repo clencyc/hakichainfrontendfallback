@@ -1,6 +1,7 @@
 # Deployment Checklist
 
 ## Pre-deployment Checks
+
 - [ ] Private key is properly formatted and secure
 - [ ] Sufficient LSK balance in wallet
 - [ ] Network connection is stable
@@ -10,6 +11,7 @@
 - [ ] Environment variables are properly set
 
 ## Security Measures
+
 1. **Private Key Security**
    - [ ] Private key is stored in `.env` file
    - [ ] `.env` is in `.gitignore`
@@ -34,6 +36,7 @@
    - [ ] Transaction confirmation is monitored
 
 ## Post-deployment Verification
+
 - [ ] All contracts are deployed successfully
 - [ ] Contract addresses are saved
 - [ ] Contracts are verified on block explorer
@@ -42,6 +45,7 @@
 - [ ] Test transactions are successful
 
 ## Emergency Procedures
+
 1. **If deployment fails**
    - [ ] Check error logs
    - [ ] Verify network status
@@ -61,7 +65,8 @@
    - [ ] Test contract interactions
 
 ## Documentation
-- [ ] Deployment addresses are documented
-- [ ] Contract interactions are documented
-- [ ] Frontend integration is documented
-- [ ] Emergency procedures are documented 
+
+- [x] Deployment addresses are documented
+- [x] Contract interactions are documented
+- [x] Frontend integration is documented
+- [ ] Emergency procedures are documented
