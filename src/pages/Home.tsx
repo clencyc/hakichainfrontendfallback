@@ -24,7 +24,7 @@ export const Home = () => {
                 <Link to="/bounties" className="btn btn-primary text-base px-6 py-3">
                   Explore Bounties
                 </Link>
-                <Link to="/register" className="btn btn-outline border-white text-white hover:bg-white/10 text-base px-6 py-3">
+                <Link to="/register" className="btn btn-primary text-base px-6 py-3">
                   Join the Network
                 </Link>
               </div>
