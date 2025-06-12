@@ -81,7 +81,7 @@ export const LawyerDashboard = () => {
 
   return (
     <LawyerDashboardLayout>
-      <div className="max-w-[1600px] mx-auto">
+      <div className="max-w-[1600px] mx-auto mt-6">
         <div className="mb-6">
           <h1 className="text-3xl font-serif font-bold text-gray-900">Welcome back, {user?.name}</h1>
           <p className="text-lg text-gray-600">Here's an overview of your cases and performance</p>
