@@ -61,7 +61,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          {/* <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link to="/" className="flex items-center space-x-2">
               <GavelIcon className="w-8 h-8 text-primary-500" />
               <span className="text-xl font-serif font-bold text-primary-500">HakiChain</span>
@@ -72,9 +72,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             >
               <X className="w-6 h-6" />
             </button>
-          </div>
+          </div> */}
 
-          {/* <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {links.map((link) => {
               const Icon = link.icon;
               return (
@@ -93,7 +93,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                 </Link>
               );
             })}
-          </nav> */}
+          </nav>
 
           {/* User Profile */}
           <div className="p-4 border-t border-gray-200">
