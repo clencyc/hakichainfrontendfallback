@@ -79,14 +79,14 @@ async function main() {
   console.log('✅ Private key format is valid');
 
   // Validate network connection
-  const rpcUrl = 'https://rpc.sepolia-api.lisk.com';
-  if (!await validateNetworkConnection(rpcUrl)) {
+  const testnet_rpcUrl = 'https://rpc.sepolia-api.lisk.com';
+  if (!await validateNetworkConnection(testnet_rpcUrl)) {
     process.exit(1);
   }
   console.log('✅ Network connection successful');
 
   // Validate wallet balance
-  if (!await validateWalletBalance(privateKey, rpcUrl)) {
+  if (!await validateWalletBalance(privateKey, testnet_rpcUrl)) {
     process.exit(1);
   }
 

@@ -64,8 +64,8 @@ export const LawyerDashboard = () => {
 
         setData(prev => ({
           ...prev,
-          activeCases: cases || [],
-          matchingBounties: matches || []
+          activeCases: cases as any[] || [],
+          matchingBounties: matches as any[] || []
         }));
       } catch (error) {
         console.error('Error loading dashboard data:', error);
