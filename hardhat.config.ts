@@ -39,8 +39,8 @@ const config: HardhatUserConfig = {
       gasPrice: 1000000000, // 1 gwei
     },
     liskMainnet: {
-      url: "https://rpc.lisk.com",
-      chainId: 4201,
+      url: "https://lisk.drpc.org",
+      chainId: 1135,
       accounts: [formattedPrivateKey],
       gasPrice: 1000000000, // 1 gwei
     }

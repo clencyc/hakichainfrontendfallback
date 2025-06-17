@@ -20,8 +20,8 @@ export const NETWORK_CONFIG = {
     }
   },
   liskMainnet: {
-    chainId: 4201,
-    rpcUrl: 'https://rpc.lisk.com',
+    chainId: 1135,
+    rpcUrl: 'https://lisk.drpc.org',
     blockExplorer: 'https://explorer.lisk.com',
     nativeCurrency: {
       name: 'Lisk',
