@@ -58,7 +58,7 @@ export const Navbar = ({ scrolled }: NavbarProps) => {
                 className={`text-sm font-medium hover:text-primary-500 transition-colors ${
                   location.pathname === link.path 
                     ? 'text-primary-500 font-semibold' 
-                    : 'text-gray-700'
+                    : 'text-primary-500'
                 }`}
               >
                 {link.name}
@@ -68,7 +68,7 @@ export const Navbar = ({ scrolled }: NavbarProps) => {
 
           {/* Auth/Wallet Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {!isConnected ? (
+            {/* {!isConnected ? (
               <button 
                 onClick={connectWallet}
                 className="btn btn-outline flex items-center space-x-1 text-sm"
@@ -84,7 +84,7 @@ export const Navbar = ({ scrolled }: NavbarProps) => {
                 <Wallet className="w-4 h-4" />
                 <span className="truncate w-20">{walletAddress?.substring(0, 6)}...{walletAddress?.substring(walletAddress.length - 4)}</span>
               </button>
-            )}
+            )} */}
 
             {!isAuthenticated ? (
               <Link to="/login" className="btn btn-primary text-sm">
