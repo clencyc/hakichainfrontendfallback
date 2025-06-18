@@ -28,7 +28,7 @@ export const Home = () => {
                   Join the Network
                 </Link>
                 <Link to="/waitlist" className="btn btn-primary text-base px-6 py-3">
-                  Join the Waitlist 
+                  Join the Waitlist.
                 </Link>
               </div>
             </motion.div>
