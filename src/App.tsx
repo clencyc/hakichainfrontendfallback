@@ -17,6 +17,7 @@ import { DonorDashboard } from './pages/donor/DonorDashboard';
 import { Profile } from './pages/Profile';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { Waitlist } from './pages/Waitlist';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="bounties/:id" element={<BountyDetails />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="waitlist" element={<Waitlist />} />
 
           {/* Protected routes */}
           <Route 
