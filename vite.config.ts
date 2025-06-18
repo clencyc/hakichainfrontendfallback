@@ -7,4 +7,9 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    host: true,
+    port: 3000, // You can change this port if needed
+    open: true, // Automatically open browser on server start
+  },
 });
