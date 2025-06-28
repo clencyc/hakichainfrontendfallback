@@ -7,7 +7,7 @@ interface User {
   name: string;
   email: string;
   role: UserRole;
-  lskNumber?: string; // For lawyers only
+  lsk_number?: string; // For lawyers only
 }
 
 interface AuthContextType {
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: userData.name,
         email: userData.email,
         role: userData.role,
-        lskNumber: userData.lskNumber,
+        lsk_number: userData.lskNumber,
       };
 
       // Store user in local storage

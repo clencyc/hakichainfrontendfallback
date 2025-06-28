@@ -9,7 +9,7 @@ export const mockUsers: User[] = [
     role: 'lawyer',
     avatar: 'https://images.pexels.com/photos/5081971/pexels-photo-5081971.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2',
     bio: 'Human rights attorney with 8 years of experience in public interest litigation.',
-    lskNumber: 'LSK12345',
+    lsk_number: 'LSK12345',
     specializations: ['Human Rights', 'Land Rights', 'Constitutional Law'],
     location: 'Nairobi, Kenya',
     rating: 4.8,

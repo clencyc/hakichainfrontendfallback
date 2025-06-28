@@ -13,7 +13,7 @@ export const Profile = () => {
     bio: user?.bio || '',
     specializations: user?.specializations?.join(', ') || '',
     organization: user?.organization || '',
-    lskNumber: user?.lskNumber || '',
+    lsk_number: user?.lskNumber || '',
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +28,7 @@ export const Profile = () => {
         bio: user.bio || '',
         specializations: user.specializations?.join(', ') || '',
         organization: user.organization || '',
-        lskNumber: user.lskNumber || '',
+        lsk_number: user.lskNumber || '',
       });
     }
   }, [user]);

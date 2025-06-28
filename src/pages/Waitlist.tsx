@@ -6,10 +6,10 @@ import { supabase } from '../lib/supabase';
 
 type WaitlistFormData = {
   full_name: string;
-  lskNumber: string;
+  lsk_number: string;
   email: string;
-  legalSpecialty: string;
-  phoneNumber: string;
+  legal_specialty: string;
+  phone_number: string;
   message?: string;
 };
 
@@ -164,15 +164,15 @@ export const Waitlist = () => {
                 </div>
 
                 <div>
-                  <label htmlFor="legalSpecialty" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="legal_specialty" className="block text-sm font-medium text-gray-700 mb-1">
                     Legal Specialty *
                   </label>
                   <select
-                    id="legalSpecialty"
+                    id="legal_specialty"
                     className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.legalSpecialty ? 'border-red-300' : 'border-gray-300'
+                      errors.legal_specialty ? 'border-red-300' : 'border-gray-300'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500`}
-                    {...register('legalSpecialty', { required: 'Legal specialty is required' })}
+                    {...register('legal_specialty', { required: 'Legal specialty is required' })}
                   >
                     <option value="">Select your specialty</option>
                     <option value="Human Rights">Human Rights</option>
@@ -184,26 +184,26 @@ export const Waitlist = () => {
                     <option value="Corporate Law">Corporate Law</option>
                     <option value="Other">Other</option>
                   </select>
-                  {errors.legalSpecialty && (
-                    <p className="mt-1 text-sm text-red-600">{errors.legalSpecialty.message}</p>
+                  {errors.legal_specialty && (
+                    <p className="mt-1 text-sm text-red-600">{errors.legal_specialty.message}</p>
                   )}
                 </div>
 
                 <div>
-                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number *
                   </label>
                   <input
-                    id="phoneNumber"
+                    id="phone_number"
                     type="tel"
                     className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.phoneNumber ? 'border-red-300' : 'border-gray-300'
+                      errors.phone_number ? 'border-red-300' : 'border-gray-300'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500`}
                     placeholder="+254 712 345 678"
-                    {...register('phoneNumber', { required: 'Phone number is required' })}
+                    {...register('phone_number', { required: 'Phone number is required' })}
                   />
-                  {errors.phoneNumber && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phoneNumber.message}</p>
+                  {errors.phone_number && (
+                    <p className="mt-1 text-sm text-red-600">{errors.phone_number.message}</p>
                   )}
                 </div>
 

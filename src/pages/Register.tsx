@@ -14,7 +14,7 @@ export const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    lskNumber: '',
+    lsk_number: '',
     organization: '',
   });
   const [isLoading, setIsLoading] = useState(false);
