@@ -5,7 +5,7 @@ import { Scale, CheckCircle, XCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type WaitlistFormData = {
-  fullName: string;
+  full_name: string;
   lskNumber: string;
   email: string;
   legalSpecialty: string;
@@ -104,20 +104,20 @@ export const Waitlist = () => {
             <div className="p-6 md:p-8">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div>
-                  <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="full_name" className="block text-sm font-medium text-gray-700 mb-1">
                     Full Name *
                   </label>
                   <input
-                    id="fullName"
+                    id="full_name"
                     type="text"
                     className={`w-full px-4 py-3 rounded-lg border ${
-                      errors.fullName ? 'border-red-300' : 'border-gray-300'
+                      errors.full_name ? 'border-red-300' : 'border-gray-300'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500`}
                     placeholder="John Doe"
-                    {...register('fullName', { required: 'Full name is required' })}
+                    {...register('full_name', { required: 'Full name is required' })}
                   />
-                  {errors.fullName && (
-                    <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>
+                  {errors.full_name && (
+                    <p className="mt-1 text-sm text-red-600">{errors.full_name.message}</p>
                   )}
                 </div>
 
