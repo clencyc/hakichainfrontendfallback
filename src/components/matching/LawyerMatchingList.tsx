@@ -30,7 +30,7 @@ export const LawyerMatchingList = ({ bountyId, onSelect }: LawyerMatchingListPro
   useEffect(() => {
     const loadMatchingLawyers = async () => {
       try {
-        const { data, error } = await supabase.rpc('get_matching_lawyers', {
+        const { data, error } = await .rpc('get_matching_lawyers', {
           bounty_id: bountyId,
           limit_count: 10
         });
