@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         name: userData.name,
         email: userData.email,
         role: userData.role,
-        lsk_number: userData.lskNumber,
+        lsk_number: userData.lsk_number,
       };
 
       // Store user in local storage
