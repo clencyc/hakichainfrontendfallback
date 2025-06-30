@@ -14,7 +14,7 @@ export const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    lskNumber: '',
+    lsk_number: '',
     organization: '',
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -45,7 +45,7 @@ export const Register = () => {
         email: formData.email,
         password: formData.password,
         role: registrationType!,
-        ...(registrationType === 'lawyer' && { lskNumber: formData.lskNumber }),
+        ...(registrationType === 'lawyer' && { lsk_number: formData.lsk_number }),
         ...(registrationType === 'ngo' && { organization: formData.organization }),
       });
       navigate('/');
@@ -181,17 +181,17 @@ export const Register = () => {
 
             {registrationType === 'lawyer' && (
               <div className="mb-5">
-                <label htmlFor="lskNumber" className="label">LSK Number</label>
+                <label htmlFor="lsk_number" className="label">LSK Number</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <GavelIcon className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    id="lskNumber"
-                    name="lskNumber"
+                    id="lsk_number"
+                    name="lsk_number"
                     type="text"
                     required
-                    value={formData.lskNumber}
+                    value={formData.lsk_number}
                     onChange={handleChange}
                     className="input pl-10"
                     placeholder="LSK12345"
