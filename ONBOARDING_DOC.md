@@ -5,6 +5,7 @@ Justice Made Accessible Through Blockchain
 ---
 
 ## Overview
+
 HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to facilitate legal aid through bounties and smart contracts. The platform aims to make legal justice more accessible, transparent, and efficient for underserved communities.
 
 ---
@@ -12,6 +13,7 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
 ## Architecture
 
 ### 1. Frontend (React + Vite)
+
 - **Framework:** React (with TypeScript)
 - **Styling:** Tailwind CSS
 - **Animation:** Framer Motion
@@ -21,6 +23,7 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
 - **API/Blockchain:** Interacts with smart contracts and Supabase
 
 ### 2. Backend
+
 - **Supabase:**
   - Auth (users, roles)
   - Database (Postgres)
@@ -32,6 +35,7 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
   - Types generated with TypeChain
 
 ### 3. Smart Contracts
+
 - **Contracts:**
   - `DocumentRegistry.sol`: Document verification and storage
   - `HakiToken.sol`: Platform token (if used)
@@ -43,6 +47,7 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
   - Addresses tracked in `deployment-addresses.json`
 
 ### 4. Database (Supabase/Postgres)
+
 - **Tables:** users, bounties, milestones, donations, documents
 - **RLS:** Row Level Security enabled
 - **Policies:** CRUD based on user roles
@@ -74,6 +79,7 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
 ---
 
 ## Tech Stack
+
 - **Frontend:** React, TypeScript, Tailwind CSS, Framer Motion, Lucide React
 - **Backend:** Supabase (Postgres, Auth, Storage)
 - **Smart Contracts:** Solidity, Hardhat, TypeChain
@@ -84,12 +90,14 @@ HakiChain is a blockchain-based platform connecting NGOs, lawyers, and donors to
 ## Onboarding & Setup
 
 ### 1. Prerequisites
+
 - Node.js (v18+ recommended)
 - Yarn or npm
 - [Supabase](https://supabase.com/) account (for local dev)
 - [Hardhat](https://hardhat.org/) (for smart contract dev)
 
 ### 2. Install Dependencies
+
 ```sh
 # Using npm
 npm install
@@ -98,9 +106,11 @@ yarn install
 ```
 
 ### 3. Environment Variables
+
 - Copy `.env.example` to `.env` and fill in Supabase and blockchain config.
 
 ### 4. Running the App
+
 ```sh
 # Start frontend
 yarn dev
@@ -109,6 +119,7 @@ npm run dev
 ```
 
 ### 5. Smart Contracts
+
 ```sh
 # Compile contracts
 yarn hardhat compile
@@ -118,10 +129,12 @@ yarn hardhat test
 ```
 
 ### 6. Database
+
 - Supabase migrations in `/supabase/migrations`
 - Apply using Supabase CLI or dashboard
 
 ### 7. Linting & Formatting
+
 ```sh
 yarn lint
 ```
@@ -129,6 +142,7 @@ yarn lint
 ---
 
 ## Key Features
+
 - **Legal Bounties:** NGOs post cases, donors fund, lawyers apply and work
 - **Milestone Escrow:** Funds released on verified milestone completion
 - **Document Registry:** Secure, verifiable document uploads
@@ -140,6 +154,7 @@ yarn lint
 ---
 
 ## Documentation
+
 - [Platform Documentation](src/pages/Documentation.tsx)
 - [FAQ](src/pages/FAQ.tsx)
 - [Terms of Service](src/pages/legal/TermsOfService.tsx)
@@ -148,6 +163,7 @@ yarn lint
 ---
 
 ## Contribution Guidelines
+
 - Fork and clone the repo
 - Create a feature branch
 - Follow code style (see ESLint config)
@@ -157,10 +173,12 @@ yarn lint
 ---
 
 ## Contact & Support
+
 - For issues, open a GitHub issue or contact the project maintainer.
 - For security or legal questions, see [Terms of Service](src/pages/legal/TermsOfService.tsx) and [Privacy Policy](src/pages/legal/PrivacyPolicy.tsx).
 
 ---
 
 ## License
+
 [MIT](LICENSE)
