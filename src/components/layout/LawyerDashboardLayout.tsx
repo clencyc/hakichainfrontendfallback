@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GavelIcon, BarChart3, FileText, Home, Settings, LogOut } from 'lucide-react';
+import { GavelIcon, BarChart3, FileText, Home, Settings, LogOut, Brain, Bell } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -15,6 +15,8 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   const sidebarLinks = [
     { name: 'Overview', path: '/lawyer-dashboard', icon: Home },
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
+    { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
+    { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
   ];
