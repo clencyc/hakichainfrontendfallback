@@ -360,7 +360,7 @@ export const LawyerCases = () => {
 
   return (
     <LawyerDashboardLayout>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 mt-20 sm:px-6 lg:px-8">
         <div className="mb-8">
           <h1 className="text-3xl font-serif font-bold text-gray-900">Active Cases</h1>
           <p className="text-lg text-gray-600">Manage and track your legal cases</p>

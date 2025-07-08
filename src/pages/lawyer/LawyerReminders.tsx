@@ -200,7 +200,7 @@ export const LawyerReminders = () => {
 
   return (
     <LawyerDashboardLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto mt-20">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
