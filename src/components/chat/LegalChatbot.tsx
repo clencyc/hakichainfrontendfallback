@@ -11,13 +11,16 @@ import {
   Sparkles,
   Scale,
   AlertCircle,
-  RefreshCw
+  RefreshCw,
+  ChevronUp,
+  ChevronDown
 } from 'lucide-react';
 import { generateChatResponse, generateQuickSuggestions, ChatMessage } from '../../lib/geminiChat';
 
 export const LegalChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
@@ -48,6 +51,17 @@ export const LegalChatbot = () => {
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const formatMessage = (content: string) => {
+    return content
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/`(.*?)`/g, '<code class="bg-gray-200 px-1 rounded text-sm">$1</code>')
+      .replace(/\n\n/g, '<br><br>')
+      .replace(/\n/g, '<br>')
+      .replace(/(?:^|\n)(\d+\.\s)/g, '<br><strong>$1</strong>')
+      .replace(/(?:^|\n)(-\s)/g, '<br>• ');
   };
 
   const handleSendMessage = async (messageText?: string) => {
@@ -120,6 +134,9 @@ export const LegalChatbot = () => {
     ]);
   };
 
+  const chatHeight = isExpanded ? 'h-[80vh]' : isMinimized ? 'h-16' : 'h-[500px]';
+  const chatWidth = isExpanded ? 'w-[600px]' : 'w-96';
+
   return (
     <>
       {/* Chat Button */}
@@ -155,16 +172,13 @@ export const LegalChatbot = () => {
             animate={{ 
               scale: 1, 
               opacity: 1, 
-              y: 0,
-              height: isMinimized ? 60 : 500 
+              y: 0
             }}
             exit={{ scale: 0.8, opacity: 0, y: 20 }}
-            className={`fixed bottom-6 right-6 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden ${
-              isMinimized ? 'h-16' : 'h-[500px]'
-            }`}
+            className={`fixed bottom-6 right-6 ${chatWidth} ${chatHeight} bg-white rounded-2xl shadow-2xl border border-gray-200 z-50 overflow-hidden flex flex-col`}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 flex items-center justify-between">
+            <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-4 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                   <Scale className="w-5 h-5 text-white" />
@@ -176,6 +190,17 @@ export const LegalChatbot = () => {
               </div>
               
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                  title={isExpanded ? "Shrink" : "Expand"}
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4 text-white" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4 text-white" />
+                  )}
+                </button>
                 <button
                   onClick={() => setIsMinimized(!isMinimized)}
                   className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
@@ -204,7 +229,7 @@ export const LegalChatbot = () => {
             {!isMinimized && (
               <>
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 h-80">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}
@@ -212,7 +237,7 @@ export const LegalChatbot = () => {
                       animate={{ opacity: 1, y: 0 }}
                       className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`flex items-start space-x-2 max-w-[80%] ${
+                      <div className={`flex items-start space-x-3 max-w-[85%] ${
                         message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
                       }`}>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -227,13 +252,18 @@ export const LegalChatbot = () => {
                           )}
                         </div>
                         
-                        <div className={`px-3 py-2 rounded-2xl ${
+                        <div className={`px-4 py-3 rounded-2xl ${
                           message.role === 'user'
                             ? 'bg-blue-500 text-white'
                             : 'bg-gray-100 text-gray-800'
                         }`}>
-                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                          <p className={`text-xs mt-1 ${
+                          <div 
+                            className="text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ 
+                              __html: formatMessage(message.content) 
+                            }}
+                          />
+                          <p className={`text-xs mt-2 ${
                             message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                           }`}>
                             {message.timestamp.toLocaleTimeString([], { 
@@ -252,11 +282,11 @@ export const LegalChatbot = () => {
                       animate={{ opacity: 1 }}
                       className="flex justify-start"
                     >
-                      <div className="flex items-start space-x-2">
+                      <div className="flex items-start space-x-3">
                         <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-500 flex items-center justify-center">
                           <Bot className="w-4 h-4 text-white" />
                         </div>
-                        <div className="bg-gray-100 px-3 py-2 rounded-2xl">
+                        <div className="bg-gray-100 px-4 py-3 rounded-2xl">
                           <div className="flex space-x-1">
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                             <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
@@ -271,17 +301,20 @@ export const LegalChatbot = () => {
                 </div>
 
                 {/* Quick Suggestions */}
-                {suggestions.length > 0 && inputMessage.length === 0 && (
-                  <div className="px-4 pb-2">
-                    <p className="text-xs text-gray-500 mb-2">Quick questions:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {suggestions.slice(0, 2).map((suggestion, index) => (
+                {suggestions.length > 0 && inputMessage.length === 0 && !isTyping && (
+                  <div className="px-4 pb-2 border-t border-gray-100">
+                    <p className="text-xs text-gray-500 mb-2 pt-2">Quick questions:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.slice(0, isExpanded ? 4 : 2).map((suggestion, index) => (
                         <button
                           key={index}
                           onClick={() => handleSendMessage(suggestion)}
-                          className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
+                          className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors"
                         >
-                          {suggestion.length > 30 ? suggestion.substring(0, 30) + '...' : suggestion}
+                          {suggestion.length > (isExpanded ? 50 : 25) 
+                            ? suggestion.substring(0, isExpanded ? 50 : 25) + '...' 
+                            : suggestion
+                          }
                         </button>
                       ))}
                     </div>
@@ -289,8 +322,8 @@ export const LegalChatbot = () => {
                 )}
 
                 {/* Input */}
-                <div className="p-4 border-t border-gray-200">
-                  <div className="flex items-end space-x-2">
+                <div className="p-4 border-t border-gray-200 flex-shrink-0">
+                  <div className="flex items-end space-x-3">
                     <div className="flex-1 relative">
                       <input
                         ref={inputRef}
@@ -299,21 +332,21 @@ export const LegalChatbot = () => {
                         onChange={(e) => setInputMessage(e.target.value)}
                         onKeyPress={handleKeyPress}
                         placeholder="Ask me about Kenyan law..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
                         disabled={isTyping}
                       />
                     </div>
                     <button
                       onClick={() => handleSendMessage()}
                       disabled={!inputMessage.trim() || isTyping}
-                      className="p-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
                     >
                       <Send className="w-4 h-4" />
                     </button>
                   </div>
                   
                   <div className="flex items-center mt-2 text-xs text-gray-500">
-                    <AlertCircle className="w-3 h-3 mr-1" />
+                    <AlertCircle className="w-3 h-3 mr-1 flex-shrink-0" />
                     <span>For personalized advice, consult a qualified lawyer</span>
                   </div>
                 </div>

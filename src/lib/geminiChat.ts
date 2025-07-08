@@ -1,6 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = 'AIzaSyDSmcctwb094ifsM1Dgb8B01brcVaNtq2Y';
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDSmcctwb094ifsM1Dgb8B01brcVaNtq2Y';
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export interface ChatMessage {
@@ -14,7 +14,8 @@ export const generateChatResponse = async (
   message: string,
   chatHistory: ChatMessage[]
 ): Promise<AsyncGenerator<string, void, unknown>> => {
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  // Update model name to the current version
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   // Build conversation context
   const context = chatHistory
