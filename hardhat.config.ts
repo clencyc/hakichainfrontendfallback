@@ -5,7 +5,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 // Validate private key
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = process.env.BLOCKCHAIN_PRIVATE_KEY;
 if (!privateKey) {
   throw new Error("Please set your PRIVATE_KEY in the .env file");
 }

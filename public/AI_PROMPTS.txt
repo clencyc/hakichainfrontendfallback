@@ -1,0 +1,29 @@
+I am working on a blockchain/Web3-based application with several unfinished or partially implemented components across the codebase.
+
+Your task is to:
+
+Scan and analyze all code files (smart contracts, frontend, backend, integrations, etc.) to identify all unfinished, broken, or improperly implemented parts—especially those that relate to blockchain/Web3 interactions.
+
+Provide a clear, structured audit report detailing:
+
+What’s missing or incomplete.
+
+What needs to be corrected or refactored.
+
+What dependencies or external services (e.g., wallets, RPCs, APIs, IPFS, etc.) are required or improperly configured.
+
+Recommend and implement fixes or completions for each issue.
+
+Deliver a fully working version of the product, including:
+
+Full on-chain/off-chain integration.
+
+Proper wallet support (e.g., Metamask, WalletConnect, etc.).
+
+Deployment-ready smart contracts.
+
+Clean, tested code across all layers (smart contract, backend, frontend).
+
+Deployment or build instructions, if needed.
+
+Be meticulous—treat this as a production-ready project audit and delivery process. Leave helpful code comments where applicable.

@@ -230,4 +230,12 @@ contract LegalBounty is ReentrancyGuard, Ownable {
     function getLawyerBounties(address _lawyer) external view returns (uint256[] memory) {
         return lawyerToBounties[_lawyer];
     }
+
+    function getAllBounties() external view returns (Bounty[] memory) {
+        Bounty[] memory allBounties = new Bounty[](nextBountyId);
+        for (uint i = 0; i < nextBountyId; i++) {
+            allBounties[i] = bounties[i];
+        }
+        return allBounties;
+    }
 }
