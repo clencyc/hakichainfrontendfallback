@@ -13,7 +13,7 @@ export const Profile = () => {
     bio: user?.bio || '',
     specializations: user?.specializations?.join(', ') || '',
     organization: user?.organization || '',
-    lskNumber: user?.lskNumber || '',
+    lsk_number: user?.lsk_number || '',
   });
   
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +28,7 @@ export const Profile = () => {
         bio: user.bio || '',
         specializations: user.specializations?.join(', ') || '',
         organization: user.organization || '',
-        lskNumber: user.lskNumber || '',
+        lsk_number: user.lsk_number || '',
       });
     }
   }, [user]);
@@ -155,12 +155,12 @@ export const Profile = () => {
                   
                   {user.role === 'lawyer' && (
                     <div>
-                      <label htmlFor="lskNumber" className="label">LSK Number</label>
+                      <label htmlFor="lsk_number" className="label">LSK Number</label>
                       <input
                         type="text"
-                        id="lskNumber"
-                        name="lskNumber"
-                        value={formData.lskNumber}
+                        id="lsk_number"
+                        name="lsk_number"
+                        value={formData.lsk_number}
                         onChange={handleChange}
                         className="input"
                         disabled
@@ -276,7 +276,7 @@ export const Profile = () => {
                         <FileText className="w-5 h-5 text-gray-500 flex-shrink-0" />
                         <div>
                           <p className="font-medium">LSK Certification</p>
-                          <p className="text-sm text-gray-500 mb-1">LSK Number: {user.lskNumber || 'LSK12345'}</p>
+                          <p className="text-sm text-gray-500 mb-1">LSK Number: {user.lsk_number || 'LSK12345'}</p>
                           <p className="text-sm text-success-600 flex items-center">
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Verified

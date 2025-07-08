@@ -8,7 +8,7 @@ export interface User {
   role: UserRole;
   avatar?: string;
   bio?: string;
-  lskNumber?: string; // For lawyers
+  lsk_number?: string; // For lawyers
   organization?: string; // For NGOs
   specializations?: string[]; // For lawyers
   location?: string;
