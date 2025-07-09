@@ -1,7 +1,20 @@
 import { GavelIcon, Github, Twitter, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export const Footer = () => {
+export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
+  if (minimal) {
+    return (
+      <footer className="w-full bg-transparent text-gray-700 border-t border-transparent py-6 flex flex-col md:flex-row items-center justify-between px-4">
+        <span className="text-sm">@2025 HakiChain. All rights reserved.</span>
+        <div className="flex space-x-6 mt-2 md:mt-0">
+          <Link to="/privacy-policy" className="text-sm hover:underline">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
+          <Link to="/legal-notice" className="text-sm hover:underline">Legal Notice</Link>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
