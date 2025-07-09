@@ -109,6 +109,28 @@ export const LawyerReminders = () => {
         })
       });
 
+      // After SMS is sent, update the status to 'sent' for the correct reminder
+      if (editingReminder) {
+        // Update the edited reminder
+        await supabase
+          .from('lawyer_reminders')
+          .update({ status: 'sent' })
+          .eq('id', editingReminder.id);
+      } else {
+        // Find the most recent reminder for this client/phone/title (just inserted)
+        const { data: latest, error: fetchError } = await supabase
+          .from('lawyer_reminders')
+          .select('id')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (!fetchError && latest && latest.length > 0) {
+          await supabase
+            .from('lawyer_reminders')
+            .update({ status: 'sent' })
+            .eq('id', latest[0].id);
+        }
+      }
+
       resetForm();
       loadReminders();
     } catch (error) {

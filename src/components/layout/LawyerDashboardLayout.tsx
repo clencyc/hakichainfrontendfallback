@@ -4,6 +4,7 @@ import { GavelIcon, BarChart3, FileText, Home, Settings, LogOut, Brain, Bell } f
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { Footer } from './Footer';
+import { Logo } from './Logo';
 
 interface LawyerDashboardLayoutProps {
   children: React.ReactNode;
@@ -30,12 +31,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-gray-200">
             <Link to="/" className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-primary-500 rounded-lg flex items-center justify-center">
-                {/* <GavelIcon className="w-6 h-6 text-white" /> */}
-              </div>
-              {/* <span className="text-xl font-serif font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                HakiChain
-              </span> */}
+              <Logo />
             </Link>
           </div>
 

@@ -9,13 +9,13 @@ import {
   FileText, 
   Users, 
   BarChart3, 
-  Settings,
   LogOut,
   Bell
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
 import { Footer } from './Footer';
+import { Logo } from './Logo';
 
 interface SidebarLink {
   name: string;
@@ -64,8 +64,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b border-gray-200">
             <Link to="/" className="flex items-center space-x-2">
-              <GavelIcon className="w-8 h-8 text-primary-500" />
-              <span className="text-xl font-serif font-bold text-primary-500">HakiChain</span>
+              <Logo />
             </Link>
             <button 
               onClick={() => setIsSidebarOpen(false)}
@@ -144,13 +143,9 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <div className="relative group">
                 <button className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                    ) : (
-                      <span className="text-sm font-medium text-gray-600">
-                        {user?.name.charAt(0)}
-                      </span>
-                    )}
+                    <span className="text-sm font-medium text-gray-600">
+                      {user?.name?.charAt(0)}
+                    </span>
                   </div>
                   <span className="text-sm font-medium text-gray-700">{user?.name}</span>
                 </button>

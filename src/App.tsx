@@ -1,5 +1,5 @@
 import { BrowserRouter } from 'react-router-dom';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
@@ -42,6 +42,7 @@ function App() {
 function AppContent() {
   const { isAuthenticated, userRole } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -53,9 +54,17 @@ function AppContent() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Hide Navbar on dashboard routes
+  const hideNavbar =
+    location.pathname.startsWith('/lawyer-dashboard') ||
+    location.pathname.startsWith('/lawyer/') ||
+    location.pathname.startsWith('/ngo-dashboard') ||
+    location.pathname.startsWith('/ngo-') ||
+    location.pathname.startsWith('/donor-dashboard');
+
   return (
     <div className="min-h-screen bg-white">
-      <Navbar scrolled={scrolled} />
+      {!hideNavbar && <Navbar scrolled={scrolled} />}
       <Routes>
         <Route element={<Layout />}>
           {/* Public routes */}

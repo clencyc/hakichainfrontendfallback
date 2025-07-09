@@ -4,6 +4,7 @@ import { Menu, X, GavelIcon, UserIcon, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { useWallet } from '../../hooks/useWallet';
+import { Logo } from './Logo';
 
 interface NavbarProps {
   scrolled: boolean;
@@ -44,10 +45,7 @@ export const Navbar = ({ scrolled }: NavbarProps) => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center py-4">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <GavelIcon className="w-8 h-8 text-primary-500" />
-            <span className="text-xl font-serif font-bold text-primary-500">HakiChain</span>
-          </Link>
+          <Logo />
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
