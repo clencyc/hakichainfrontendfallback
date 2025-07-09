@@ -13,6 +13,7 @@ export const BountyDetails = () => {
   const [bounty, setBounty] = useState<Bounty | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [donationAmount, setDonationAmount] = useState('');
+  const [currency, setCurrency] = useState('USD');
   const { isAuthenticated, userRole } = useAuth();
   const { isConnected, connectWallet } = useWallet();
   const [showMpesaModal, setShowMpesaModal] = useState(false);
@@ -115,6 +116,8 @@ export const BountyDetails = () => {
               <button 
                 onClick={() => setShowMpesaModal(false)}
                 className="p-1 rounded-full hover:bg-gray-100"
+                aria-label="Close M-Pesa Payment Modal"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -122,9 +125,31 @@ export const BountyDetails = () => {
             
             <div className="mb-4">
               <p className="text-gray-600 text-sm mb-4">
-                Enter your M-Pesa number to make a payment of ${donationAmount}
+                Enter the amount, select currency, and your M-Pesa number to make a payment.
               </p>
-              
+              <div className="flex gap-2 mb-3">
+                <div className="relative flex-1">                  
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    value={donationAmount}
+                    onChange={(e) => setDonationAmount(e.target.value)}
+                    className="input pl-10 w-full"
+                    min="1"
+                    step="1"
+                  />
+                </div>
+                <select
+                  aria-label="Select currency"
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className="input w-28"
+                >
+                  <option value="USD">USD</option>
+                  <option value="KES">KES</option>
+                  <option value="EUR">EUR</option>
+                </select>
+              </div>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Phone className="h-5 w-5 text-gray-400" />
