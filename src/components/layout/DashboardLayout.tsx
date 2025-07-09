@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
+import { Footer } from './Footer';
 
 interface SidebarLink {
   name: string;
@@ -51,7 +52,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Sidebar */}
       <aside 
         className={cn(
@@ -121,7 +122,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
 
       {/* Main Content */}
       <div className={cn(
-        "transition-all duration-300",
+        "transition-all duration-300 flex-1 flex flex-col",
         "md:ml-64"
       )}>
         {/* Top Navigation */}
@@ -182,7 +183,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         </header>
 
         {/* Page Content */}
-        <main className="pt-16 min-h-screen">
+        <main className="pt-16 min-h-screen pb-32 flex-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -196,6 +197,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </motion.div>
           </AnimatePresence>
         </main>
+        <Footer />
       </div>
     </div>
   );

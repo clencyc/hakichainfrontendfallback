@@ -188,8 +188,6 @@ function AppContent() {
           />
         </Route>
       </Routes>
-      <Footer />
-      
       {/* Legal Chatbot - appears on all pages */}
       <LegalChatbot />
     </div>

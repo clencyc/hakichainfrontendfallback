@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { GavelIcon, BarChart3, FileText, Home, Settings, LogOut, Brain, Bell } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
+import { Footer } from './Footer';
 
 interface LawyerDashboardLayoutProps {
   children: React.ReactNode;
@@ -22,7 +23,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Fixed Sidebar */}
       <aside className="fixed inset-y-0 left-0 w-72 bg-white border-r border-gray-200 z-30">
         <div className="flex flex-col h-full">
@@ -110,8 +111,8 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
       </aside>
 
       {/* Main Content */}
-      <main className="ml-72">
-        <div className="min-h-screen py-8 px-8">
+      <main className="ml-72 flex-1 flex flex-col">
+        <div className="min-h-screen py-8 px-8 pb-32"> {/* Add pb-32 for footer space */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -120,6 +121,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
             {children}
           </motion.div>
         </div>
+        <Footer />
       </main>
     </div>
   );
