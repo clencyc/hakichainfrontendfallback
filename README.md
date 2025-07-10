@@ -20,7 +20,8 @@ HakiChain is a decentralized platform for legal services and intellectual proper
 - **Form Handling**: React Hook Form, Zod
 - **Data Visualization**: Recharts
 
-## 🚀 Getting Started
+## 🚀 Getting Started today
+
 
 ### Prerequisites
 
