@@ -28,6 +28,7 @@ import { LegalChatbot } from './components/chat/LegalChatbot';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { AuthProvider } from './contexts/AuthContext';
+import { BountyDemoDetails } from './pages/BountyDemoDetails';
 
 function App() {
   return (
@@ -70,6 +71,8 @@ function AppContent() {
           {/* Public routes */}
           <Route index element={<Home />} />
           <Route path="bounties" element={<BountyExplorer />} />
+          <Route path="bounties/bounty-fake-1" element={<BountyDemoDetails />} />
+          <Route path="bounties/bounty-fake-2" element={<BountyDemoDetails />} />
           <Route path="bounties/:id" element={<BountyDetails />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />

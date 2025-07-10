@@ -102,7 +102,7 @@ export const mockBounties: Bounty[] = [
   {
     id: '123e4567-e89b-12d3-a456-426614174009',
     title: 'Domestic Violence Protection',
-    description: 'Legal support needed for a domestic violence survivor seeking a protection order and legal separation. Includes representation in court and legal counseling.',
+    description: 'Legal support needed for a domestic violence survivor seeking a protection order and legal separation. Includes representation in court and legal counseling.\n\nThis project will provide a lifeline to a mother and her two children, helping them escape an abusive environment and secure a safer future. The lawyer will work closely with the family, the courts, and local organizations to ensure comprehensive protection and support.\n\nKey project features include emergency legal filings, court representation, and ongoing counseling to empower the survivor and her children.',
     ngoId: '123e4567-e89b-12d3-a456-426614174001',
     ngoName: 'Justice Africa',
     totalAmount: 1800,
@@ -162,8 +162,8 @@ export const mockBounties: Bounty[] = [
         amount: 500,
       },
     ],
-    tags: ['Domestic Violence', 'Family Law', 'Protection Order'],
-    impact: 'This case will help protect a mother and her two children from an abusive situation and provide them with legal protection.',
+    tags: ['Domestic Violence', 'Family Law', 'Protection Order', 'Women Empowerment', 'Child Safety'],
+    impact: 'This case will help protect a mother and her two children from an abusive situation and provide them with legal protection, emotional support, and a pathway to independence. By supporting this project, donors are directly contributing to breaking the cycle of violence and empowering survivors to rebuild their lives.',
   },
   {
     id: '123e4567-e89b-12d3-a456-426614174015',

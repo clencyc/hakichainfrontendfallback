@@ -113,7 +113,7 @@ export const LawyerCases = () => {
           id: c.id,
           bounty: {
             ...c.bounties,
-            milestones: c.bounties.milestones.map(m => ({
+            milestones: c.bounties.milestones.map((m: any) => ({
               ...m,
               documents: m.documents || []
             }))
@@ -124,7 +124,118 @@ export const LawyerCases = () => {
           last_activity: new Date().toISOString(),
         }));
 
-        setCases(transformedCases);
+        // --- Inject fake bounties for demo/testing ---
+        const fakeCases: Case[] = [
+          {
+            id: 'fake-1',
+            bounty: {
+              id: 'bounty-fake-1',
+              title: 'Domestic Violence Protection',
+              category: 'Family Law',
+              location: 'Mombasa, Kenya',
+              due_date: '2025-05-15T00:00:00.000Z',
+              total_amount: 1800,
+              status: 'active',
+              milestones: [
+                {
+                  id: 'm1',
+                  title: 'Protection Order Filing',
+                  description: 'File for emergency protection order',
+                  amount: 400,
+                  due_date: '2025-04-20T00:00:00.000Z',
+                  status: 'completed',
+                  proof_required: 'Filed protection order documents',
+                  proof_submitted: {
+                    documentHash: 'xyz123',
+                    timestamp: new Date().toISOString(),
+                    url: '#',
+                  },
+                  documents: [],
+                },
+                {
+                  id: 'm2',
+                  title: 'Court Representation',
+                  description: 'Represent client in protection order hearing',
+                  amount: 500,
+                  due_date: '2025-04-30T00:00:00.000Z',
+                  status: 'pending',
+                  proof_required: 'Court appearance record',
+                  documents: [],
+                },
+                {
+                  id: 'm3',
+                  title: 'Legal Separation Filing',
+                  description: 'Prepare and file legal separation documents',
+                  amount: 600,
+                  due_date: '2025-05-10T00:00:00.000Z',
+                  status: 'pending',
+                  proof_required: 'Filed separation documents',
+                  documents: [],
+                },
+                {
+                  id: 'm4',
+                  title: 'Follow-up and Support',
+                  description: 'Provide legal counseling and follow-up support',
+                  amount: 300,
+                  due_date: '2025-05-15T00:00:00.000Z',
+                  status: 'pending',
+                  proof_required: 'Counseling session notes and action plan',
+                  documents: [],
+                },
+              ],
+            },
+            status: 'active',
+            priority: 'medium',
+            billable_hours: 12,
+            last_activity: new Date().toISOString(),
+          },
+          {
+            id: 'fake-2',
+            bounty: {
+              id: 'bounty-fake-2',
+              title: 'Land Rights Dispute',
+              category: 'Property Law',
+              location: 'Kisumu, Kenya',
+              due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+              total_amount: 2500,
+              status: 'active',
+              milestones: [
+                {
+                  id: 'm1',
+                  title: 'Evidence Gathering',
+                  description: 'Collect all necessary documents',
+                  amount: 1000,
+                  due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+                  status: 'completed',
+                  proof_required: 'Document List',
+                  proof_submitted: {
+                    documentHash: 'def456',
+                    timestamp: new Date().toISOString(),
+                    url: '#',
+                  },
+                  documents: [],
+                },
+                {
+                  id: 'm2',
+                  title: 'Negotiation',
+                  description: 'Negotiate with opposing party',
+                  amount: 1500,
+                  due_date: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString(),
+                  status: 'pending',
+                  proof_required: 'Negotiation Report',
+                  documents: [],
+                },
+              ],
+            },
+            status: 'active',
+            priority: 'low',
+            billable_hours: 5,
+            last_activity: new Date().toISOString(),
+          },
+        ];
+        // --- End fake bounties ---
+
+        setCases([...transformedCases, ...fakeCases]);
       } catch (error) {
         console.error('Error loading cases:', error);
       } finally {
@@ -209,7 +320,7 @@ export const LawyerCases = () => {
           ...c,
           bounty: {
             ...updatedCase.bounties,
-            milestones: updatedCase.bounties.milestones.map(m => ({
+            milestones: updatedCase.bounties.milestones.map((m: any) => ({
               ...m,
               documents: m.documents || []
             }))
