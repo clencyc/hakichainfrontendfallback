@@ -31,6 +31,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
 import { GeneralSettings } from './pages/settings/GeneralSettings';
+import { AIReviewer } from './pages/lawyer/AIReviewer';
 // Placeholder imports for new settings pages
 const PreferencesSettings = () => <div className="p-6">Preferences Settings (Coming soon)</div>;
 const DeleteAccountSettings = () => <div className="p-6">Delete Your Account (Coming soon)</div>;
@@ -139,6 +140,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <LawyerDocuments />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/ai-document-reviewer" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <AIReviewer />
               </ProtectedRoute>
             } 
           />

@@ -21,6 +21,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
+    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
   ];
 
   const isSettings = location.pathname.startsWith('/settings');
@@ -48,8 +49,8 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
             <div className="space-y-1">
               {sidebarLinks.map((link) => {
                 const Icon = link.icon;
+                // Highlight active link for all sidebar links, including AI Document Reviewer
                 const isActive = location.pathname === link.path;
-                
                 return (
                   <Link
                     key={link.path}
