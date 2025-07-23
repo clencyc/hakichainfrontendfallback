@@ -44,6 +44,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const navigate = useNavigate();
 
   const links = getLinksByRole(user?.role || '');
+  const isSettings = location.pathname.startsWith('/settings');
+  const sidebarClass = isSettings ? 'mt-12' : '';
 
   const handleLogout = () => {
     logout();
@@ -57,21 +59,25 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
         className={cn(
           "fixed top-0 left-0 z-40 h-screen transition-transform bg-white border-r border-gray-200",
           "w-64 md:translate-x-0",
-          !isSidebarOpen && "-translate-x-full"
+          !isSidebarOpen && "-translate-x-full",
+          sidebarClass
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <Link to="/" className="flex items-center space-x-2">
-              <Logo />
-            </Link>
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+          {/* Logo */}
+          {!isSettings && (
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <Link to="/" className="flex items-center space-x-2">
+                <Logo />
+              </Link>
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="md:hidden text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          )}
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {links.map((link) => {
@@ -94,20 +100,6 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             })}
           </nav>
 
-          {/* User Profile */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-medium text-primary-600">
-                  {user?.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-sm text-gray-500">{user?.role}</p>
-              </div>
-            </div>
-          </div>
           <div className="absolute bottom-0 left-0 w-full p-4">
             <Link
               to="/settings"
@@ -135,13 +127,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
               <Menu className="w-6 h-6" />
             </button>
             <div className="flex-1" />
-            <button
-              onClick={handleLogout}
-              className="ml-auto flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg border border-gray-200"
-            >
-              <LogOut className="w-5 h-5 mr-2" />
-              Sign Out
-            </button>
+            {/* Sign Out button removed to prevent overlap */}
           </div>
         </header>
 

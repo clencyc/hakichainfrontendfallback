@@ -29,6 +29,11 @@ import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { AuthProvider } from './contexts/AuthContext';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
+import SettingsIndex from './pages/settings';
+import { GeneralSettings } from './pages/settings/GeneralSettings';
+// Placeholder imports for new settings pages
+const PreferencesSettings = () => <div className="p-6">Preferences Settings (Coming soon)</div>;
+const DeleteAccountSettings = () => <div className="p-6">Delete Your Account (Coming soon)</div>;
 
 function App() {
   return (
@@ -198,6 +203,13 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+
+          {/* Settings routes */}
+          <Route path="settings" element={<SettingsIndex />}>
+            <Route index element={<GeneralSettings />} />
+            <Route path="preferences" element={<PreferencesSettings />} />
+            <Route path="delete" element={<DeleteAccountSettings />} />
+          </Route>
         </Route>
       </Routes>
       {/* Legal Chatbot - appears on all pages */}

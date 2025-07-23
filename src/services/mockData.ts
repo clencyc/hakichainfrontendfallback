@@ -114,16 +114,21 @@ export const mockBounties: Bounty[] = [
     dueDate: '2025-05-15T10:00:00Z',
     milestones: [
       {
-        id: '123e4567-e89b-12d3-a456-426614174010',
+        id: 'm1',
         title: 'Protection Order Filing',
         description: 'File for emergency protection order',
         amount: 400,
         dueDate: '2025-04-20T10:00:00Z',
-        status: 'pending',
+        status: 'completed',
         proofRequired: 'Filed protection order documents',
+        proofSubmitted: {
+          documentHash: 'xyz123',
+          timestamp: '2025-04-20T12:00:00Z',
+          url: '#',
+        },
       },
       {
-        id: '123e4567-e89b-12d3-a456-426614174011',
+        id: 'm2',
         title: 'Court Representation',
         description: 'Represent client in protection order hearing',
         amount: 500,
@@ -132,7 +137,7 @@ export const mockBounties: Bounty[] = [
         proofRequired: 'Court appearance record',
       },
       {
-        id: '123e4567-e89b-12d3-a456-426614174012',
+        id: 'm3',
         title: 'Legal Separation Filing',
         description: 'Prepare and file legal separation documents',
         amount: 600,
@@ -141,7 +146,7 @@ export const mockBounties: Bounty[] = [
         proofRequired: 'Filed separation documents',
       },
       {
-        id: '123e4567-e89b-12d3-a456-426614174013',
+        id: 'm4',
         title: 'Follow-up and Support',
         description: 'Provide legal counseling and follow-up support',
         amount: 300,
@@ -152,12 +157,12 @@ export const mockBounties: Bounty[] = [
     ],
     donors: [
       {
-        id: '123e4567-e89b-12d3-a456-426614174002',
+        id: 'donor-1',
         name: 'Sarah Johnson',
         amount: 700,
       },
       {
-        id: '123e4567-e89b-12d3-a456-426614174014',
+        id: 'donor-2',
         name: 'Anonymous Donor',
         amount: 500,
       },
