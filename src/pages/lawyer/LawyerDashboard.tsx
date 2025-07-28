@@ -62,9 +62,40 @@ export const LawyerDashboard = () => {
 
         if (matchesError) throw matchesError;
 
+        // --- Inject fake bounties for demo/testing ---
+        const fakeCases = [
+          {
+            id: 'fake-1',
+            bounty_id: 'bounty-fake-1',
+            bounties: {
+              id: 'bounty-fake-1',
+              title: 'Domestic Violence Protection',
+              category: 'Family Law',
+              location: 'Mombasa, Kenya',
+              due_date: '2025-05-15T00:00:00.000Z',
+              total_amount: 1800,
+            },
+            status: 'active',
+          },
+          {
+            id: 'fake-2',
+            bounty_id: 'bounty-fake-2',
+            bounties: {
+              id: 'bounty-fake-2',
+              title: 'Land Rights Dispute',
+              category: 'Property Law',
+              location: 'Kisumu, Kenya',
+              due_date: '2025-05-20T00:00:00.000Z',
+              total_amount: 2500,
+            },
+            status: 'active',
+          },
+        ];
+        // --- End fake bounties ---
+
         setData(prev => ({
           ...prev,
-          activeCases: cases as any[] || [],
+          activeCases: [...(cases as any[] || []), ...fakeCases],
           matchingBounties: matches as any[] || []
         }));
       } catch (error) {

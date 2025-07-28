@@ -9,12 +9,12 @@ import {
   FileText, 
   Users, 
   BarChart3, 
-  Settings,
-  LogOut,
-  Bell
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
+import { Footer } from './Footer';
+import { Logo } from './Logo';
 
 interface SidebarLink {
   name: string;
@@ -44,6 +44,8 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   const navigate = useNavigate();
 
   const links = getLinksByRole(user?.role || '');
+  const isSettings = location.pathname.startsWith('/settings');
+  const sidebarClass = isSettings ? 'mt-12' : '';
 
   const handleLogout = () => {
     logout();
@@ -51,28 +53,31 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Sidebar */}
       <aside 
         className={cn(
           "fixed top-0 left-0 z-40 h-screen transition-transform bg-white border-r border-gray-200",
           "w-64 md:translate-x-0",
-          !isSidebarOpen && "-translate-x-full"
+          !isSidebarOpen && "-translate-x-full",
+          sidebarClass
         )}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b border-gray-200">
-            <Link to="/" className="flex items-center space-x-2">
-              <GavelIcon className="w-8 h-8 text-primary-500" />
-              <span className="text-xl font-serif font-bold text-primary-500">HakiChain</span>
-            </Link>
-            <button 
-              onClick={() => setIsSidebarOpen(false)}
-              className="md:hidden text-gray-500 hover:text-gray-700"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
+          {/* Logo */}
+          {!isSettings && (
+            <div className="flex items-center justify-between p-4 border-b border-gray-200">
+              <Link to="/" className="flex items-center space-x-2">
+                <Logo />
+              </Link>
+              <button 
+                onClick={() => setIsSidebarOpen(false)}
+                className="md:hidden text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+          )}
 
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {links.map((link) => {
@@ -95,33 +100,21 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             })}
           </nav>
 
-          {/* User Profile */}
-          <div className="p-4 border-t border-gray-200">
-            <div className="flex items-center space-x-3 mb-4">
-              <div className="w-10 h-10 bg-primary-100 rounded-full flex items-center justify-center">
-                <span className="text-lg font-medium text-primary-600">
-                  {user?.name.charAt(0)}
-                </span>
-              </div>
-              <div>
-                <p className="font-medium">{user?.name}</p>
-                <p className="text-sm text-gray-500">{user?.role}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          <div className="absolute bottom-0 left-0 w-full p-4">
+            <Link
+              to="/settings"
+              className="flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100"
             >
-              <LogOut className="w-5 h-5 mr-3" />
-              Sign Out
-            </button>
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.5-3.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z" /></svg>
+              Settings
+            </Link>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
       <div className={cn(
-        "transition-all duration-300",
+        "transition-all duration-300 flex-1 flex flex-col",
         "md:ml-64"
       )}>
         {/* Top Navigation */}
@@ -133,56 +126,13 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             >
               <Menu className="w-6 h-6" />
             </button>
-
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-500 hover:text-gray-700 relative">
-                <Bell className="w-6 h-6" />
-                <span className="absolute top-0 right-0 w-2 h-2 bg-primary-500 rounded-full"></span>
-              </button>
-
-              <div className="relative group">
-                <button className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                    {user?.avatar ? (
-                      <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                    ) : (
-                      <span className="text-sm font-medium text-gray-600">
-                        {user?.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">{user?.name}</span>
-                </button>
-
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="py-1">
-                    <Link
-                      to="/profile"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Profile
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Settings
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <div className="flex-1" />
+            {/* Sign Out button removed to prevent overlap */}
           </div>
         </header>
 
         {/* Page Content */}
-        <main className="pt-16 min-h-screen">
+        <main className="pt-12 min-h-screen pb-32 flex-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
@@ -196,6 +146,7 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
             </motion.div>
           </AnimatePresence>
         </main>
+        <Footer minimal={true} />
       </div>
     </div>
   );

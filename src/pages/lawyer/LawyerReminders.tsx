@@ -11,8 +11,6 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  AlertCircle,
-  Filter,
   Search
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
@@ -42,6 +40,7 @@ export const LawyerReminders = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [lawyerPhone, setLawyerPhone] = useState(''); // Add lawyer phone state
 
   const [formData, setFormData] = useState({
     title: '',
@@ -63,7 +62,6 @@ export const LawyerReminders = () => {
       const { data, error } = await supabase
         .from('lawyer_reminders')
         .select('*')
-        .eq('lawyer_id', user?.id)
         .order('reminder_date', { ascending: true });
 
       if (error) throw error;
@@ -94,11 +92,43 @@ export const LawyerReminders = () => {
           .from('lawyer_reminders')
           .insert({
             ...formData,
-            lawyer_id: user?.id,
             status: 'pending'
           });
 
         if (error) throw error;
+      }
+
+      // Send SMS to both lawyer and client with the message from description
+      await fetch('/api/send-sms-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lawyer_phone: lawyerPhone,
+          client_phone: formData.client_phone,
+          message: formData.description
+        })
+      });
+
+      // After SMS is sent, update the status to 'sent' for the correct reminder
+      if (editingReminder) {
+        // Update the edited reminder
+        await supabase
+          .from('lawyer_reminders')
+          .update({ status: 'sent' })
+          .eq('id', editingReminder.id);
+      } else {
+        // Find the most recent reminder for this client/phone/title (just inserted)
+        const { data: latest, error: fetchError } = await supabase
+          .from('lawyer_reminders')
+          .select('id')
+          .order('created_at', { ascending: false })
+          .limit(1);
+        if (!fetchError && latest && latest.length > 0) {
+          await supabase
+            .from('lawyer_reminders')
+            .update({ status: 'sent' })
+            .eq('id', latest[0].id);
+        }
       }
 
       resetForm();
@@ -302,6 +332,20 @@ export const LawyerReminders = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Lawyer Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={lawyerPhone}
+                      onChange={e => setLawyerPhone(e.target.value)}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="+254..."
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Client Phone
                     </label>
                     <input
@@ -310,6 +354,7 @@ export const LawyerReminders = () => {
                       onChange={(e) => setFormData({...formData, client_phone: e.target.value})}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       placeholder="+254..."
+                      required
                     />
                   </div>
 

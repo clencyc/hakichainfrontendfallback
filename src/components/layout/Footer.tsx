@@ -1,10 +1,23 @@
 import { GavelIcon, Github, Twitter, Linkedin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-export const Footer = () => {
+export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
+  if (minimal) {
+    return (
+      <footer className="w-full bg-transparent text-gray-700 border-t border-transparent py-6 flex flex-col md:flex-row items-center justify-between px-4">
+        <span className="text-sm">@2025 HakiChain. All rights reserved.</span>
+        <div className="flex space-x-6 mt-2 md:mt-0">
+          <Link to="/privacy-policy" className="text-sm hover:underline">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
+          <Link to="/legal-notice" className="text-sm hover:underline">Legal Notice</Link>
+        </div>
+      </footer>
+    );
+  }
+
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-12 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-2 sm:px-6 lg:px-4 ">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
@@ -100,7 +113,7 @@ export const Footer = () => {
           </div>
         </div>
         
-        <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
+        <div className="border-t border-gray-800 mt-8 pt-4 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} HakiChain. All rights reserved.
           </p>

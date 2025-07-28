@@ -5,6 +5,7 @@ import App from './App';
 import { WalletProvider } from './contexts/WalletContext';
 import { ToastProvider } from './components/common/Toaster';
 import './index.css';
+import { BountyDemoDetails } from './pages/BountyDemoDetails';
 
 const queryClient = new QueryClient({
   defaultOptions: {

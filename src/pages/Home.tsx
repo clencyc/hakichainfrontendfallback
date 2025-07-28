@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle, Shield, Scale, Landmark } from 'lucide-react';
+import { Footer } from '../components/layout/Footer';
 
 export const Home = () => {
   return (
@@ -253,6 +254,7 @@ export const Home = () => {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 };
