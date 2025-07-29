@@ -18,10 +18,10 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'Overview', path: '/lawyer-dashboard', icon: Home },
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
     { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
+    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
     { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
-    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
   ];
 
   const isSettings = location.pathname.startsWith('/settings');

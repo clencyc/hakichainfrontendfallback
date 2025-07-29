@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Book, FileText, Code, Settings, ExternalLink } from 'lucide-react';
+import { Search, Book, FileText, Code, Settings, Shield, ExternalLink } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const Documentation = () => {
@@ -13,7 +13,8 @@ export const Documentation = () => {
       items: [
         { title: 'Introduction to HakiChain', link: '/docs/intro' },
         { title: 'Quick Start Guide', link: '/docs/quickstart' },
-        { title: 'Platform Overview', link: '/docs/overview' }
+        { title: 'Platform Overview', link: '/docs/overview' },
+        { title: 'Whitepaper', link: '/legal/whitepaper' }
       ]
     },
     {
@@ -22,7 +23,7 @@ export const Documentation = () => {
       items: [
         { title: 'For NGOs', link: '/docs/ngo-guide' },
         { title: 'For Lawyers', link: '/docs/lawyer-guide' },
-        { title: 'For Donors', link: '/docs/donor-guide' }
+        { title: 'For Donors', link: '/legal/donor-guide' }
       ]
     },
     {
@@ -41,6 +42,17 @@ export const Documentation = () => {
         { title: 'Legal Bounties', link: '/docs/bounties' },
         { title: 'Milestone System', link: '/docs/milestones' },
         { title: 'Lawyer Matching', link: '/docs/matching' }
+      ]
+    },
+    {
+      title: 'Legal & Compliance',
+      icon: Shield,
+      items: [
+        { title: 'Terms of Service', link: '/legal/terms-of-service' },
+        { title: 'Privacy Policy', link: '/legal/privacy-policy' },
+        { title: 'Data Protection Policy', link: '/legal/data-protection' },
+        { title: 'KYC/AML Policy', link: '/legal/kyc-aml' },
+        { title: 'Consumer Protection Policy', link: '/legal/consumer-protection' }
       ]
     }
   ];

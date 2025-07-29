@@ -32,6 +32,28 @@ import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
 import { GeneralSettings } from './pages/settings/GeneralSettings';
 import { AIReviewer } from './pages/lawyer/AIReviewer';
+import { Documentation } from './pages/Documentation';
+import { Whitepaper } from './pages/legal/Whitepaper';
+import { DonorGuide } from './pages/legal/DonorGuide';
+import { DataProtectionPolicy } from './pages/legal/DataProtectionPolicy';
+import { KYCAMLPolicy } from './pages/legal/KYCAMLPolicy';
+import { ConsumerProtectionPolicy } from './pages/legal/ConsumerProtectionPolicy';
+import { TermsOfService } from './pages/legal/TermsOfService';
+import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
+
+// Documentation page imports
+import { Introduction } from './pages/docs/Introduction';
+import { QuickStart } from './pages/docs/QuickStart';
+import { PlatformOverview } from './pages/docs/PlatformOverview';
+import { SmartContracts } from './pages/docs/SmartContracts';
+import { API } from './pages/docs/API';
+import BlockchainIntegration from './pages/docs/BlockchainIntegration';
+import { NGOGuide } from './pages/docs/NGOGuide';
+import { LawyerGuide } from './pages/docs/LawyerGuide';
+import LegalBounties from './pages/docs/LegalBounties';
+import MilestoneSystem from './pages/docs/MilestoneSystem';
+import LawyerMatching from './pages/docs/LawyerMatching';
+
 // Placeholder imports for new settings pages
 const PreferencesSettings = () => <div className="p-6">Preferences Settings (Coming soon)</div>;
 const DeleteAccountSettings = () => <div className="p-6">Delete Your Account (Coming soon)</div>;
@@ -83,6 +105,29 @@ function AppContent() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="waitlist" element={<Waitlist />} />
+          <Route path="documentation" element={<Documentation />} />
+          
+          {/* Documentation Pages */}
+          <Route path="docs/intro" element={<Introduction />} />
+          <Route path="docs/quickstart" element={<QuickStart />} />
+          <Route path="docs/overview" element={<PlatformOverview />} />
+          <Route path="docs/smart-contracts" element={<SmartContracts />} />
+          <Route path="docs/api" element={<API />} />
+          <Route path="docs/blockchain" element={<BlockchainIntegration />} />
+          <Route path="docs/ngo-guide" element={<NGOGuide />} />
+          <Route path="docs/lawyer-guide" element={<LawyerGuide />} />
+          <Route path="docs/bounties" element={<LegalBounties />} />
+          <Route path="docs/milestones" element={<MilestoneSystem />} />
+          <Route path="docs/matching" element={<LawyerMatching />} />
+          
+          {/* Legal and Policy Pages */}
+          <Route path="legal/whitepaper" element={<Whitepaper />} />
+          <Route path="legal/donor-guide" element={<DonorGuide />} />
+          <Route path="legal/data-protection" element={<DataProtectionPolicy />} />
+          <Route path="legal/kyc-aml" element={<KYCAMLPolicy />} />
+          <Route path="legal/consumer-protection" element={<ConsumerProtectionPolicy />} />
+          <Route path="legal/terms-of-service" element={<TermsOfService />} />
+          <Route path="legal/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* Protected routes */}
           <Route 

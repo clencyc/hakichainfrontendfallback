@@ -6,11 +6,11 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
     return (
       <footer className="w-full bg-transparent text-gray-700 border-t border-transparent py-6 flex flex-col md:flex-row items-center justify-between px-4">
         <span className="text-sm">@2025 HakiChain. All rights reserved.</span>
-        <div className="flex space-x-6 mt-2 md:mt-0">
-          <Link to="/privacy-policy" className="text-sm hover:underline">Privacy Policy</Link>
-          <Link to="/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
-          <Link to="/legal-notice" className="text-sm hover:underline">Legal Notice</Link>
-        </div>
+                  <div className="flex space-x-6 mt-2 md:mt-0">
+            <Link to="/legal/privacy-policy" className="text-sm hover:underline">Privacy Policy</Link>
+            <Link to="/legal/terms-of-service" className="text-sm hover:underline">Terms of Service</Link>
+            <Link to="/legal/data-protection" className="text-sm hover:underline">Data Protection</Link>
+          </div>
       </footer>
     );
   }
@@ -118,14 +118,14 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
             &copy; {new Date().getFullYear()} HakiChain. All rights reserved.
           </p>
           <div className="flex space-x-6">
-            <Link to="/privacy-policy" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
+            <Link to="/legal/privacy-policy" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms-of-service" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
+            <Link to="/legal/terms-of-service" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
               Terms of Service
             </Link>
-            <Link to="/legal-notice" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
-              Legal Notice
+            <Link to="/legal/data-protection" className="text-gray-500 text-sm hover:text-primary-400 transition-colors">
+              Data Protection
             </Link>
           </div>
         </div>
