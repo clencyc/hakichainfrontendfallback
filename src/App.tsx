@@ -26,13 +26,16 @@ import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
 import { LegalChatbot } from './components/chat/LegalChatbot';
 import { Navbar } from './components/layout/Navbar';
-import { Footer } from './components/layout/Footer';
 import { AuthProvider } from './contexts/AuthContext';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
 import { GeneralSettings } from './pages/settings/GeneralSettings';
 import { AIReviewer } from './pages/lawyer/AIReviewer';
 import { Documentation } from './pages/Documentation';
+import { FAQ } from './pages/FAQ';
+import { CaseStudies } from './pages/CaseStudies';
+import { Blog } from './pages/Blog';
+import LegalIndex from './pages/legal';
 import { Whitepaper } from './pages/legal/Whitepaper';
 import { DonorGuide } from './pages/legal/DonorGuide';
 import { DataProtectionPolicy } from './pages/legal/DataProtectionPolicy';
@@ -42,6 +45,7 @@ import { TermsOfService } from './pages/legal/TermsOfService';
 import { PrivacyPolicy } from './pages/legal/PrivacyPolicy';
 
 // Documentation page imports
+import DocumentationIndex from './pages/docs';
 import { Introduction } from './pages/docs/Introduction';
 import { QuickStart } from './pages/docs/QuickStart';
 import { PlatformOverview } from './pages/docs/PlatformOverview';
@@ -106,8 +110,12 @@ function AppContent() {
           <Route path="register" element={<Register />} />
           <Route path="waitlist" element={<Waitlist />} />
           <Route path="documentation" element={<Documentation />} />
+          <Route path="faq" element={<FAQ />} />
+          <Route path="case-studies" element={<CaseStudies />} />
+          <Route path="blog" element={<Blog />} />
           
           {/* Documentation Pages */}
+          <Route path="docs" element={<DocumentationIndex />} />
           <Route path="docs/intro" element={<Introduction />} />
           <Route path="docs/quickstart" element={<QuickStart />} />
           <Route path="docs/overview" element={<PlatformOverview />} />
@@ -121,6 +129,7 @@ function AppContent() {
           <Route path="docs/matching" element={<LawyerMatching />} />
           
           {/* Legal and Policy Pages */}
+          <Route path="legal" element={<LegalIndex />} />
           <Route path="legal/whitepaper" element={<Whitepaper />} />
           <Route path="legal/donor-guide" element={<DonorGuide />} />
           <Route path="legal/data-protection" element={<DataProtectionPolicy />} />
