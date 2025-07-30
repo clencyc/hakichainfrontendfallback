@@ -17,7 +17,7 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
 
   return (
     <footer className="bg-gray-900 text-white">
-      <div className="container mx-auto px-4 py-2 sm:px-6 lg:px-4 ">
+      <div className="container mx-auto px-4 py-5 sm:px-6 lg:px-4 ">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
@@ -28,7 +28,7 @@ export const Footer = ({ minimal = false }: { minimal?: boolean }) => {
               Blockchain-powered legal justice platform connecting NGOs, donors, and lawyers for positive social impact.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">
+              <a href="https://x.com/HakiChain" className="text-gray-400 hover:text-primary-400 transition-colors">
                 <Twitter className="w-5 h-5" />
               </a>
               <a href="#" className="text-gray-400 hover:text-primary-400 transition-colors">

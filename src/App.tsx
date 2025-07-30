@@ -8,6 +8,7 @@ import { BountyDetails } from './pages/BountyDetails';
 import { CreateBounty } from './pages/CreateBounty';
 import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
 import { LawyerAI } from './pages/lawyer/LawyerAI';
+import { LawyerESign } from './pages/lawyer/LawyerESign';
 import { LawyerReminders } from './pages/lawyer/LawyerReminders';
 import { LawyerAnalytics } from './pages/lawyer/LawyerAnalytics';
 import { LawyerCases } from './pages/lawyer/LawyerCases';
@@ -162,6 +163,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <LawyerAI />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/e-sign" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerESign />
               </ProtectedRoute>
             } 
           />
