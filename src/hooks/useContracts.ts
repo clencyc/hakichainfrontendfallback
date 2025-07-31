@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ethers } from 'ethers';
 import { getContracts } from '../lib/contracts';
 
 export const useContracts = () => {
@@ -22,5 +23,22 @@ export const useContracts = () => {
     loadContracts();
   }, []);
 
-  return { contracts, isLoading, error };
+  const getContract = useCallback((contractName: string, signer?: ethers.Signer) => {
+    if (!contracts) {
+      throw new Error('Contracts not loaded');
+    }
+    
+    const contract = contracts[contractName];
+    if (!contract) {
+      throw new Error(`Contract ${contractName} not found`);
+    }
+    
+    if (signer) {
+      return contract.connect(signer);
+    }
+    
+    return contract;
+  }, [contracts]);
+
+  return { contracts, isLoading, error, getContract };
 };

@@ -259,12 +259,55 @@ export const LawyerAI = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Jurisdiction
                     </label>
-                    <input
-                      type="text"
-                      value={caseDetails.jurisdiction}
-                      onChange={(e) => setCaseDetails({...caseDetails, jurisdiction: e.target.value})}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="text"
+                        value={caseDetails.jurisdiction}
+                        onChange={(e) => setCaseDetails({ ...caseDetails, jurisdiction: e.target.value })}
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                        placeholder="Enter jurisdiction (e.g., Nairobi, Kenya)"
+                      />
+                      
+                      <div>
+                        <label className="block text-xs text-gray-500 mt-1">
+                          Or select one or multiple jurisdictions:
+                        </label>
+                        <div className="grid grid-cols-2 gap-2 mt-1">
+                          {[
+                            "Kenya",
+                            "Uganda",
+                            "Nigeria",
+                            "Ghana"
+                          ].map(j => (
+                            <label key={j} className="flex items-center space-x-2 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={caseDetails.jurisdictionList?.includes(j) || false}
+                                onChange={e => {
+                                  const list = caseDetails.jurisdictionList || [];
+                                  if (e.target.checked) {
+                                    setCaseDetails({
+                                      ...caseDetails,
+                                      jurisdictionList: [...list, j],
+                                      jurisdiction: [...list, j].join(", ")
+                                    });
+                                  } else {
+                                    const newList = list.filter(item => item !== j);
+                                    setCaseDetails({
+                                      ...caseDetails,
+                                      jurisdictionList: newList,
+                                      jurisdiction: newList.join(", ")
+                                    });
+                                  }
+                                }}
+                                className="accent-purple-500"
+                              />
+                              <span>{j}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

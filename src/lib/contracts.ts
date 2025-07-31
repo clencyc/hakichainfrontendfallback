@@ -4,6 +4,7 @@ import LegalBountyABI from '../contracts/LegalBounty.json';
 import DocumentRegistryABI from '../contracts/DocumentRegistry.json';
 import MilestoneEscrowABI from '../contracts/MilestoneEscrow.json';
 import ReputationSystemABI from '../contracts/ReputationSystem.json';
+import ESignatureRegistryABI from '../contracts/ESignatureRegistry.json';
 
 // Contract addresses (replace with actual deployed addresses)
 const HAKI_TOKEN_ADDRESS = '0x...';
@@ -11,6 +12,7 @@ const LEGAL_BOUNTY_ADDRESS = '0x...';
 const DOCUMENT_REGISTRY_ADDRESS = '0x...';
 const MILESTONE_ESCROW_ADDRESS = '0x...';
 const REPUTATION_SYSTEM_ADDRESS = '0x...';
+const ESIGNATURE_REGISTRY_ADDRESS = '0x...';
 
 export const getContracts = async () => {
   if (!window.ethereum) {
@@ -50,12 +52,19 @@ export const getContracts = async () => {
     signer
   );
 
+  const eSignatureRegistry = new ethers.Contract(
+    ESIGNATURE_REGISTRY_ADDRESS,
+    ESignatureRegistryABI,
+    signer
+  );
+
   return {
     hakiToken,
     legalBounty,
     documentRegistry,
     milestoneEscrow,
     reputationSystem,
+    eSignatureRegistry,
     signer
   };
 };

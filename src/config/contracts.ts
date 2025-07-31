@@ -6,6 +6,7 @@ import LegalBountyABI from '../../artifacts/contracts/LegalBounty.sol/LegalBount
 import DocumentRegistryABI from '../../artifacts/contracts/DocumentRegistry.sol/DocumentRegistry.json';
 import MilestoneEscrowABI from '../../artifacts/contracts/MilestoneEscrow.sol/MilestoneEscrow.json';
 import ReputationSystemABI from '../../artifacts/contracts/ReputationSystem.sol/ReputationSystem.json';
+import ESignatureRegistryABI from '../../artifacts/contracts/ESignatureRegistry.sol/ESignatureRegistry.json';
 
 // Network configuration
 export const NETWORK_CONFIG = {
@@ -37,7 +38,8 @@ export const CONTRACT_ADDRESSES = {
   legalBounty: process.env.VITE_LEGAL_BOUNTY_ADDRESS || '',
   documentRegistry: process.env.VITE_DOCUMENT_REGISTRY_ADDRESS || '',
   milestoneEscrow: process.env.VITE_MILESTONE_ESCROW_ADDRESS || '',
-  reputationSystem: process.env.VITE_REPUTATION_SYSTEM_ADDRESS || ''
+  reputationSystem: process.env.VITE_REPUTATION_SYSTEM_ADDRESS || '',
+  eSignatureRegistry: process.env.VITE_ESIGNATURE_REGISTRY_ADDRESS || ''
 };
 
 // Contract interfaces
@@ -65,6 +67,11 @@ export const getContractInterface = (provider: ethers.Provider) => ({
   reputationSystem: new ethers.Contract(
     CONTRACT_ADDRESSES.reputationSystem,
     ReputationSystemABI.abi,
+    provider
+  ),
+  eSignatureRegistry: new ethers.Contract(
+    CONTRACT_ADDRESSES.eSignatureRegistry,
+    ESignatureRegistryABI.abi,
     provider
   )
 });

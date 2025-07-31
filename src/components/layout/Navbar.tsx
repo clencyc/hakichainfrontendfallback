@@ -25,6 +25,7 @@ export const Navbar = ({ scrolled }: NavbarProps) => {
   const navLinks = [
     { name: 'Home', path: '/' },
     { name: 'Explore Bounties', path: '/bounties' },
+    { name: 'Documentation', path: '/documentation' },
     ...(isAuthenticated && user?.role === 'ngo' 
       ? [{ name: 'Create Bounty', path: '/create-bounty' }] 
       : []),

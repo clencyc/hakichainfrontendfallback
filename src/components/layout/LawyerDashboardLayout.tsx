@@ -20,6 +20,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'Hakilens', path: '/lawyer/hakilens', icon: BookOpen },
     { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
     { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
+    { name: 'E-Signature', path: '/lawyer/e-sign', icon: FileText },
     { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
