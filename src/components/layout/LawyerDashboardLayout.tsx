@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GavelIcon, BarChart3, FileText, Home, LogOut, Brain, Bell } from 'lucide-react';
+import { GavelIcon, BarChart3, FileText, Home, LogOut, Brain, Bell, BookOpen } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { Footer } from './Footer';
@@ -17,11 +17,12 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   const sidebarLinks = [
     { name: 'Overview', path: '/lawyer-dashboard', icon: Home },
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
+    { name: 'Hakilens', path: '/lawyer/hakilens', icon: BookOpen },
     { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
+    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
     { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
-    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
   ];
 
   const isSettings = location.pathname.startsWith('/settings');
