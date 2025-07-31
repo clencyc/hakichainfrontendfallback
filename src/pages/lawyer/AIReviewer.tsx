@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/Page/AnnotationLayer.css';
+import 'react-pdf/dist/Page/TextLayer.css';
 import {
   Upload, 
   FileText, 
   Loader2, 
-  CheckCircle, 
   AlertTriangle,
   Send,
   Bot,
@@ -14,20 +15,20 @@ import {
   MessageCircle,
   Maximize2,
   Minimize2,
-  Download,
-  Copy,
   X,
   Sparkles,
   Eye,
-  EyeOff,
   RotateCw,
   ZoomIn,
   ZoomOut
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 
-// Set up PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Set up PDF.js worker - Updated configuration for modern versions
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.js',
+  import.meta.url,
+).toString();
 
 interface ChatMessage {
   id: string;
@@ -44,8 +45,6 @@ interface DocumentError {
 export const AIReviewer = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [reviewing, setReviewing] = useState(false);
-  const [review, setReview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [documentError, setDocumentError] = useState<DocumentError | null>(null);
   const [numPages, setNumPages] = useState<number>(0);
@@ -63,7 +62,6 @@ export const AIReviewer = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [isDocumentLoaded, setIsDocumentLoaded] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -77,8 +75,6 @@ export const AIReviewer = () => {
     if (file) {
       const url = URL.createObjectURL(file);
       setFileUrl(url);
-      setIsDocumentLoaded(false);
-      setReview(null);
       setError(null);
       setMessages([
         {
@@ -140,7 +136,6 @@ export const AIReviewer = () => {
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
-    setIsDocumentLoaded(true);
     setDocumentError(null);
   };
 
@@ -152,7 +147,6 @@ export const AIReviewer = () => {
         ? 'PDF viewer is not available. Please try refreshing the page or use a different browser.'
         : error.message
     });
-    setIsDocumentLoaded(false);
   };
 
   // Fallback for PDF worker issues
@@ -218,7 +212,6 @@ export const AIReviewer = () => {
       'default': 'I\'m ready to help you edit your document. I can:\n\n• **Add new clauses** or sections\n• **Modify existing content**\n• **Improve language** and clarity\n• **Ensure legal compliance**\n\nWhat would you like to edit?'
     };
 
-    const responses = mode === 'chat' ? chatResponses : editResponses;
     const lowerInput = userInput.toLowerCase();
     
     if (mode === 'chat') {
