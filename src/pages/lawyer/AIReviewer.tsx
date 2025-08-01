@@ -22,9 +22,17 @@ import {
   EyeOff,
   RotateCw,
   ZoomIn,
-  ZoomOut
+  ZoomOut,
+  FileSignature,
+  UserPlus,
+  PenTool,
+  Type,
+  Image as ImageIcon,
+  Hash,
+  Database
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
+import { useESignature } from '../../hooks/useESignature';
 
 // Set up PDF.js worker
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -41,6 +49,17 @@ interface DocumentError {
   details?: string;
 }
 
+interface Signer {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'pending' | 'signed' | 'declined';
+  signature?: string;
+  signedAt?: Date;
+  position: { x: number; y: number };
+}
+
 export const AIReviewer = () => {
   const [file, setFile] = useState<File | null>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -52,12 +71,12 @@ export const AIReviewer = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [scale, setScale] = useState<number>(1.0);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [chatMode, setChatMode] = useState<'chat' | 'edit'>('chat');
+  const [chatMode, setChatMode] = useState<'chat' | 'edit' | 'e-sign'>('chat');
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "👋 Hi! I'm your AI document assistant. I can help you review, analyze, and edit your legal documents. Upload a document to get started!",
+      content: "👋 Hi! I'm your AI document assistant. I can help you review, analyze, edit, and sign your legal documents. Upload a document to get started!",
       timestamp: new Date()
     }
   ]);
@@ -65,9 +84,34 @@ export const AIReviewer = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [isDocumentLoaded, setIsDocumentLoaded] = useState(false);
   
+  // E-signature state
+  const [signers, setSigners] = useState<Signer[]>([]);
+  const [showSignerForm, setShowSignerForm] = useState(false);
+  const [newSigner, setNewSigner] = useState({ name: '', email: '', role: '' });
+  const [signatureMode, setSignatureMode] = useState<'draw' | 'type' | 'upload'>('draw');
+  const [signatureData, setSignatureData] = useState('');
+  const [typedSignature, setTypedSignature] = useState('');
+  const [uploadedSignature, setUploadedSignature] = useState<File | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawingContext, setDrawingContext] = useState<CanvasRenderingContext2D | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
+  // E-signature hook
+  const { 
+    registerDocument, 
+    requestSignature, 
+    signDocument, 
+    createSignature, 
+    generateDocumentHash,
+    isLoading: isESignLoading,
+    error: eSignError 
+  } = useESignature();
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const signatureCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     scrollToBottom();
@@ -244,10 +288,123 @@ export const AIReviewer = () => {
       {
         id: '1',
         role: 'assistant',
-        content: "👋 Hi! I'm your AI document assistant. I can help you review, analyze, and edit your legal documents. Upload a document to get started!",
+        content: file 
+          ? `📄 I've loaded "${file.name}". I can help you review, analyze, edit, or sign this document. What would you like me to help you with?`
+          : "👋 Hi! I'm your AI document assistant. I can help you review, analyze, edit, and sign your legal documents. Upload a document to get started!",
         timestamp: new Date()
       }
     ]);
+  };
+
+  // E-signature methods
+  useEffect(() => {
+    if (signatureCanvasRef.current) {
+      const canvas = signatureCanvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.strokeStyle = '#000';
+        ctx.lineWidth = 2;
+        ctx.lineCap = 'round';
+        setDrawingContext(ctx);
+      }
+    }
+  }, []);
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawingMode || !drawingContext) return;
+    
+    setIsDrawing(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    drawingContext.beginPath();
+    drawingContext.moveTo(x, y);
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing || !drawingContext) return;
+    
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    drawingContext.lineTo(x, y);
+    drawingContext.stroke();
+  };
+
+  const stopDrawing = () => {
+    setIsDrawing(false);
+  };
+
+  const clearSignature = () => {
+    if (drawingContext && signatureCanvasRef.current) {
+      drawingContext.clearRect(0, 0, signatureCanvasRef.current.width, signatureCanvasRef.current.height);
+    }
+    setTypedSignature('');
+    setUploadedSignature(null);
+  };
+
+  const saveSignature = () => {
+    if (signatureMode === 'draw' && signatureCanvasRef.current) {
+      setSignatureData(signatureCanvasRef.current.toDataURL());
+    } else if (signatureMode === 'type') {
+      setSignatureData(typedSignature);
+    } else if (signatureMode === 'upload' && uploadedSignature) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setSignatureData(e.target?.result as string);
+      };
+      reader.readAsDataURL(uploadedSignature);
+    }
+  };
+
+  const addSigner = () => {
+    if (newSigner.name && newSigner.email) {
+      const signer: Signer = {
+        id: Date.now().toString(),
+        name: newSigner.name,
+        email: newSigner.email,
+        role: newSigner.role || 'Signer',
+        status: 'pending',
+        position: { x: 100, y: 100 }
+      };
+      
+      setSigners([...signers, signer]);
+      setNewSigner({ name: '', email: '', role: '' });
+      setShowSignerForm(false);
+    }
+  };
+
+  const sendForSigning = async () => {
+    if (!file || signers.length === 0) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Generate document hash
+      const documentHash = generateDocumentHash(file.name, {
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
+      // Register document on blockchain
+      await registerDocument(documentHash, file.name);
+      
+      // Request signatures from all signers
+      for (const signer of signers) {
+        await requestSignature(documentHash, signer.email, signer.name, signer.email);
+      }
+      
+      // Update signers status
+      setSigners(signers.map(s => ({ ...s, status: 'pending' as const })));
+      
+    } catch (err) {
+      console.error('Error sending for signing:', err);
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const formatMessage = (content: string) => {
@@ -512,117 +669,295 @@ export const AIReviewer = () => {
                   <Edit3 className="w-4 h-4 inline mr-2" />
                   Edit
                 </button>
-              </div>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <motion.div
-                  key={message.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`flex items-start space-x-3 max-w-[85%] ${
-                    message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-                  }`}>
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.role === 'user' 
-                        ? 'bg-blue-500' 
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                    }`}>
-                      {message.role === 'user' ? (
-                        <User className="w-4 h-4 text-white" />
-                      ) : (
-                        <Bot className="w-4 h-4 text-white" />
-                      )}
-                    </div>
-                    
-                    <div className={`px-4 py-3 rounded-2xl ${
-                      message.role === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      <div 
-                        className="text-sm leading-relaxed"
-                        dangerouslySetInnerHTML={{ 
-                          __html: formatMessage(message.content) 
-                        }}
-                      />
-                      <p className={`text-xs mt-2 ${
-                        message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString([], { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {isTyping && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex justify-start"
-                >
-                  <div className="flex items-start space-x-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="px-4 py-3 bg-gray-100 rounded-2xl">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area */}
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex items-end space-x-3">
-                <div className="flex-1 relative">
-                  <input
-                    ref={inputRef}
-                    type="text"
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    placeholder={chatMode === 'chat' ? "Ask me about your document..." : "Tell me what to edit..."}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
-                    disabled={isTyping}
-                  />
-                </div>
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isTyping}
-                  className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
-                  title="Send message"
-                  aria-label="Send message"
+                  onClick={() => setChatMode('e-sign')}
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                    chatMode === 'e-sign'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  <Send className="w-4 h-4" />
+                  <FileSignature className="w-4 h-4 inline mr-2" />
+                  E-Sign
                 </button>
               </div>
-              
-              <div className="flex items-center mt-2 text-xs text-gray-500">
-                <Sparkles className="w-3 h-3 mr-1 flex-shrink-0" />
-                <span>
-                  {chatMode === 'chat' 
-                    ? 'Ask me to review, analyze, or explain your document' 
-                    : 'Tell me what changes you want to make to your document'
-                  }
-                </span>
-              </div>
             </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {chatMode === 'e-sign' ? (
+                // E-Sign Interface
+                <div className="space-y-6">
+                  {!file ? (
+                    <div className="text-center py-12">
+                      <FileSignature className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Document Selected</h3>
+                      <p className="text-gray-500">Upload a document to start the e-signature process</p>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Signers Management */}
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="font-medium text-gray-900">Signers</h3>
+                          <button
+                            onClick={() => setShowSignerForm(true)}
+                            className="flex items-center space-x-1 px-3 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                            <span>Add Signer</span>
+                          </button>
+                        </div>
+
+                        <div className="space-y-3">
+                          {signers.map((signer) => (
+                            <div key={signer.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div>
+                                <p className="font-medium text-gray-900">{signer.name}</p>
+                                <p className="text-sm text-gray-500">{signer.email} • {signer.role}</p>
+                              </div>
+                              <div className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                signer.status === 'signed' ? 'bg-green-100 text-green-800' :
+                                signer.status === 'declined' ? 'bg-red-100 text-red-800' :
+                                'bg-yellow-100 text-yellow-800'
+                              }`}>
+                                {signer.status}
+                              </div>
+                            </div>
+                          ))}
+                          
+                          {signers.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                              <UserPlus className="w-8 h-8 mx-auto mb-2" />
+                              <p>No signers added yet</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Signature Tools */}
+                      <div>
+                        <h3 className="font-medium text-gray-900 mb-4">Signature Tools</h3>
+                        
+                        <div className="grid grid-cols-3 gap-4 mb-4">
+                          <button
+                            onClick={() => setSignatureMode('draw')}
+                            className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                              signatureMode === 'draw'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <PenTool className="w-5 h-5 mx-auto mb-1" />
+                            Draw
+                          </button>
+                          <button
+                            onClick={() => setSignatureMode('type')}
+                            className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                              signatureMode === 'type'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <Type className="w-5 h-5 mx-auto mb-1" />
+                            Type
+                          </button>
+                          <button
+                            onClick={() => setSignatureMode('upload')}
+                            className={`p-3 rounded-lg border text-sm font-medium transition-colors ${
+                              signatureMode === 'upload'
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <ImageIcon className="w-5 h-5 mx-auto mb-1" />
+                            Upload
+                          </button>
+                        </div>
+
+                        {signatureMode === 'draw' && (
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-4">
+                              <span className="text-sm font-medium">Draw your signature</span>
+                              <button
+                                onClick={clearSignature}
+                                className="text-sm text-red-500 hover:text-red-700"
+                              >
+                                Clear
+                              </button>
+                            </div>
+                            <canvas
+                              ref={signatureCanvasRef}
+                              width={400}
+                              height={200}
+                              className="border border-gray-300 rounded-lg cursor-crosshair w-full"
+                              onMouseDown={startDrawing}
+                              onMouseMove={draw}
+                              onMouseUp={stopDrawing}
+                              onMouseLeave={stopDrawing}
+                              title="Signature drawing canvas"
+                              aria-label="Signature drawing area"
+                            />
+                          </div>
+                        )}
+
+                        {signatureMode === 'type' && (
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <input
+                              type="text"
+                              value={typedSignature}
+                              onChange={(e) => setTypedSignature(e.target.value)}
+                              placeholder="Type your signature"
+                              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            />
+                          </div>
+                        )}
+
+                        {signatureMode === 'upload' && (
+                          <div className="border border-gray-200 rounded-lg p-4">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => setUploadedSignature(e.target.files?.[0] || null)}
+                              className="w-full p-3 border border-gray-300 rounded-lg"
+                              title="Upload signature image"
+                              aria-label="Upload signature image file"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-4">
+                        <button
+                          onClick={sendForSigning}
+                          disabled={signers.length === 0 || isProcessing}
+                          className="flex items-center space-x-2 px-6 py-3 bg-blue-500 text-white rounded-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-600"
+                        >
+                          {isProcessing ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                          ) : (
+                            <FileSignature className="w-4 h-4" />
+                          )}
+                          <span>{isProcessing ? 'Processing...' : 'Send for Signing'}</span>
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ) : (
+                // Chat/Edit Interface
+                <div className="space-y-4">
+                  {messages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`flex items-start space-x-3 max-w-[85%] ${
+                        message.role === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+                      }`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          message.role === 'user' 
+                            ? 'bg-blue-500' 
+                            : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                        }`}>
+                          {message.role === 'user' ? (
+                            <User className="w-4 h-4 text-white" />
+                          ) : (
+                            <Bot className="w-4 h-4 text-white" />
+                          )}
+                        </div>
+                        
+                        <div className={`px-4 py-3 rounded-2xl ${
+                          message.role === 'user'
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          <div 
+                            className="text-sm leading-relaxed"
+                            dangerouslySetInnerHTML={{ 
+                              __html: formatMessage(message.content) 
+                            }}
+                          />
+                          <p className={`text-xs mt-2 ${
+                            message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
+                          }`}>
+                            {message.timestamp.toLocaleTimeString([], { 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+
+                  {isTyping && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex justify-start"
+                    >
+                      <div className="flex items-start space-x-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+                          <Bot className="w-4 h-4 text-white" />
+                        </div>
+                        <div className="px-4 py-3 bg-gray-100 rounded-2xl">
+                          <div className="flex space-x-1">
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                  
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </div>
+
+            {/* Input Area - Hidden in E-sign mode */}
+            {chatMode !== 'e-sign' && (
+              <div className="p-4 border-t border-gray-200">
+                <div className="flex items-end space-x-3">
+                  <div className="flex-1 relative">
+                    <input
+                      ref={inputRef}
+                      type="text"
+                      value={inputMessage}
+                      onChange={(e) => setInputMessage(e.target.value)}
+                      onKeyPress={handleKeyPress}
+                      placeholder={chatMode === 'chat' ? "Ask me about your document..." : "Tell me what to edit..."}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                      disabled={isTyping}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!inputMessage.trim() || isTyping}
+                    className="p-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+                    title="Send message"
+                    aria-label="Send message"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+                
+                <div className="flex items-center mt-2 text-xs text-gray-500">
+                  <Sparkles className="w-3 h-3 mr-1 flex-shrink-0" />
+                  <span>
+                    {chatMode === 'chat' 
+                      ? 'Ask me to review, analyze, or explain your document' 
+                      : 'Tell me what changes you want to make to your document'
+                    }
+                  </span>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
 
@@ -636,6 +971,78 @@ export const AIReviewer = () => {
             <AlertTriangle className="w-5 h-5 text-red-500 mt-1" />
             <span className="text-red-900">{error}</span>
           </motion.div>
+        )}
+
+        {/* Add Signer Modal */}
+        {showSignerForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-2xl p-6 w-full max-w-md"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-900">Add Signer</h3>
+                <button
+                  onClick={() => setShowSignerForm(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                  title="Close modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <input
+                    type="text"
+                    value={newSigner.name}
+                    onChange={(e) => setNewSigner({...newSigner, name: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter signer name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newSigner.email}
+                    onChange={(e) => setNewSigner({...newSigner, email: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Enter signer email"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                  <input
+                    type="text"
+                    value={newSigner.role}
+                    onChange={(e) => setNewSigner({...newSigner, role: e.target.value})}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="e.g., Client, Witness, Attorney"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-3 mt-6">
+                <button
+                  onClick={() => setShowSignerForm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={addSigner}
+                  className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Add Signer
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </div>
     </LawyerDashboardLayout>
