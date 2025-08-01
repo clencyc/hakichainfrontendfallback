@@ -13,6 +13,8 @@ import { LawyerReminders } from './pages/lawyer/LawyerReminders';
 import { LawyerAnalytics } from './pages/lawyer/LawyerAnalytics';
 import { LawyerCases } from './pages/lawyer/LawyerCases';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
+// import { LawyerESign } from './pages/lawyer/LawyerESign';
+import { Hakilens } from './pages/lawyer/Hakilens';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
@@ -206,11 +208,27 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
+          {/* <Route 
+            path="lawyer/e-sign" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerESign />
+              </ProtectedRoute>
+            } 
+          /> */}
           <Route 
             path="lawyer/ai-document-reviewer" 
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <AIReviewer />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/hakilens" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <Hakilens />
               </ProtectedRoute>
             } 
           />
