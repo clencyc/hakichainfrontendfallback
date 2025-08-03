@@ -1,5 +1,5 @@
 import { BrowserRouter } from 'react-router-dom';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Layout } from './components/layout/Layout';
 import { Home } from './pages/Home';
@@ -9,7 +9,7 @@ import { CreateBounty } from './pages/CreateBounty';
 import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
 import { LawyerAI } from './pages/lawyer/LawyerAI';
 import { LawyerESign } from './pages/lawyer/LawyerESign';
-import { LawyerReminders } from './pages/lawyer/LawyerReminders';
+import { LawyerRemindersKanban } from './pages/lawyer/LawyerRemindersKanban';
 import { LawyerAnalytics } from './pages/lawyer/LawyerAnalytics';
 import { LawyerCases } from './pages/lawyer/LawyerCases';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
@@ -178,9 +178,13 @@ function AppContent() {
           />
           <Route 
             path="lawyer/reminders" 
+            element={<Navigate to="/lawyer/reminders-kanban" replace />}
+          />
+          <Route 
+            path="lawyer/reminders-kanban" 
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
-                <LawyerReminders />
+                <LawyerRemindersKanban />
               </ProtectedRoute>
             } 
           />

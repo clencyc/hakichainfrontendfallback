@@ -21,7 +21,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
     { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
     { name: 'E-Signature', path: '/lawyer/e-sign', icon: FileText },
-    { name: 'Reminders', path: '/lawyer/reminders', icon: Bell },
+    { name: 'Smart Reminders', path: '/lawyer/reminders-kanban', icon: Bell },
     { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
     { name: 'Documents', path: '/lawyer/documents', icon: FileText },
   ];
@@ -40,9 +40,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
           {/* Logo */}
           {!isSettings && (
             <div className="h-16 flex items-center px-6 border-b border-gray-200">
-              <Link to="/" className="flex items-center space-x-3">
-                <Logo />
-              </Link>
+              <Logo />
             </div>
           )}
 

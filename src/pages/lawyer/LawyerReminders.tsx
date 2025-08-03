@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
   Plus,
@@ -11,7 +11,15 @@ import {
   Edit,
   Trash2,
   CheckCircle,
-  Search
+  Search,
+  ArrowRight,
+  Brain,
+  Lightbulb,
+  AlertTriangle,
+  MoreVertical,
+  Filter,
+  Sparkles,
+  GripVertical
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { useAuth } from '../../hooks/useAuth';
@@ -27,8 +35,31 @@ interface Reminder {
   reminder_date: string;
   reminder_time: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'sent' | 'completed';
+  status: 'pending' | 'in_progress' | 'sent' | 'completed';
   created_at: string;
+  case_id?: string;
+  reminder_type?: 'court_date' | 'deadline' | 'meeting' | 'follow_up' | 'document_review';
+}
+
+interface SmartSuggestion {
+  id: string;
+  type: 'court_deadline' | 'follow_up' | 'document_review' | 'meeting_prep';
+  title: string;
+  description: string;
+  suggested_date: string;
+  suggested_time: string;
+  priority: 'low' | 'medium' | 'high';
+  client_name: string;
+  case_context: string;
+  confidence: number;
+}
+
+interface KanbanColumn {
+  id: 'pending' | 'in_progress' | 'sent' | 'completed';
+  title: string;
+  color: string;
+  bgColor: string;
+  count: number;
 }
 
 export const LawyerReminders = () => {
