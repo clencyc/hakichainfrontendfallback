@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Upload, Download, Trash2, Filter, FileText, File, Image, FileArchive, AlertCircle } from 'lucide-react';
+import { Search, Upload, Download, Trash2, Filter, FileText, File, Image, FileArchive, FolderOpen, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
@@ -144,8 +144,15 @@ export const LawyerDocuments = () => {
     <LawyerDashboardLayout>
       <div className="container mx-auto mt-20 px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-serif font-bold text-gray-900">Document Management</h1>
-          <p className="text-lg text-gray-600">Manage your case files and legal documents</p>
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center">
+              <FolderOpen className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-serif font-bold text-gray-900">Document Management</h1>
+              <p className="text-lg text-gray-600">Manage your case files and legal documents</p>
+            </div>
+          </div>
         </div>
 
         <div className="mb-8 flex flex-col md:flex-row gap-4">

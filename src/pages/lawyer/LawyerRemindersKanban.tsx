@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell,
@@ -31,7 +31,7 @@ interface Reminder {
   reminder_date: string;
   reminder_time: string;
   priority: 'low' | 'medium' | 'high';
-  status: 'pending' | 'in_progress' | 'sent' | 'completed';
+  status: 'pending' | 'sent' | 'completed';
   created_at: string;
   case_id?: string;
   reminder_type?: 'court_date' | 'deadline' | 'meeting' | 'follow_up' | 'document_review';
@@ -51,7 +51,7 @@ interface SmartSuggestion {
 }
 
 interface KanbanColumn {
-  id: 'pending' | 'in_progress' | 'sent' | 'completed';
+  id: 'pending' | 'sent' | 'completed';
   title: string;
   color: string;
   bgColor: string;
@@ -88,30 +88,23 @@ export const LawyerRemindersKanban = () => {
   const kanbanColumns: KanbanColumn[] = [
     { 
       id: 'pending', 
-      title: 'Pending', 
-      color: 'text-orange-600', 
-      bgColor: 'bg-orange-50 border-orange-200',
-      count: reminders.filter(r => r.status === 'pending').length
-    },
-    { 
-      id: 'in_progress', 
-      title: 'In Progress', 
+      title: 'Scheduled', 
       color: 'text-blue-600', 
       bgColor: 'bg-blue-50 border-blue-200',
-      count: reminders.filter(r => r.status === 'in_progress').length
+      count: reminders.filter(r => r.status === 'pending').length
     },
     { 
       id: 'sent', 
       title: 'Sent', 
-      color: 'text-purple-600', 
-      bgColor: 'bg-purple-50 border-purple-200',
+      color: 'text-green-600', 
+      bgColor: 'bg-green-50 border-green-200',
       count: reminders.filter(r => r.status === 'sent').length
     },
     { 
       id: 'completed', 
-      title: 'Completed', 
-      color: 'text-green-600', 
-      bgColor: 'bg-green-50 border-green-200',
+      title: 'History', 
+      color: 'text-gray-600', 
+      bgColor: 'bg-gray-50 border-gray-200',
       count: reminders.filter(r => r.status === 'completed').length
     }
   ];
@@ -554,7 +547,7 @@ export const LawyerRemindersKanban = () => {
                 <Bell className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-serif font-bold text-gray-900">Smart Reminders</h1>
+                <h1 className="text-3xl font-serif font-bold text-gray-900">HakiReminders</h1>
                 <p className="text-lg text-gray-600">AI-powered reminder management with Kanban workflow</p>
               </div>
             </div>

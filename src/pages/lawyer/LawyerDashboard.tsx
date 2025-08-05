@@ -2,14 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
-  BarChart3, 
   DollarSign, 
   FileText, 
-  Users, 
-  Clock, 
   CheckCircle,
   ArrowRight,
-  MapPin,
   Calendar,
   GavelIcon,
   Award,
@@ -21,7 +17,7 @@ import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLa
 
 export const LawyerDashboard = () => {
   const { user } = useAuth();
-  const [data, setData] = useState({
+  const [data, setData] = useState<any>({
     activeCases: [],
     matchingBounties: [],
     totalEarnings: 15900,
@@ -32,7 +28,43 @@ export const LawyerDashboard = () => {
       { id: 2, status: 'pending', bountyTitle: 'Environmental Justice', ngo: 'EcoRights Kenya' }
     ]
   });
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Helper functions for table formatting
+  const getPriorityColor = (priority?: string) => {
+    switch (priority) {
+      case 'critical': return 'bg-red-100 text-red-800';
+      case 'high': return 'bg-orange-100 text-orange-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getDaysUntilDue = (dueDate: string) => {
+    const today = new Date();
+    const due = new Date(dueDate);
+    const diffTime = due.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const formatDueDate = (dueDate: string) => {
+    const date = new Date(dueDate);
+    const formattedDate = date.toLocaleDateString('en-US', { 
+      month: 'numeric', 
+      day: 'numeric', 
+      year: '2-digit' 
+    });
+    const daysLeft = getDaysUntilDue(dueDate);
+    
+    if (daysLeft < 0) {
+      return `${formattedDate} (${Math.abs(daysLeft)} days overdue)`;
+    } else if (daysLeft === 0) {
+      return `${formattedDate} (Due today)`;
+    } else {
+      return `${formattedDate} (${daysLeft} days left)`;
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -67,41 +99,61 @@ export const LawyerDashboard = () => {
           {
             id: 'fake-1',
             bounty_id: 'bounty-fake-1',
+            status: 'active',
+            priority: 'high',
+            progress: 75,
+            estimated_hours: 60,
             bounties: {
               id: 'bounty-fake-1',
               title: 'Domestic Violence Protection',
               category: 'Family Law',
               location: 'Mombasa, Kenya',
-              due_date: '2025-05-15T00:00:00.000Z',
+              due_date: '2025-02-28T00:00:00.000Z',
               total_amount: 1800,
             },
-            status: 'active',
           },
           {
             id: 'fake-2',
             bounty_id: 'bounty-fake-2',
+            status: 'active',
+            priority: 'critical',
+            progress: 45,
+            estimated_hours: 80,
             bounties: {
               id: 'bounty-fake-2',
               title: 'Land Rights Dispute',
               category: 'Property Law',
               location: 'Kisumu, Kenya',
-              due_date: '2025-05-20T00:00:00.000Z',
+              due_date: '2025-03-15T00:00:00.000Z',
               total_amount: 2500,
             },
+          },
+          {
+            id: 'fake-3',
+            bounty_id: 'bounty-fake-3',
             status: 'active',
+            priority: 'medium',
+            progress: 90,
+            estimated_hours: 40,
+            bounties: {
+              id: 'bounty-fake-3',
+              title: 'Small Business Legal Support',
+              category: 'Commercial Law',
+              location: 'Nairobi, Kenya',
+              due_date: '2025-02-20T00:00:00.000Z',
+              total_amount: 1200,
+            },
           },
         ];
         // --- End fake bounties ---
 
-        setData(prev => ({
+        setData((prev: any) => ({
           ...prev,
-          activeCases: [...(cases as any[] || []), ...fakeCases],
-          matchingBounties: matches as any[] || []
+          activeCases: [...(cases || []), ...fakeCases],
+          matchingBounties: matches || []
         }));
       } catch (error) {
         console.error('Error loading dashboard data:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -209,45 +261,89 @@ export const LawyerDashboard = () => {
               </div>
 
               <div className="p-6">
-                <div className="space-y-4">
-                  {data.activeCases.map((caseItem) => (
-                    <Link
-                      key={caseItem.id}
-                      to={`/bounties/${caseItem.bounty_id}`}
-                      className="block p-4 border border-gray-200 rounded-lg hover:border-primary-500 hover:shadow-md transition-all"
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <div>
-                          <h3 className="font-medium">{caseItem.bounties?.title}</h3>
-                          <p className="text-sm text-gray-600">{caseItem.bounties?.category}</p>
-                        </div>
-                        <span className="text-accent-600 font-medium">${caseItem.bounties?.total_amount}</span>
-                      </div>
-
-                      <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          <span>{caseItem.bounties?.location}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          <span>Due: {new Date(caseItem.bounties?.due_date).toLocaleDateString()}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-
-                  {data.activeCases.length === 0 && (
-                    <div className="text-center py-8">
-                      <GavelIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                      <h3 className="text-lg font-medium text-gray-600 mb-1">No active cases</h3>
-                      <p className="text-gray-500 mb-4">Start by browsing available bounties</p>
-                      <Link to="/bounties" className="btn btn-primary">
-                        Browse Bounties
-                      </Link>
+                {/* Cases Table */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+                  {/* Table Header */}
+                  <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
+                    <div className="grid grid-cols-5 gap-4 text-sm font-medium text-gray-600">
+                      <div>CASE TITLE</div>
+                      <div>TYPE</div>
+                      <div>PRIORITY</div>
+                      <div>PROGRESS</div>
+                      <div>DUE DATE</div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Table Body */}
+                  <div className="divide-y divide-gray-200">
+                    {data.activeCases.map((caseItem: any) => (
+                      <Link
+                        key={caseItem.id}
+                        to={`/lawyer/cases/${caseItem.id}`}
+                        className="block hover:bg-gray-50 transition-colors duration-200"
+                      >
+                        <div className="p-4">
+                          <div className="grid grid-cols-5 gap-4 items-center">
+                            {/* Case Title */}
+                            <div className="min-w-0">
+                              <h3 className="text-sm font-medium text-blue-600 hover:text-blue-700 truncate">
+                                {caseItem.bounties?.title}
+                              </h3>
+                            </div>
+
+                            {/* Type */}
+                            <div className="text-sm text-gray-900">
+                              {caseItem.bounties?.category}
+                            </div>
+
+                            {/* Priority */}
+                            <div>
+                              <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(caseItem.priority)}`}>
+                                {caseItem.priority ? caseItem.priority.charAt(0).toUpperCase() + caseItem.priority.slice(1) : 'Medium'}
+                              </span>
+                            </div>
+
+                            {/* Progress */}
+                            <div className="min-w-0">
+                              <div className="flex items-center">
+                                <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
+                                  <div 
+                                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                    style={{ width: `${caseItem.progress || 0}%` }}
+                                  ></div>
+                                </div>
+                                <span className="text-xs text-gray-600 min-w-0">
+                                  {caseItem.progress || 0}%
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Due Date */}
+                            <div className="text-sm text-gray-900">
+                              <div className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+                                <span className="text-xs">
+                                  {formatDueDate(caseItem.bounties?.due_date)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </div>
+
+                {data.activeCases.length === 0 && (
+                  <div className="text-center py-8">
+                    <GavelIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-1">No active cases</h3>
+                    <p className="text-gray-500 mb-4">Start by browsing available bounties</p>
+                    <Link to="/bounties" className="btn btn-primary">
+                      Browse Bounties
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
 

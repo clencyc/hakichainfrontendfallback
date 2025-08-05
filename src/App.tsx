@@ -8,13 +8,11 @@ import { BountyDetails } from './pages/BountyDetails';
 import { CreateBounty } from './pages/CreateBounty';
 import { LawyerDashboard } from './pages/lawyer/LawyerDashboard';
 import { LawyerAI } from './pages/lawyer/LawyerAI';
-import { LawyerESign } from './pages/lawyer/LawyerESign';
 import { LawyerRemindersKanban } from './pages/lawyer/LawyerRemindersKanban';
-import { LawyerAnalytics } from './pages/lawyer/LawyerAnalytics';
-import { LawyerCases } from './pages/lawyer/LawyerCases';
+import { LawyerCases } from './pages/lawyer/LawyerCasesList';
+import { LawyerCaseDetails } from './pages/lawyer/LawyerCaseDetails';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
-// import { LawyerESign } from './pages/lawyer/LawyerESign';
-import { Hakilens } from './pages/lawyer/Hakilens';
+import { HakiLens } from './pages/lawyer/HakiLens';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
@@ -32,7 +30,6 @@ import { Navbar } from './components/layout/Navbar';
 import { AuthProvider } from './contexts/AuthContext';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
-import { GeneralSettings } from './pages/settings/GeneralSettings';
 import { AIReviewer } from './pages/lawyer/AIReviewer';
 import { Documentation } from './pages/Documentation';
 import { FAQ } from './pages/FAQ';
@@ -169,10 +166,10 @@ function AppContent() {
             } 
           />
           <Route 
-            path="lawyer/e-sign" 
+            path="lawyer/hakilens" 
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
-                <LawyerESign />
+                <HakiLens />
               </ProtectedRoute>
             } 
           />
@@ -189,18 +186,18 @@ function AppContent() {
             } 
           />
           <Route 
-            path="lawyer/analytics" 
-            element={
-              <ProtectedRoute allowed={userRole === 'lawyer'}>
-                <LawyerAnalytics />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
             path="lawyer/cases" 
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <LawyerCases />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/cases/:caseId" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <LawyerCaseDetails />
               </ProtectedRoute>
             } 
           />
@@ -212,27 +209,11 @@ function AppContent() {
               </ProtectedRoute>
             } 
           />
-          {/* <Route 
-            path="lawyer/e-sign" 
-            element={
-              <ProtectedRoute allowed={userRole === 'lawyer'}>
-                <LawyerESign />
-              </ProtectedRoute>
-            } 
-          /> */}
           <Route 
             path="lawyer/ai-document-reviewer" 
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <AIReviewer />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="lawyer/hakilens" 
-            element={
-              <ProtectedRoute allowed={userRole === 'lawyer'}>
-                <Hakilens />
               </ProtectedRoute>
             } 
           />
@@ -300,7 +281,7 @@ function AppContent() {
 
           {/* Settings routes */}
           <Route path="settings" element={<SettingsIndex />}>
-            <Route index element={<GeneralSettings />} />
+            <Route index element={<div className="p-6">General Settings (Coming soon)</div>} />
             <Route path="preferences" element={<PreferencesSettings />} />
             <Route path="delete" element={<DeleteAccountSettings />} />
           </Route>

@@ -5,7 +5,7 @@ import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import {
   Upload, 
-  FileText, 
+  ShieldCheck, 
   Loader2, 
   AlertTriangle,
   Send,
@@ -416,12 +416,12 @@ export const AIReviewer = () => {
       <div className="max-w-7xl mx-auto mt-20">
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-              <FileText className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-serif font-bold text-gray-900">AI Document Reviewer</h1>
-              <p className="text-lg text-gray-600">Upload, preview, and interact with your legal documents using AI</p>
+              <h1 className="text-3xl font-serif font-bold text-gray-900">HakiReview</h1>
+              <p className="text-lg text-gray-600">AI-powered document analysis and legal review</p>
             </div>
           </div>
         </div>
@@ -559,7 +559,7 @@ export const AIReviewer = () => {
                          </Document>
                        ) : (
                          <div className="flex flex-col items-center justify-center h-64">
-                           <FileText className="w-16 h-16 text-blue-500 mb-4" />
+                           <ShieldCheck className="w-16 h-16 text-emerald-500 mb-4" />
                            <h3 className="text-lg font-medium text-gray-900 mb-2">{file?.name}</h3>
                            <p className="text-gray-500 mb-4">Document preview not available for this file type</p>
                            <button
@@ -608,12 +608,12 @@ export const AIReviewer = () => {
             {/* Chat Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">AI Assistant</h2>
-                  <p className="text-sm text-gray-500">Chat & Edit Mode</p>
+                  <h2 className="text-xl font-bold text-gray-900">HakiReview Assistant</h2>
+                  <p className="text-sm text-gray-500">AI Document Analysis & Chat</p>
                 </div>
               </div>
               

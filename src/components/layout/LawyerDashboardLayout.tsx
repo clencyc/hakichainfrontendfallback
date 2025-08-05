@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GavelIcon, BarChart3, FileText, Home, LogOut, Brain, Bell, BookOpen } from 'lucide-react';
+import { GavelIcon, Home, LogOut, Brain, Bell, Search, ShieldCheck, FolderOpen } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { Footer } from './Footer';
@@ -17,13 +17,11 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   const sidebarLinks = [
     { name: 'Overview', path: '/lawyer-dashboard', icon: Home },
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
-    { name: 'Hakilens', path: '/lawyer/hakilens', icon: BookOpen },
-    { name: 'AI Assistant', path: '/lawyer/ai', icon: Brain },
-    { name: 'AI Document Reviewer', path: '/lawyer/ai-document-reviewer', icon: FileText },
-    { name: 'E-Signature', path: '/lawyer/e-sign', icon: FileText },
-    { name: 'Smart Reminders', path: '/lawyer/reminders-kanban', icon: Bell },
-    { name: 'Analytics', path: '/lawyer/analytics', icon: BarChart3 },
-    { name: 'Documents', path: '/lawyer/documents', icon: FileText },
+    { name: 'HakiLens', path: '/lawyer/hakilens', icon: Search },
+    { name: 'HakiDraft', path: '/lawyer/ai', icon: Brain },
+    { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: ShieldCheck },
+    { name: 'HakiReminders', path: '/lawyer/reminders-kanban', icon: Bell },
+    { name: 'Documents', path: '/lawyer/documents', icon: FolderOpen },
   ];
 
   const isSettings = location.pathname.startsWith('/settings');

@@ -19,6 +19,8 @@ import { cn } from '../../utils/cn';
 
 interface Case {
   id: string;
+  status: 'applied' | 'in_review' | 'active' | 'completed' | 'rejected';
+  application_date: string;
   bounty: {
     id: string;
     title: string;
@@ -27,6 +29,9 @@ interface Case {
     due_date: string;
     total_amount: number;
     status: string;
+    description: string;
+    required_skills: string[];
+    ngo_name: string;
     milestones: {
       id: string;
       title: string;

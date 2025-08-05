@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import {
   Bell,
   Plus,
@@ -7,19 +7,10 @@ import {
   Clock,
   User,
   Mail,
-  Phone,
   Edit,
   Trash2,
   CheckCircle,
-  Search,
-  ArrowRight,
-  Brain,
-  Lightbulb,
-  AlertTriangle,
-  MoreVertical,
-  Filter,
-  Sparkles,
-  GripVertical
+  Search
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { useAuth } from '../../hooks/useAuth';
@@ -39,27 +30,6 @@ interface Reminder {
   created_at: string;
   case_id?: string;
   reminder_type?: 'court_date' | 'deadline' | 'meeting' | 'follow_up' | 'document_review';
-}
-
-interface SmartSuggestion {
-  id: string;
-  type: 'court_deadline' | 'follow_up' | 'document_review' | 'meeting_prep';
-  title: string;
-  description: string;
-  suggested_date: string;
-  suggested_time: string;
-  priority: 'low' | 'medium' | 'high';
-  client_name: string;
-  case_context: string;
-  confidence: number;
-}
-
-interface KanbanColumn {
-  id: 'pending' | 'in_progress' | 'sent' | 'completed';
-  title: string;
-  color: string;
-  bgColor: string;
-  count: number;
 }
 
 export const LawyerReminders = () => {
@@ -490,83 +460,103 @@ export const LawyerReminders = () => {
         </div>
 
         {/* Reminders List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredReminders.map((reminder) => (
-            <motion.div
-              key={reminder.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <h3 className="font-semibold text-gray-900 text-lg">{reminder.title}</h3>
-                <div className="flex space-x-1">
-                  <button
-                    onClick={() => handleEdit(reminder)}
-                    className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(reminder.id)}
-                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          {/* Table Header */}
+          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="grid grid-cols-6 gap-4 text-sm font-medium text-gray-600">
+              <div>TITLE</div>
+              <div>CLIENT</div>
+              <div>DATE & TIME</div>
+              <div>PRIORITY</div>
+              <div>STATUS</div>
+              <div>ACTIONS</div>
+            </div>
+          </div>
 
-              {reminder.description && (
-                <p className="text-gray-600 text-sm mb-4">{reminder.description}</p>
-              )}
-
-              <div className="space-y-3 mb-4">
-                <div className="flex items-center text-sm text-gray-600">
-                  <User className="w-4 h-4 mr-2" />
-                  <span>{reminder.client_name}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Mail className="w-4 h-4 mr-2" />
-                  <span>{reminder.client_email}</span>
-                </div>
-                {reminder.client_phone && (
-                  <div className="flex items-center text-sm text-gray-600">
-                    <Phone className="w-4 h-4 mr-2" />
-                    <span>{reminder.client_phone}</span>
+          {/* Table Body */}
+          <div className="divide-y divide-gray-200">
+            {filteredReminders.map((reminder) => (
+              <motion.div
+                key={reminder.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="hover:bg-gray-50 transition-colors duration-200 p-6"
+              >
+                <div className="grid grid-cols-6 gap-4 items-center">
+                  {/* Title */}
+                  <div className="min-w-0">
+                    <h3 className="font-medium text-gray-900 truncate">{reminder.title}</h3>
+                    {reminder.description && (
+                      <p className="text-sm text-gray-600 truncate">{reminder.description}</p>
+                    )}
                   </div>
-                )}
-                <div className="flex items-center text-sm text-gray-600">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  <span>{new Date(reminder.reminder_date).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Clock className="w-4 h-4 mr-2" />
-                  <span>{reminder.reminder_time}</span>
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex space-x-2">
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(reminder.priority)}`}>
-                    {reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)}
-                  </span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reminder.status)}`}>
-                    {reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1)}
-                  </span>
+                  {/* Client */}
+                  <div className="min-w-0">
+                    <div className="flex items-center text-sm text-gray-900">
+                      <User className="w-4 h-4 mr-1 text-gray-400" />
+                      <span className="truncate">{reminder.client_name}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-600">
+                      <Mail className="w-3 h-3 mr-1 text-gray-400" />
+                      <span className="truncate">{reminder.client_email}</span>
+                    </div>
+                  </div>
+
+                  {/* Date & Time */}
+                  <div className="text-sm text-gray-900">
+                    <div className="flex items-center">
+                      <Calendar className="w-4 h-4 mr-1 text-gray-400" />
+                      <span>{new Date(reminder.reminder_date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center text-xs text-gray-600 mt-1">
+                      <Clock className="w-3 h-3 mr-1 text-gray-400" />
+                      <span>{reminder.reminder_time}</span>
+                    </div>
+                  </div>
+
+                  {/* Priority */}
+                  <div>
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getPriorityColor(reminder.priority)}`}>
+                      {reminder.priority.charAt(0).toUpperCase() + reminder.priority.slice(1)}
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(reminder.status)}`}>
+                      {reminder.status.charAt(0).toUpperCase() + reminder.status.slice(1).replace('_', ' ')}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => handleEdit(reminder)}
+                      className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(reminder.id)}
+                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                    {reminder.status === 'pending' && (
+                      <button
+                        onClick={() => markAsCompleted(reminder.id)}
+                        className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Mark as completed"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-                
-                {reminder.status === 'pending' && (
-                  <button
-                    onClick={() => markAsCompleted(reminder.id)}
-                    className="p-2 text-gray-400 hover:text-green-500 hover:bg-green-50 rounded-lg transition-colors"
-                    title="Mark as completed"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
             </motion.div>
           ))}
+          </div>
         </div>
 
         {filteredReminders.length === 0 && !isLoading && (
