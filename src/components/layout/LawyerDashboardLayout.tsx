@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { GavelIcon, Home, LogOut, Brain, Bell, Search, ShieldCheck, FolderOpen } from 'lucide-react';
+import { GavelIcon, Home, LogOut, Brain, Bell, Search, FileCheck, FolderOpen, Settings } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { Footer } from './Footer';
@@ -19,7 +19,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
     { name: 'HakiLens', path: '/lawyer/hakilens', icon: Search },
     { name: 'HakiDraft', path: '/lawyer/ai', icon: Brain },
-    { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: ShieldCheck },
+    { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: FileCheck },
     { name: 'HakiReminders', path: '/lawyer/reminders-kanban', icon: Bell },
     { name: 'Documents', path: '/lawyer/documents', icon: FolderOpen },
   ];
@@ -75,7 +75,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
                 to="/settings"
                 className="flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100"
               >
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.5-3.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z" /></svg>
+                <Settings className="w-5 h-5 mr-2" />
                 Settings
               </Link>
             </div>

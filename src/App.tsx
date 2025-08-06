@@ -30,6 +30,7 @@ import { Navbar } from './components/layout/Navbar';
 import { AuthProvider } from './contexts/AuthContext';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
+import { GeneralSettings } from './pages/settings/GeneralSettings';
 import { AIReviewer } from './pages/lawyer/AIReviewer';
 import { Documentation } from './pages/Documentation';
 import { FAQ } from './pages/FAQ';
@@ -281,7 +282,7 @@ function AppContent() {
 
           {/* Settings routes */}
           <Route path="settings" element={<SettingsIndex />}>
-            <Route index element={<div className="p-6">General Settings (Coming soon)</div>} />
+            <Route index element={<GeneralSettings />} />
             <Route path="preferences" element={<PreferencesSettings />} />
             <Route path="delete" element={<DeleteAccountSettings />} />
           </Route>

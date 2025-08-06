@@ -591,13 +591,13 @@ export const LawyerRemindersKanban = () => {
                     {smartSuggestions.length} suggestions
                   </span>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {smartSuggestions.map((suggestion) => (
                     <motion.div
                       key={suggestion.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-white rounded-xl border border-purple-200 p-4 hover:shadow-md transition-all cursor-pointer"
+                      className="bg-white rounded-xl border border-purple-200 p-6 hover:shadow-md transition-all cursor-pointer"
                       onClick={() => acceptSuggestion(suggestion)}
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -682,11 +682,11 @@ export const LawyerRemindersKanban = () => {
         </div>
 
         {/* Kanban Board */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {kanbanColumns.map((column) => (
             <div
               key={column.id}
-              className={`${column.bgColor} rounded-2xl border-2 border-dashed p-4 min-h-[600px] transition-all duration-200 hover:border-opacity-80 relative`}
+              className={`${column.bgColor} rounded-2xl border-2 border-dashed p-6 min-h-[600px] transition-all duration-200 hover:border-opacity-80 relative flex-1`}
             >
               {/* Drop zone overlay for when dragging */}
               {draggedReminder && draggedReminder.status !== column.id && (

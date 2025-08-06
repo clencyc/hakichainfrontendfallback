@@ -327,23 +327,34 @@ const GeneralSettings = () => {
                   </button>
 
                   {showSpecializationDropdown && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="absolute z-10 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
-                    >
-                      {legalSpecializations
-                        .filter(spec => !specializations.includes(spec))
-                        .map((spec) => (
-                          <button
-                            key={spec}
-                            onClick={() => handleSpecializationAdd(spec)}
-                            className="w-full text-left px-4 py-2 hover:bg-teal-50 hover:text-teal-700 focus:bg-teal-50 focus:text-teal-700"
-                          >
-                            {spec}
-                          </button>
-                        ))}
-                    </motion.div>
+                    <>
+                      {/* Backdrop to close dropdown when clicking outside */}
+                      <div 
+                        className="fixed inset-0 z-10 bg-transparent"
+                        onClick={() => setShowSpecializationDropdown(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="absolute z-20 mt-1 w-full max-h-48 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg"
+                        style={{
+                          maxHeight: '12rem',
+                          overflowY: 'auto'
+                        }}
+                      >
+                        {legalSpecializations
+                          .filter(spec => !specializations.includes(spec))
+                          .map((spec) => (
+                            <button
+                              key={spec}
+                              onClick={() => handleSpecializationAdd(spec)}
+                              className="w-full text-left px-4 py-2 hover:bg-teal-50 hover:text-teal-700 focus:bg-teal-50 focus:text-teal-700 transition-colors duration-150"
+                            >
+                              {spec}
+                            </button>
+                          ))}
+                      </motion.div>
+                    </>
                   )}
                 </div>
               </div>
