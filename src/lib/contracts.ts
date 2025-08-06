@@ -1,10 +1,11 @@
 import { ethers } from 'ethers';
-import HakiTokenABI from '../../artifacts/contracts/HakiToken.sol/HakiToken.json';
-import LegalBountyABI from '../../artifacts/contracts/LegalBounty.sol/LegalBounty.json';
-import DocumentRegistryABI from '../../artifacts/contracts/DocumentRegistry.sol/DocumentRegistry.json';
-import MilestoneEscrowABI from '../../artifacts/contracts/MilestoneEscrow.sol/MilestoneEscrow.json';
-import ReputationSystemABI from '../../artifacts/contracts/ReputationSystem.sol/ReputationSystem.json';
-// import ESignatureRegistryABI from '../../artifacts/contracts/ESignatureRegistry.sol/ESignatureRegistry.json';
+import {
+  HakiTokenABI,
+  LegalBountyABI,
+  DocumentRegistryABI,
+  MilestoneEscrowABI,
+  ReputationSystemABI
+} from '../abis';
 
 // Contract addresses (replace with actual deployed addresses)
 const HAKI_TOKEN_ADDRESS = '0x...';
@@ -52,19 +53,12 @@ export const getContracts = async () => {
     signer
   );
 
-  const eSignatureRegistry = new ethers.Contract(
-    ESIGNATURE_REGISTRY_ADDRESS,
-    ESignatureRegistryABI,
-    signer
-  );
-
   return {
     hakiToken,
     legalBounty,
     documentRegistry,
     milestoneEscrow,
     reputationSystem,
-    eSignatureRegistry,
     signer
   };
 };
