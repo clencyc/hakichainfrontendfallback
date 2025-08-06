@@ -213,13 +213,13 @@ export const HakiLens = () => {
 
         {/* Two Column Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Comprehensive Case Scraper */}
+          {/* Comprehensive Case Deep Research */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center space-x-3 mb-6">
               <div className="w-8 h-8 bg-[#008080]/10 rounded-lg flex items-center justify-center">
                 <FileText className="w-5 h-5 text-[#008080]" />
               </div>
-              <h2 className="text-xl font-semibold text-gray-900">Comprehensive Case Scraper</h2>
+              <h2 className="text-xl font-semibold text-gray-900">Comprehensive Case Deep Research</h2>
             </div>
 
             <div className="mb-4">
@@ -246,7 +246,7 @@ export const HakiLens = () => {
               className="bg-[#008080] hover:bg-[#006666] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
             >
               <Sparkles className="w-5 h-5" />
-              <span>Deep Scrape Case</span>
+              <span>Deep Research Case</span>
             </button>
 
             {urlError && (

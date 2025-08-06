@@ -32,11 +32,8 @@ import {
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { useESignature } from '../../hooks/useESignature';
 
-// Set up PDF.js worker - Updated configuration for modern versions
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.js',
-  import.meta.url,
-).toString();
+// Set up PDF.js worker - Using CDN for better compatibility
+pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
 
 interface ChatMessage {
   id: string;
@@ -185,34 +182,52 @@ export const AIReviewer = () => {
 
   const onDocumentLoadError = (error: Error) => {
     console.error('Document load error:', error);
+    
+    let errorMessage = 'Failed to load document';
+    let errorDetails = error.message;
+    
+    if (error.message.includes('worker') || error.message.includes('PDF')) {
+      errorMessage = 'PDF viewer is not available';
+      errorDetails = 'The PDF viewer is currently unavailable. You can still download and view the document in your browser.';
+    } else if (error.message.includes('fetch')) {
+      errorMessage = 'Network error';
+      errorDetails = 'Unable to load the document due to a network issue. Please check your connection and try again.';
+    } else if (error.message.includes('Invalid PDF')) {
+      errorMessage = 'Invalid PDF file';
+      errorDetails = 'The uploaded file appears to be corrupted or not a valid PDF. Please try a different file.';
+    }
+    
     setDocumentError({
-      message: 'Failed to load document',
-      details: error.message.includes('worker') 
-        ? 'PDF viewer is not available. Please try refreshing the page or use a different browser.'
-        : error.message
+      message: errorMessage,
+      details: errorDetails
     });
   };
 
   // Fallback for PDF worker issues
   useEffect(() => {
-    const checkWorkerAvailability = async () => {
-      try {
-        // Test if the worker is available
-        const testUrl = pdfjs.GlobalWorkerOptions.workerSrc;
-        const response = await fetch(testUrl, { method: 'HEAD' });
-        if (!response.ok) {
-          console.warn('PDF worker not available, using fallback');
-          // Try alternative worker source
-          pdfjs.GlobalWorkerOptions.workerSrc = `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+    const setupPDFWorker = async () => {
+      const workerSources = [
+        `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`,
+        `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`,
+        `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+      ];
+
+      for (const workerSrc of workerSources) {
+        try {
+          const response = await fetch(workerSrc, { method: 'HEAD' });
+          if (response.ok) {
+            pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
+            console.log('PDF worker loaded from:', workerSrc);
+            break;
+          }
+        } catch (error) {
+          console.warn('Failed to load PDF worker from:', workerSrc);
+          continue;
         }
-      } catch (error) {
-        console.warn('PDF worker check failed:', error);
-        // Try alternative worker source
-        pdfjs.GlobalWorkerOptions.workerSrc = `//cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
       }
     };
 
-    checkWorkerAvailability();
+    setupPDFWorker();
   }, []);
 
   const handleSendMessage = async () => {
