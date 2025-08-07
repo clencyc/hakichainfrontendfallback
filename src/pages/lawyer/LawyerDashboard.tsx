@@ -9,7 +9,9 @@ import {
   Calendar,
   GavelIcon,
   Award,
-  Star
+  Star,
+  HelpCircle,
+  X
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
@@ -17,6 +19,7 @@ import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLa
 
 export const LawyerDashboard = () => {
   const { user } = useAuth();
+  const [showTourPrompt, setShowTourPrompt] = useState(false);
   const [data, setData] = useState<any>({
     activeCases: [],
     matchingBounties: [],
@@ -69,6 +72,12 @@ export const LawyerDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Check if user has seen tour before
+        const hasSeenTour = localStorage.getItem('hakichain-tour-completed');
+        if (!hasSeenTour) {
+          setTimeout(() => setShowTourPrompt(true), 2000); // Show after 2 seconds
+        }
+
         // Load active cases
         const { data: cases, error: casesError } = await supabase
           .from('lawyer_cases')
@@ -165,6 +174,53 @@ export const LawyerDashboard = () => {
   return (
     <LawyerDashboardLayout>
       <div className="max-w-[1600px] mx-auto mt-20">
+        {/* Tour Prompt */}
+        {showTourPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed top-4 right-4 z-50 bg-gradient-to-r from-teal-500 to-blue-600 text-white p-4 rounded-xl shadow-lg max-w-sm"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                <HelpCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Welcome to HakiChain! 🎉</h3>
+                  <p className="text-sm text-teal-100 mb-3">Take a quick tour to discover all the powerful features of your legal dashboard.</p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        const tourBtn = document.querySelector('[data-tour="logo"]')?.closest('aside')?.querySelector('button[data-tour-trigger]') as HTMLButtonElement;
+                        if (tourBtn) tourBtn.click();
+                        setShowTourPrompt(false);
+                        localStorage.setItem('hakichain-tour-completed', 'true');
+                      }}
+                      className="bg-white text-teal-600 px-3 py-1 rounded-lg text-sm font-medium hover:bg-teal-50 transition-colors"
+                    >
+                      Start Tour
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowTourPrompt(false);
+                        localStorage.setItem('hakichain-tour-completed', 'true');
+                      }}
+                      className="text-teal-100 hover:text-white text-sm"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTourPrompt(false)}
+                className="text-teal-200 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-3xl font-serif font-bold text-gray-900">Welcome back, {user?.name}</h1>
           <p className="text-lg text-gray-600">Here's an overview of your cases and performance</p>
