@@ -6,6 +6,7 @@
     "dev": "vite",
     "start": "ts-node server.js",
     "api": "node server.js",
+<<<<<<< HEAD
     "hakilens": "node hakilens-server.js",
     "hakilens:dev": "nodemon hakilens-server.js",
     "hakilens:test": "./test-python-backend.sh",
@@ -13,9 +14,14 @@
     "dev:all": "concurrently \"npm run dev\" \"npm run hakilens:dev\"",
     "dev:python": "concurrently \"npm run hakilens:python\" \"echo 'Frontend with Python backend integration ready!'\"",
     "build": "npx vite build",
+=======
+    "build": "npm run build:contracts && npx vite build",
+>>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
     "lint": "eslint .",
     "preview": "npx vite preview",
     "compile": "hardhat compile",
+    "generate-abis": "ts-node scripts/generate-abis.ts",
+    "build:contracts": "npm run compile && npm run generate-abis",
     "test": "hardhat test",
     "validate": "hardhat run scripts/validate-env.ts",
     "generate-key": "hardhat run scripts/generate-key.ts",
@@ -28,6 +34,7 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
+    "openai": "^4.28.0",
     "@headlessui/react": "^1.7.18",
     "@hello-pangea/dnd": "^16.5.0",
     "@microsoft/clarity": "^1.0.0",
@@ -35,9 +42,23 @@
     "@supabase/supabase-js": "^2.39.3",
     "@tanstack/react-query": "^5.24.1",
     "@tanstack/react-table": "^8.13.2",
+<<<<<<< HEAD
     "@types/react-joyride": "^2.0.2",
     "axios": "^1.11.0",
     "cheerio": "^1.1.2",
+=======
+    "@tiptap/extension-history": "^3.2.0",
+    "@tiptap/extension-link": "^3.2.0",
+    "@tiptap/extension-mention": "^3.2.0",
+    "@tiptap/extension-placeholder": "^3.2.0",
+    "@tiptap/extension-table": "^3.2.0",
+    "@tiptap/extension-table-cell": "^3.2.0",
+    "@tiptap/extension-table-header": "^3.2.0",
+    "@tiptap/extension-table-row": "^3.2.0",
+    "@tiptap/pm": "^3.1.0",
+    "@tiptap/react": "^3.2.0",
+    "@tiptap/starter-kit": "^3.2.0",
+>>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
     "clsx": "^2.1.0",
     "concurrently": "^9.2.0",
     "cors": "^2.8.5",
@@ -49,9 +70,15 @@
     "http-proxy-middleware": "^2.0.9",
     "js-yaml": "^4.1.0",
     "lucide-react": "^0.344.0",
+<<<<<<< HEAD
     "node-fetch": "^2.7.0",
     "nodemon": "^3.1.10",
+=======
+    "marked": "^16.1.2",
+>>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
     "pdfjs-dist": "^5.4.54",
+    "prosemirror-state": "^1.4.3",
+    "prosemirror-view": "^1.40.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.50.1",
@@ -75,6 +102,7 @@
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.0.0",
     "@types/chai": "^4.2.0",
+    "@types/marked": "^5.0.2",
     "@types/mocha": "^10.0.6",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",

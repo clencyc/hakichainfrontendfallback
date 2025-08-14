@@ -13,27 +13,29 @@ async function main() {
   // Create .env file content
   const envContent = Object.entries(addresses)
     .map(([key, value]) => `${key}=${value}`)
-    .join('\n');
+    .join('\n') + '\n';
 
   // Create .env.example file content (without actual addresses)
   const envExampleContent = Object.keys(addresses)
     .map(key => `${key}=`)
-    .join('\n');
+    .join('\n') + '\n';
 
-  // Write to .env file
-  fs.writeFileSync(path.join(__dirname, '../.env'), envContent);
-  console.log('Updated .env file with contract addresses');
+  // Append to .env file
+  fs.appendFileSync(path.join(__dirname, '../.env'), envContent);
+  console.log('Appended contract addresses to .env file');
 
-  // Write to .env.example file
-  fs.writeFileSync(path.join(__dirname, '../.env.example'), envExampleContent);
-  console.log('Updated .env.example file');
+  // Append to .env.example file
+  fs.appendFileSync(path.join(__dirname, '../.env.example'), envExampleContent);
+  console.log('Appended to .env.example file');
 
-  // Create frontend .env file
+  // Create frontend .env file content
   const frontendEnvContent = Object.entries(addresses)
     .map(([key, value]) => `VITE_${key}=${value}`)
-    .join('\n');
-  fs.writeFileSync(path.join(__dirname, '../.env.frontend'), frontendEnvContent);
-  console.log('Created .env.frontend file for frontend configuration');
+    .join('\n') + '\n';
+
+  // Append to .env.frontend file
+  fs.appendFileSync(path.join(__dirname, '../.env.frontend'), frontendEnvContent);
+  console.log('Appended to .env.frontend file for frontend configuration');
 }
 
 main().catch((error) => {

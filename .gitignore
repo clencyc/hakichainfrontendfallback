@@ -25,6 +25,9 @@ dist/
 build/
 out/
 
+# Generated ABIs (will be generated during build)
+src/abis/
+
 # IDE
 .idea/
 .vscode/

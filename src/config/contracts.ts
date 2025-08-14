@@ -1,12 +1,13 @@
 import { ethers } from 'ethers';
 
 // Contract ABIs
-import HakiTokenABI from '../../artifacts/contracts/HakiToken.sol/HakiToken.json';
-import LegalBountyABI from '../../artifacts/contracts/LegalBounty.sol/LegalBounty.json';
-import DocumentRegistryABI from '../../artifacts/contracts/DocumentRegistry.sol/DocumentRegistry.json';
-import MilestoneEscrowABI from '../../artifacts/contracts/MilestoneEscrow.sol/MilestoneEscrow.json';
-import ReputationSystemABI from '../../artifacts/contracts/ReputationSystem.sol/ReputationSystem.json';
-import ESignatureRegistryABI from '../../artifacts/contracts/ESignatureRegistry.sol/ESignatureRegistry.json';
+import {
+  HakiTokenABI,
+  LegalBountyABI,
+  DocumentRegistryABI,
+  MilestoneEscrowABI,
+  ReputationSystemABI
+} from '../abis';
 
 // Network configuration
 export const NETWORK_CONFIG = {
@@ -46,32 +47,27 @@ export const CONTRACT_ADDRESSES = {
 export const getContractInterface = (provider: ethers.Provider) => ({
   hakiToken: new ethers.Contract(
     CONTRACT_ADDRESSES.hakiToken,
-    HakiTokenABI.abi,
+    HakiTokenABI,
     provider
   ),
   legalBounty: new ethers.Contract(
     CONTRACT_ADDRESSES.legalBounty,
-    LegalBountyABI.abi,
+    LegalBountyABI,
     provider
   ),
   documentRegistry: new ethers.Contract(
     CONTRACT_ADDRESSES.documentRegistry,
-    DocumentRegistryABI.abi,
+    DocumentRegistryABI,
     provider
   ),
   milestoneEscrow: new ethers.Contract(
     CONTRACT_ADDRESSES.milestoneEscrow,
-    MilestoneEscrowABI.abi,
+    MilestoneEscrowABI,
     provider
   ),
   reputationSystem: new ethers.Contract(
     CONTRACT_ADDRESSES.reputationSystem,
-    ReputationSystemABI.abi,
-    provider
-  ),
-  eSignatureRegistry: new ethers.Contract(
-    CONTRACT_ADDRESSES.eSignatureRegistry,
-    ESignatureRegistryABI.abi,
+    ReputationSystemABI,
     provider
   )
 });

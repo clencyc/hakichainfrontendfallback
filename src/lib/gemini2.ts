@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDSmcctwb094ifsM1Dgb8B01brcVaNtq2Y';
-const genAI = new GoogleGenerativeAI(API_KEY);
+const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDSmcctwb094ifsM1Dgb8B01brcVaNtq2Y';
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 export const generateDocumentTemplate = async (
   documentType: string,
@@ -9,7 +10,8 @@ export const generateDocumentTemplate = async (
   additionalPrompts: string[]
 ): Promise<AsyncGenerator<string, void, unknown>> => {
   console.log('generateDocumentTemplate called with:', { documentType, caseDetails, additionalPrompts });
-  console.log('API Key available:', !!API_KEY);
+  console.log('Gemini API Key available:', !!GEMINI_API_KEY);
+  console.log('OpenAI API Key available:', !!OPENAI_API_KEY);
   
   // Update model name to the current version
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
@@ -65,26 +67,124 @@ export const generateDocumentTemplate = async (
       lastError = error;
       console.error(`Attempt ${attempt} failed:`, error);
       
-      // Check if it's a 503 overload error
-      if (error.message && error.message.includes('503') && error.message.includes('overloaded')) {
-        if (attempt < maxRetries) {
-          console.log(`Model overloaded, waiting ${attempt * 2} seconds before retry...`);
-          await new Promise(resolve => setTimeout(resolve, attempt * 2000)); // Exponential backoff
-          continue;
-        } else {
-          console.log('All retries failed, providing fallback content');
-          // Provide fallback content when API is overloaded
-          return generateFallbackContent(documentType, caseDetails, additionalPrompts);
-        }
-      } else {
-        // For other errors, throw immediately
-        throw error;
-      }
+             // Check if it's a 503 overload error
+       if (error.message && error.message.includes('503') && error.message.includes('overloaded')) {
+         if (attempt < maxRetries) {
+           console.log(`Model overloaded, waiting ${attempt * 2} seconds before retry...`);
+           await new Promise(resolve => setTimeout(resolve, attempt * 2000)); // Exponential backoff
+           continue;
+         } else {
+           console.log('All retries failed, trying OpenAI fallback...');
+           // Try OpenAI as fallback
+           try {
+             return await generateWithOpenAI(prompt);
+           } catch (openaiError) {
+             console.log('OpenAI also failed, providing fallback content');
+             return generateFallbackContent(documentType, caseDetails, additionalPrompts);
+           }
+         }
+       } else {
+         // For other errors, try OpenAI as fallback
+         if (OPENAI_API_KEY) {
+           console.log('Gemini error, trying OpenAI fallback...');
+           try {
+             return await generateWithOpenAI(prompt);
+           } catch (openaiError) {
+             console.log('OpenAI fallback failed, providing fallback content');
+             return generateFallbackContent(documentType, caseDetails, additionalPrompts);
+           }
+         } else {
+           // No OpenAI key, provide fallback content
+           console.log('No OpenAI key available, providing fallback content');
+           return generateFallbackContent(documentType, caseDetails, additionalPrompts);
+         }
+       }
     }
   }
 
   throw lastError;
 };
+
+// OpenAI fallback generator
+async function generateWithOpenAI(prompt: string): Promise<AsyncGenerator<string, void, unknown>> {
+  if (!OPENAI_API_KEY) {
+    throw new Error('OpenAI API key not available');
+  }
+
+  console.log('Using OpenAI as fallback...');
+  
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a legal document assistant specialized in Kenyan law. Generate professional legal documents with proper formatting and legal compliance.'
+          },
+          {
+            role: 'user',
+            content: prompt
+          }
+        ],
+        stream: true,
+        temperature: 0.7,
+        max_tokens: 2000
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Failed to get response reader');
+    }
+
+    async function* streamResponse() {
+      try {
+        while (true) {
+          const { done, value } = await reader!.read();
+          if (done) break;
+
+          const chunk = new TextDecoder().decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') return;
+              
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  console.log('OpenAI streaming chunk:', content);
+                  yield content;
+                }
+              } catch (e) {
+                // Ignore parsing errors for incomplete chunks
+              }
+            }
+          }
+        }
+      } finally {
+        reader!.releaseLock();
+      }
+    }
+
+    return streamResponse();
+  } catch (error) {
+    console.error('OpenAI API error:', error);
+    throw error;
+  }
+}
 
 // Fallback content generator when API is overloaded
 function generateFallbackContent(
