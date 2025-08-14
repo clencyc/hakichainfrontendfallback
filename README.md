@@ -1,3 +1,4 @@
+
 # HakiChain v2.2.1
 
 HakiChain is a decentralized platform for legal services and intellectual property protection, built on blockchain technology. The platform enables secure document management, legal bounties, milestone-based escrow services for legal professionals. There are AI-powered tools for lawyers. 
