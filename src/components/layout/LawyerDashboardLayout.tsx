@@ -24,7 +24,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'HakiDraft', path: '/lawyer/ai', icon: Brain },
     { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: FileCheck },
     { name: 'HakiReminders', path: '/lawyer/reminders-kanban', icon: Bell },
-    { name: 'Documents', path: '/lawyer/documents', icon: FolderOpen },
+    { name: 'HakiDocs', path: '/lawyer/documents', icon: FolderOpen },
   ];
 
   const isSettings = location.pathname.startsWith('/settings');

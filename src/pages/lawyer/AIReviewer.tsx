@@ -27,10 +27,14 @@ import {
   Type,
   Image as ImageIcon,
   Hash,
-  Database
+  Database,
+  FolderOpen
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { useESignature } from '../../hooks/useESignature';
+import { DocumentUpload } from '../../components/common/DocumentUpload';
+import { DocumentSelector } from '../../components/common/DocumentSelector';
+import { useDocumentManagement } from '../../hooks/useDocumentManagement';
 
 // Set up PDF.js worker - Using CDN for better compatibility
 pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
@@ -91,6 +95,9 @@ export const AIReviewer = () => {
   const [isDrawingMode, setIsDrawingMode] = useState(false);
   const [drawingContext, setDrawingContext] = useState<CanvasRenderingContext2D | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [selectedDocuments, setSelectedDocuments] = useState<Document[]>([]);
+  const [showDocumentUpload, setShowDocumentUpload] = useState(false);
+  const [showDocumentSelector, setShowDocumentSelector] = useState(false);
   
   // E-signature hook
   const { 
@@ -102,6 +109,19 @@ export const AIReviewer = () => {
     isLoading: isESignLoading,
     error: eSignError 
   } = useESignature();
+  
+  // Document management hook
+  const { uploadDocuments } = useDocumentManagement();
+  
+  interface Document {
+    id: string;
+    name: string;
+    path: string;
+    size: number;
+    type: string;
+    created_at: string;
+    url?: string;
+  }
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -258,7 +278,7 @@ export const AIReviewer = () => {
     }, 1000);
   };
 
-  const generateAIResponse = (userInput: string, mode: 'chat' | 'edit'): string => {
+  const generateAIResponse = (userInput: string, mode: 'chat' | 'edit' | 'e-sign'): string => {
     const chatResponses = {
       'review': 'I\'ve reviewed your document and found several key points:\n\n✅ **Strengths:**\n- Clear structure and formatting\n- Comprehensive coverage of main clauses\n\n⚠️ **Areas for Improvement:**\n- Clause 3.2 needs clarification\n- Missing signature section\n- Consider adding dispute resolution clause\n\nWould you like me to help you address any of these issues?',
       'analyze': 'Here\'s my analysis of your document:\n\n📊 **Document Type:** Legal Contract\n📏 **Length:** Standard (3 pages)\n🎯 **Key Sections:** 8 main clauses\n⚠️ **Risk Level:** Low to Medium\n\n**Recommendations:**\n1. Add force majeure clause\n2. Include termination conditions\n3. Specify governing law\n\nWould you like me to help implement these suggestions?',
@@ -412,6 +432,39 @@ export const AIReviewer = () => {
       console.error('Error sending for signing:', err);
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  // Document integration handlers
+  const handleUploadComplete = (uploadedDocs: Document[]) => {
+    setShowDocumentUpload(false);
+    setSelectedDocuments(prev => [...prev, ...uploadedDocs]);
+  };
+
+  const handleUploadError = (error: string) => {
+    alert(`Upload failed: ${error}`);
+  };
+
+  const handleDocumentSelect = (selectedDocs: Document[]) => {
+    setShowDocumentSelector(false);
+    setSelectedDocuments(prev => [...prev, ...selectedDocs]);
+  };
+
+  const removeDocument = (documentId: string) => {
+    setSelectedDocuments(prev => prev.filter(doc => doc.id !== documentId));
+  };
+
+  const saveToHakiDocs = async () => {
+    if (!file) return;
+    
+    try {
+      const fileList = new DataTransfer();
+      fileList.items.add(file);
+      await uploadDocuments(fileList.files);
+      alert('Document saved to HakiDocs successfully!');
+    } catch (error) {
+      console.error('Error saving to HakiDocs:', error);
+      alert('Failed to save document to HakiDocs');
     }
   };
 
@@ -641,13 +694,22 @@ export const AIReviewer = () => {
                   <RotateCw className="w-4 h-4" />
                 </button>
                 {file && (
-                  <button
-                    onClick={() => setFile(null)}
-                    className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                    title="Remove document"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
+                  <>
+                    <button
+                      onClick={saveToHakiDocs}
+                      className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Save to HakiDocs"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setFile(null)}
+                      className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Remove document"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -689,6 +751,51 @@ export const AIReviewer = () => {
                   E-Sign
                 </button>
               </div>
+            </div>
+
+            {/* HakiDocs Integration */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
+                    <FolderOpen className="w-4 h-4 text-blue-600" />
+                  </h3>
+                  <button
+                    onClick={() => setShowDocumentUpload(true)}
+                    className="flex items-center gap-1 px-3 py-1 bg-blue-500 text-white rounded-lg text-xs hover:bg-blue-600 transition-colors"
+                  >
+                    <Upload className="w-3 h-3" />
+                    Upload File
+                  </button>
+                  <button
+                    onClick={() => setShowDocumentSelector(true)}
+                    className="flex items-center gap-1 px-3 py-1 border border-blue-300 text-blue-700 rounded-lg text-xs hover:bg-blue-50 transition-colors"
+                  >
+                    <FolderOpen className="w-3 h-3" />
+                    Select from HakiDocs
+                  </button>
+                </div>
+              </div>
+
+              {selectedDocuments.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs text-gray-600">Reference documents ({selectedDocuments.length}):</p>
+                  <div className="space-y-1">
+                    {selectedDocuments.map((doc) => (
+                      <div key={doc.id} className="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                        <span className="text-xs text-gray-700 truncate">{doc.name}</span>
+                        <button
+                          onClick={() => removeDocument(doc.id)}
+                          className="text-red-500 hover:text-red-700"
+                          title="Remove document"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Content Area */}
@@ -1050,6 +1157,63 @@ export const AIReviewer = () => {
                 </button>
               </div>
             </motion.div>
+          </div>
+        )}
+
+        {/* Document Upload Modal */}
+        {showDocumentUpload && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <Upload className="w-6 h-6 text-blue-600" />
+                      <h3 className="text-lg font-medium text-gray-900">Upload File Documents</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDocumentUpload(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Close modal"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <DocumentUpload
+                    onUploadComplete={handleUploadComplete}
+                    onUploadError={handleUploadError}
+                    placeholder="Upload File documents for review"
+                    showPreview={true}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Selector Modal */}
+        {showDocumentSelector && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full max-h-[90vh]">
+                <DocumentSelector
+                  onDocumentSelect={handleDocumentSelect}
+                  placeholder="Select reference documents from HakiDocs"
+                  showPreview={true}
+                  isModal={true}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

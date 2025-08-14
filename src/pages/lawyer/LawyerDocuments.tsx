@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Upload, Download, Trash2, Filter, FileText, File, Image, FileArchive, FolderOpen, CheckCircle } from 'lucide-react';
+import { Search, Upload, Download, Trash2, Filter, FileText, File, Image, FileArchive, FolderOpen, CheckCircle, Plus, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { supabase } from '../../lib/supabase';
+import { useDocumentManagement } from '../../hooks/useDocumentManagement';
+import { DocumentUpload } from '../../components/common/DocumentUpload';
+import { DocumentSelector } from '../../components/common/DocumentSelector';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 
 interface Document {
@@ -24,98 +26,44 @@ interface Document {
 
 export const LawyerDocuments = () => {
   const { user } = useAuth();
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { documents, isLoading, error, loadDocuments, deleteDocument, downloadDocument, searchDocuments } = useDocumentManagement();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showSelectorModal, setShowSelectorModal] = useState(false);
 
-  useEffect(() => {
-    const loadDocuments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('documents')
-          .select(`
-            *,
-            bounties (
-              id,
-              title
-            ),
-            milestones (
-              id,
-              title
-            )
-          `)
-          .eq('uploaded_by', user?.id);
+  const handleUploadComplete = (uploadedDocs: Document[]) => {
+    setShowUploadModal(false);
+    // Documents are automatically refreshed by the hook
+  };
 
-        if (error) throw error;
-        setDocuments(data || []);
-      } catch (err) {
-        console.error('Error loading documents:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const handleUploadError = (error: string) => {
+    alert(`Upload failed: ${error}`);
+  };
 
-    if (user?.id) {
-      loadDocuments();
-    }
-  }, [user]);
-
-  const handleUpload = async (files: FileList) => {
-    for (const file of Array.from(files)) {
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${Math.random()}.${fileExt}`;
-        const filePath = `${user?.id}/${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('documents')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { error: docError } = await supabase
-          .from('documents')
-          .insert({
-            name: file.name,
-            path: filePath,
-            uploaded_by: user?.id,
-            size: file.size,
-            type: file.type,
-          });
-
-        if (docError) throw docError;
-
-        // Refresh documents list
-        const { data, error } = await supabase
-          .from('documents')
-          .select('*')
-          .eq('uploaded_by', user?.id);
-
-        if (error) throw error;
-        setDocuments(data || []);
-      } catch (error) {
-        console.error('Error uploading document:', error);
-        alert('Failed to upload document');
-      }
-    }
+  const handleDocumentSelect = (selectedDocs: Document[]) => {
+    setShowSelectorModal(false);
+    // Handle selected documents as needed
+    console.log('Selected documents:', selectedDocs);
   };
 
   const handleDelete = async (documentId: string) => {
-    try {
-      const { error } = await supabase
-        .from('documents')
-        .delete()
-        .eq('id', documentId);
-
-      if (error) throw error;
-
-      setDocuments(prev => prev.filter(d => d.id !== documentId));
+    const success = await deleteDocument(documentId);
+    if (success) {
       setSelectedFiles(prev => prev.filter(id => id !== documentId));
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      alert('Failed to delete document');
+    }
+  };
+
+  const handleDownload = async (document: Document) => {
+    await downloadDocument(document);
+  };
+
+  const handleSearch = () => {
+    if (searchTerm.trim()) {
+      searchDocuments(searchTerm, { type: typeFilter !== 'all' ? typeFilter : undefined });
+    } else {
+      loadDocuments({ type: typeFilter !== 'all' ? typeFilter : undefined });
     }
   };
 
@@ -149,8 +97,8 @@ export const LawyerDocuments = () => {
               <FolderOpen className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-serif font-bold text-gray-900">Document Management</h1>
-              <p className="text-lg text-gray-600">Manage your case files and legal documents</p>
+              <h1 className="text-3xl font-serif font-bold text-gray-900">HakiDocs</h1>
+              <p className="text-lg text-gray-600">Central document repository for HakiChain</p>
             </div>
           </div>
         </div>
@@ -165,6 +113,7 @@ export const LawyerDocuments = () => {
               placeholder="Search documents..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
           </div>
@@ -177,6 +126,7 @@ export const LawyerDocuments = () => {
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none bg-white"
+              aria-label="Filter by file type"
             >
               <option value="all">All Types</option>
               <option value="image/">Images</option>
@@ -186,19 +136,22 @@ export const LawyerDocuments = () => {
             </select>
           </div>
 
-          <label className="btn btn-primary">
-            <input
-              type="file"
-              className="hidden"
-              multiple
-              onChange={(e) => {
-                const files = e.target.files;
-                if (files) handleUpload(files);
-              }}
-            />
-            <Upload className="w-5 h-5 mr-2" />
-            Upload Files
-          </label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="btn btn-primary"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Upload Files
+            </button>
+            <button
+              onClick={() => setShowSelectorModal(true)}
+              className="btn btn-outline"
+            >
+              <FolderOpen className="w-5 h-5 mr-2" />
+              Select from HakiDocs
+            </button>
+          </div>
         </div>
 
         {selectedFiles.length > 0 && (
@@ -283,17 +236,24 @@ export const LawyerDocuments = () => {
                       <span className="text-sm text-gray-500">
                         {new Date(doc.created_at).toLocaleDateString()}
                       </span>
-                      <div className="flex space-x-2">
-                        <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Download className="w-4 h-4 text-gray-500" />
-                        </button>
-                        <button 
-                          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                          onClick={() => handleDelete(doc.id)}
-                        >
-                          <Trash2 className="w-4 h-4 text-gray-500" />
-                        </button>
-                      </div>
+                                             <div className="flex space-x-2">
+                         <button 
+                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                           onClick={() => handleDownload(doc)}
+                           aria-label={`Download ${doc.name}`}
+                           title={`Download ${doc.name}`}
+                         >
+                           <Download className="w-4 h-4 text-gray-500" />
+                         </button>
+                         <button 
+                           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                           onClick={() => handleDelete(doc.id)}
+                           aria-label={`Delete ${doc.name}`}
+                           title={`Delete ${doc.name}`}
+                         >
+                           <Trash2 className="w-4 h-4 text-gray-500" />
+                         </button>
+                       </div>
                     </div>
                   </div>
                 </motion.div>
@@ -305,19 +265,70 @@ export const LawyerDocuments = () => {
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-600 mb-2">No documents found</h3>
             <p className="text-gray-500 mb-6">Upload your first document to get started</p>
-            <label className="btn btn-primary">
-              <input
-                type="file"
-                className="hidden"
-                multiple
-                onChange={(e) => {
-                  const files = e.target.files;
-                  if (files) handleUpload(files);
-                }}
-              />
+            <button
+              onClick={() => setShowUploadModal(true)}
+              className="btn btn-primary"
+            >
               <Upload className="w-5 h-5 mr-2" />
               Upload Files
-            </label>
+            </button>
+          </div>
+                 )}
+
+        {/* Upload Modal */}
+        {showUploadModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full">
+                <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <Upload className="w-6 h-6 text-primary-600" />
+                      <h3 className="text-lg font-medium text-gray-900">Upload Documents to Haki Docs</h3>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowUploadModal(false)}
+                      className="text-gray-400 hover:text-gray-600"
+                      aria-label="Close modal"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+
+                  <DocumentUpload
+                    onUploadComplete={handleUploadComplete}
+                    onUploadError={handleUploadError}
+                    placeholder="Upload documents to your Haki Docs"
+                    showPreview={true}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Document Selector Modal */}
+        {showSelectorModal && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+              <div className="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
+              </div>
+
+              <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-6xl sm:w-full max-h-[90vh]">
+                <DocumentSelector
+                  onDocumentSelect={handleDocumentSelect}
+                  placeholder="Select documents from your Haki Docs"
+                  showPreview={true}
+                  isModal={true}
+                />
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Brain,
@@ -9,17 +9,19 @@ import {
   Wand2,
   Loader2,
   CheckCircle,
-  AlertCircle,
   Sparkles,
   Plus,
   X,
   ChevronLeft,
   ChevronRight,
   Maximize2,
-  Minimize2
+  Minimize2,
+  FolderOpen
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { generateDocumentTemplate } from '../../lib/gemini';
+
+import { useDocumentManagement } from '../../hooks/useDocumentManagement';
 
 export const LawyerAI = () => {
   const [documentType, setDocumentType] = useState('');
@@ -27,7 +29,8 @@ export const LawyerAI = () => {
     caseType: '',
     clientName: '',
     description: '',
-    jurisdiction: 'Kenya'
+    jurisdiction: 'Kenya',
+    jurisdictionList: [] as string[]
   });
   const [additionalPrompts, setAdditionalPrompts] = useState<string[]>(['']);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -36,6 +39,10 @@ export const LawyerAI = () => {
   const [currentStep, setCurrentStep] = useState('');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  
+  // Document management hook
+  const { uploadDocuments } = useDocumentManagement();
   const outputRef = useRef<HTMLDivElement>(null);
 
   const documentTypes = [
@@ -132,15 +139,21 @@ export const LawyerAI = () => {
   };
 
   const handleDownload = () => {
+    if (!generatedContent) return;
+    
     const blob = new Blob([generatedContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
+    const fileName = `${documentType}_${caseDetails.clientName}_${new Date().toISOString().split('T')[0]}.txt`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${documentType}_${caseDetails.clientName}_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = fileName;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    
+    // Show success message
+    alert(`Document "${fileName}" downloaded successfully!`);
   };
 
   const handleCopy = async () => {
@@ -151,6 +164,28 @@ export const LawyerAI = () => {
     const subject = encodeURIComponent(`Legal Document: ${documentType} for ${caseDetails.clientName}`);
     const body = encodeURIComponent(generatedContent);
     window.open(`mailto:?subject=${subject}&body=${body}`);
+  };
+
+
+
+  const saveToHakiDocs = async () => {
+    if (!generatedContent) return;
+    
+    try {
+      const blob = new Blob([generatedContent], { type: 'text/plain' });
+      const fileName = `${documentType}_${caseDetails.clientName}_${new Date().toISOString().split('T')[0]}.txt`;
+      const file = new File([blob], fileName, {
+        type: 'text/plain'
+      });
+      
+      const fileList = new DataTransfer();
+      fileList.items.add(file);
+      await uploadDocuments(fileList.files);
+      alert(`Document "${fileName}" saved to HakiDocs successfully!`);
+    } catch (error) {
+      console.error('Error saving to HakiDocs:', error);
+      alert('Failed to save document to HakiDocs. Please try again.');
+    }
   };
 
   const goToNextPage = () => {
@@ -196,6 +231,45 @@ export const LawyerAI = () => {
                 <h2 className="text-xl font-bold text-gray-900">Document Configuration</h2>
               </div>
 
+              {/* HakiDocs Integration */}
+              <div className="bg-blue-50 rounded-lg p-4 mb-2 space-y-4">
+                  <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                    <Download className="w-5 h-5 text-green-600" />
+                    Document Export
+                  </h3>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDownload}
+                      disabled={!generatedContent}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download File
+                    </button>
+                    
+                    <button
+                      onClick={saveToHakiDocs}
+                      disabled={!generatedContent}
+                      className="flex items-center gap-2 px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                      Save to HakiDocs
+                    </button>
+                  </div>
+
+                  {generatedContent && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600">Generated document ready for download:</p>
+                      <div className="p-2 bg-white rounded border">
+                        <span className="text-sm text-gray-700 font-medium">
+                          {documentType}_{caseDetails.clientName}_{new Date().toISOString().split('T')[0]}.txt
+                        </span>
+                      </div>
+                    </div>
+                  )}
+              </div>
+
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -205,6 +279,7 @@ export const LawyerAI = () => {
                     value={documentType}
                     onChange={(e) => setDocumentType(e.target.value)}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    aria-label="Select document type"
                   >
                     <option value="">Select document type</option>
                     {documentTypes.map(type => (
@@ -339,6 +414,8 @@ export const LawyerAI = () => {
                           <button
                             onClick={() => removePrompt(index)}
                             className="p-3 text-gray-400 hover:text-red-500"
+                            title="Remove requirement"
+                            aria-label="Remove requirement"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -411,6 +488,13 @@ export const LawyerAI = () => {
                     >
                       <Mail className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={saveToHakiDocs}
+                      className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Save to HakiDocs"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                    </button>
                   </>
                 )}
                 <button
@@ -462,6 +546,43 @@ export const LawyerAI = () => {
                 )}
               </div>
 
+              {/* Document Export Section */}
+              {generatedContent && (
+                <div className="mt-6 bg-blue-50 rounded-lg p-4 space-y-4">
+                  <h3 className="font-medium text-gray-900 flex items-center gap-2">
+                    <Download className="w-5 h-5 text-green-600" />
+                    Document Export
+                  </h3>
+                  
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleDownload}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
+                    >
+                      <Download className="w-4 h-4" />
+                      Download File
+                    </button>
+                    
+                    <button
+                      onClick={saveToHakiDocs}
+                      className="flex items-center gap-2 px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+                    >
+                      <FolderOpen className="w-4 h-4" />
+                      Save to HakiDocs
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-600">Generated document ready for download:</p>
+                    <div className="p-2 bg-white rounded border">
+                      <span className="text-sm text-gray-700 font-medium">
+                        {documentType}_{caseDetails.clientName}_{new Date().toISOString().split('T')[0]}.txt
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {totalPages > 1 && generatedContent && (
                 <div className="flex items-center justify-between mt-4 p-4 bg-gray-50 rounded-lg">
                   <button
@@ -508,7 +629,10 @@ export const LawyerAI = () => {
               </div>
             )}
           </motion.div>
+          
         </div>
+
+
       </div>
     </LawyerDashboardLayout>
   );
