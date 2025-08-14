@@ -11,5 +11,13 @@ export default defineConfig({
     host: true,
     port: 3000, // You can change this port if needed
     open: true, // Automatically open browser on server start
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },
+    },
   },
 });

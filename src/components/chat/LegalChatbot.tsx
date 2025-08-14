@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageCircle,
@@ -13,11 +13,30 @@ import {
   AlertCircle,
   RefreshCw,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  History,
+  Pause,
+  Play,
+  Download,
+  Search,
+  Trash2
 } from 'lucide-react';
 import { generateChatResponse, generateQuickSuggestions, ChatMessage } from '../../lib/geminiChat';
+import { 
+  createSession, 
+  saveMessage, 
+  loadSession, 
+  getUserSessions, 
+  deleteSession,
+  exportChatSession,
+  setAutoScrollPreference,
+  getAutoScrollPreference,
+  type ChatSession 
+} from '../../services/simpleChatHistoryService';
+import { useAuth } from '../../hooks/useAuth';
 
 export const LegalChatbot = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -32,12 +51,44 @@ export const LegalChatbot = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  
+  // Auto-scroll control states
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [userHasScrolled, setUserHasScrolled] = useState(false);
+  
+  // History states
+  const [showHistory, setShowHistory] = useState(false);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [historySearchQuery, setHistorySearchQuery] = useState('');
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Enhanced auto-scroll with generation awareness
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (autoScrollEnabled && !userHasScrolled && (!isGenerating || isGenerating)) {
+      // Clear any existing timeout
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+      
+      // Delay scroll during generation to prevent jumping
+      scrollTimeoutRef.current = setTimeout(() => {
+        scrollToBottom();
+      }, isGenerating ? 200 : 50);
+    }
+    
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [messages, autoScrollEnabled, userHasScrolled, isGenerating]);
 
   useEffect(() => {
     if (isOpen && !isMinimized) {
@@ -49,8 +100,154 @@ export const LegalChatbot = () => {
     setSuggestions(generateQuickSuggestions(inputMessage));
   }, [inputMessage]);
 
+  // Load chat history when user opens the chat
+  useEffect(() => {
+    if (isOpen && user) {
+      loadChatHistory();
+      
+      // Load auto-scroll preference for current session
+      if (currentSessionId) {
+        loadAutoScrollPreference();
+      }
+    }
+  }, [isOpen, user, currentSessionId]);
+
+  // Detect user scrolling
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    
+    const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+    const isAtBottom = scrollHeight - scrollTop <= clientHeight + 100;
+    
+    setUserHasScrolled(!isAtBottom);
+    
+    // Reset user scroll detection after a delay
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    scrollTimeoutRef.current = setTimeout(() => {
+      if (isAtBottom) {
+        setUserHasScrolled(false);
+      }
+    }, 1000);
+  };
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Load chat history
+  const loadChatHistory = useCallback(async () => {
+    if (!user) return;
+    
+    setIsLoadingHistory(true);
+    try {
+      const sessions = await getUserSessions(user.id);
+      setChatSessions(sessions);
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  }, [user]);
+
+  // Load auto-scroll preference
+  const loadAutoScrollPreference = useCallback(async () => {
+    if (!user || !currentSessionId) return;
+    
+    try {
+      const disabled = await getAutoScrollPreference(currentSessionId, user.id);
+      setAutoScrollEnabled(!disabled);
+    } catch (error) {
+      console.error('Error loading auto-scroll preference:', error);
+    }
+  }, [user, currentSessionId]);
+
+  // Toggle auto-scroll and save preference
+  const toggleAutoScroll = async () => {
+    const newAutoScrollEnabled = !autoScrollEnabled;
+    setAutoScrollEnabled(newAutoScrollEnabled);
+    
+    if (user && currentSessionId) {
+      try {
+        await setAutoScrollPreference(currentSessionId, user.id, !newAutoScrollEnabled);
+      } catch (error) {
+        console.error('Error saving auto-scroll preference:', error);
+      }
+    }
+  };
+
+  // Start new chat session
+  const startNewSession = async () => {
+    if (!user) return;
+    
+    try {
+      const sessionTitle = `Chat ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`;
+      const sessionId = await createSession(sessionTitle, user.id);
+      setCurrentSessionId(sessionId);
+      clearChat();
+      await loadChatHistory();
+    } catch (error) {
+      console.error('Error creating new session:', error);
+    }
+  };
+
+  // Load a specific chat session
+  const loadChatSession = async (sessionId: string) => {
+    if (!user) return;
+    
+    try {
+      const sessionMessages = await loadSession(sessionId, user.id);
+      setMessages(sessionMessages.length > 0 ? sessionMessages : [
+        {
+          id: '1',
+          role: 'assistant',
+          content: "👋 Hi! I'm HakiBot, your AI legal assistant. I can help you understand Kenyan law, legal processes, and guide you to the right resources. What legal question can I help you with today?",
+          timestamp: new Date()
+        }
+      ]);
+      setCurrentSessionId(sessionId);
+      setShowHistory(false);
+      await loadAutoScrollPreference();
+    } catch (error) {
+      console.error('Error loading chat session:', error);
+    }
+  };
+
+  // Delete a chat session
+  const handleDeleteSession = async (sessionId: string) => {
+    if (!user) return;
+    
+    try {
+      await deleteSession(sessionId, user.id);
+      if (currentSessionId === sessionId) {
+        setCurrentSessionId(null);
+        clearChat();
+      }
+      await loadChatHistory();
+    } catch (error) {
+      console.error('Error deleting session:', error);
+    }
+  };
+
+  // Export current session
+  const handleExportSession = async () => {
+    if (!user || !currentSessionId) return;
+    
+    try {
+      const exportData = await exportChatSession(currentSessionId, user.id);
+      const blob = new Blob([exportData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hakilens-chat-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting session:', error);
+    }
   };
 
   const formatMessage = (content: string) => {
@@ -68,6 +265,17 @@ export const LegalChatbot = () => {
     const text = messageText || inputMessage.trim();
     if (!text || isTyping) return;
 
+    // Create session if user is logged in but no session exists
+    if (user && !currentSessionId) {
+      try {
+        const sessionTitle = `Chat ${new Date().toLocaleDateString()}`;
+        const sessionId = await createSession(sessionTitle, user.id);
+        setCurrentSessionId(sessionId);
+      } catch (error) {
+        console.error('Error creating session:', error);
+      }
+    }
+
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: 'user',
@@ -78,6 +286,16 @@ export const LegalChatbot = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputMessage('');
     setIsTyping(true);
+    setIsGenerating(true);
+
+    // Save user message to history if user is logged in
+    if (user && currentSessionId) {
+      try {
+        await saveMessage(currentSessionId, userMessage, user.id);
+      } catch (error) {
+        console.error('Error saving user message:', error);
+      }
+    }
 
     try {
       const generator = await generateChatResponse(text, messages);
@@ -102,6 +320,16 @@ export const LegalChatbot = () => {
           )
         );
       }
+
+      // Save complete bot response to history
+      if (user && currentSessionId) {
+        try {
+          const completeMessage = { ...botMessage, content: botResponse };
+          await saveMessage(currentSessionId, completeMessage, user.id);
+        } catch (error) {
+          console.error('Error saving bot message:', error);
+        }
+      }
     } catch (error) {
       console.error('Error generating response:', error);
       const errorMessage: ChatMessage = {
@@ -111,8 +339,18 @@ export const LegalChatbot = () => {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
+      
+      // Save error message to history
+      if (user && currentSessionId) {
+        try {
+          await saveMessage(currentSessionId, errorMessage, user.id);
+        } catch (error) {
+          console.error('Error saving error message:', error);
+        }
+      }
     } finally {
       setIsTyping(false);
+      setIsGenerating(false);
     }
   };
 
@@ -185,11 +423,62 @@ export const LegalChatbot = () => {
                 </div>
                 <div>
                   <h3 className="text-white font-semibold">HakiBot</h3>
-                  <p className="text-blue-100 text-xs">Legal AI Assistant</p>
+                  <p className="text-blue-100 text-xs flex items-center">
+                    Legal AI Assistant
+                    {isGenerating && (
+                      <span className="ml-2 flex items-center">
+                        <div className="w-2 h-2 bg-white rounded-full animate-pulse mr-1"></div>
+                        Generating...
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
               
               <div className="flex items-center space-x-2">
+                {/* Auto-scroll toggle */}
+                <button
+                  onClick={toggleAutoScroll}
+                  className={`p-1.5 rounded-lg transition-colors ${
+                    autoScrollEnabled 
+                      ? 'bg-white/20 hover:bg-white/30' 
+                      : 'bg-red-500/20 hover:bg-red-500/30'
+                  }`}
+                  title={autoScrollEnabled ? "Disable auto-scroll" : "Enable auto-scroll"}
+                >
+                  {autoScrollEnabled ? (
+                    <Play className="w-4 h-4 text-white" />
+                  ) : (
+                    <Pause className="w-4 h-4 text-white" />
+                  )}
+                </button>
+
+                {/* History toggle */}
+                {user && (
+                  <button
+                    onClick={() => setShowHistory(!showHistory)}
+                    className={`p-1.5 rounded-lg transition-colors ${
+                      showHistory 
+                        ? 'bg-white/30 hover:bg-white/40' 
+                        : 'hover:bg-white/20'
+                    }`}
+                    title="Chat History"
+                  >
+                    <History className="w-4 h-4 text-white" />
+                  </button>
+                )}
+
+                {/* Export current chat */}
+                {user && currentSessionId && (
+                  <button
+                    onClick={handleExportSession}
+                    className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+                    title="Export Chat"
+                  >
+                    <Download className="w-4 h-4 text-white" />
+                  </button>
+                )}
+
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
@@ -228,8 +517,106 @@ export const LegalChatbot = () => {
 
             {!isMinimized && (
               <>
+                {/* Chat History Sidebar */}
+                {showHistory && user && (
+                  <div className="border-b border-gray-200 max-h-48 overflow-y-auto bg-gray-50">
+                    <div className="p-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-sm font-semibold text-gray-700">Chat History</h4>
+                        <button
+                          onClick={startNewSession}
+                          className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                        >
+                          New Chat
+                        </button>
+                      </div>
+                      
+                      {/* Search */}
+                      <div className="relative mb-3">
+                        <Search className="absolute left-2 top-2 w-4 h-4 text-gray-400" />
+                        <input
+                          type="text"
+                          placeholder="Search chats..."
+                          value={historySearchQuery}
+                          onChange={(e) => setHistorySearchQuery(e.target.value)}
+                          className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+
+                      {/* Sessions List */}
+                      <div className="space-y-1 max-h-32 overflow-y-auto">
+                        {isLoadingHistory ? (
+                          <div className="text-xs text-gray-500 text-center py-2">Loading...</div>
+                        ) : chatSessions
+                          .filter(session => 
+                            !historySearchQuery || 
+                            session.title.toLowerCase().includes(historySearchQuery.toLowerCase())
+                          )
+                          .slice(0, 10)
+                          .map((session) => (
+                            <div
+                              key={session.id}
+                              className={`flex items-center justify-between p-2 rounded hover:bg-gray-100 cursor-pointer ${
+                                currentSessionId === session.id ? 'bg-blue-50 border border-blue-200' : ''
+                              }`}
+                              onClick={() => loadChatSession(session.id)}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-gray-900 truncate">
+                                  {session.title}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {session.message_count || 0} messages • {
+                                    new Date(session.updated_at || session.created_at).toLocaleDateString()
+                                  }
+                                </p>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSession(session.id);
+                                }}
+                                className="p-1 hover:bg-red-100 rounded"
+                                title="Delete chat"
+                              >
+                                <Trash2 className="w-3 h-3 text-red-500" />
+                              </button>
+                            </div>
+                          ))
+                        }
+                        {chatSessions.length === 0 && !isLoadingHistory && (
+                          <div className="text-xs text-gray-500 text-center py-2">
+                            No chat history yet
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div 
+                  ref={messagesContainerRef}
+                  onScroll={handleScroll}
+                  className="flex-1 overflow-y-auto p-4 space-y-4"
+                >
+                  {/* Auto-scroll indicator */}
+                  {userHasScrolled && isGenerating && (
+                    <div className="fixed bottom-24 right-8 bg-blue-500 text-white px-3 py-2 rounded-lg shadow-lg text-xs flex items-center space-x-2 z-10">
+                      <Pause className="w-3 h-3" />
+                      <span>Auto-scroll paused</span>
+                      <button
+                        onClick={() => {
+                          setUserHasScrolled(false);
+                          scrollToBottom();
+                        }}
+                        className="ml-2 underline hover:no-underline"
+                      >
+                        Resume
+                      </button>
+                    </div>
+                  )}
+
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}

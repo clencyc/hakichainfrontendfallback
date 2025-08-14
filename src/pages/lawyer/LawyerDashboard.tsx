@@ -9,25 +9,28 @@ import {
   Calendar,
   GavelIcon,
   Award,
-  Star
+  Star,
+  HelpCircle,
+  X,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
+import AutomatedReminderDashboard from '../../components/common/AutomatedReminderDashboard';
+import HakiLensComprehensiveUI from '../../components/hakilens/HakiLensComprehensiveUI';
 
-export const LawyerDashboard = () => {
+export default function LawyerDashboard() {
   const { user } = useAuth();
   const [data, setData] = useState<any>({
-    activeCases: [],
-    matchingBounties: [],
-    totalEarnings: 15900,
-    successRate: 92,
+    activeCases: [], // Fix: should be an array, not a number
+    completedCases: 45,
+    totalEarnings: 25000,
     rating: 4.8,
-    applications: [
-      { id: 1, status: 'accepted', bountyTitle: 'Land Rights Case', ngo: 'Justice Africa' },
-      { id: 2, status: 'pending', bountyTitle: 'Environmental Justice', ngo: 'EcoRights Kenya' }
-    ]
+    applications: [],
+    matchingBounties: []
   });
+  const [showTourPrompt, setShowTourPrompt] = useState(false);
 
   // Helper functions for table formatting
   const getPriorityColor = (priority?: string) => {
@@ -69,6 +72,12 @@ export const LawyerDashboard = () => {
   useEffect(() => {
     const loadData = async () => {
       try {
+        // Check if user has seen tour before
+        const hasSeenTour = localStorage.getItem('hakichain-tour-completed');
+        if (!hasSeenTour) {
+          setTimeout(() => setShowTourPrompt(true), 2000); // Show after 2 seconds
+        }
+
         // Load active cases
         const { data: cases, error: casesError } = await supabase
           .from('lawyer_cases')
@@ -165,6 +174,53 @@ export const LawyerDashboard = () => {
   return (
     <LawyerDashboardLayout>
       <div className="max-w-[1600px] mx-auto mt-20">
+        {/* Tour Prompt */}
+        {showTourPrompt && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed top-4 right-4 z-50 bg-gradient-to-r from-teal-500 to-blue-600 text-white p-4 rounded-xl shadow-lg max-w-sm"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                <HelpCircle className="w-6 h-6 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="font-semibold mb-1">Welcome to HakiChain! 🎉</h3>
+                  <p className="text-sm text-teal-100 mb-3">Take a quick tour to discover all the powerful features of your legal dashboard.</p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => {
+                        const tourBtn = document.querySelector('[data-tour="logo"]')?.closest('aside')?.querySelector('button[data-tour-trigger]') as HTMLButtonElement;
+                        if (tourBtn) tourBtn.click();
+                        setShowTourPrompt(false);
+                        localStorage.setItem('hakichain-tour-completed', 'true');
+                      }}
+                      className="bg-white text-teal-600 px-3 py-1 rounded-lg text-sm font-medium hover:bg-teal-50 transition-colors"
+                    >
+                      Start Tour
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowTourPrompt(false);
+                        localStorage.setItem('hakichain-tour-completed', 'true');
+                      }}
+                      className="text-teal-100 hover:text-white text-sm"
+                    >
+                      Skip
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTourPrompt(false)}
+                className="text-teal-200 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
         <div className="mb-6">
           <h1 className="text-3xl font-serif font-bold text-gray-900">Welcome back, {user?.name}</h1>
           <p className="text-lg text-gray-600">Here's an overview of your cases and performance</p>
@@ -183,10 +239,10 @@ export const LawyerDashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Active Cases</p>
-                <p className="text-2xl font-bold">{data.activeCases.length}</p>
+                <p className="text-2xl font-bold">{Array.isArray(data.activeCases) ? data.activeCases.length : 0}</p>
               </div>
             </div>
-            <p className="text-sm text-success-600">Managing {data.activeCases.length} cases</p>
+            <p className="text-sm text-success-600">Managing {Array.isArray(data.activeCases) ? data.activeCases.length : 0} cases</p>
           </motion.div>
 
           <motion.div
@@ -244,6 +300,33 @@ export const LawyerDashboard = () => {
           </motion.div>
         </div>
 
+        {/* Automated Reminder Dashboard */}
+        <div className="mb-6">
+          <AutomatedReminderDashboard />
+        </div>
+
+        {/* HakiLens Case Scraper */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+          className="bg-white rounded-xl shadow-sm mb-6"
+        >
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary-600" />
+              HakiLens Legal Research Platform
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Comprehensive case scraping, AI analysis, and legal research platform
+            </p>
+          </div>
+
+          <div className="p-6">
+            <HakiLensComprehensiveUI />
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm">
@@ -276,7 +359,7 @@ export const LawyerDashboard = () => {
 
                   {/* Table Body */}
                   <div className="divide-y divide-gray-200">
-                    {data.activeCases.map((caseItem: any) => (
+                    {Array.isArray(data.activeCases) && data.activeCases.map((caseItem: any) => (
                       <Link
                         key={caseItem.id}
                         to={`/lawyer/cases/${caseItem.id}`}
@@ -334,7 +417,7 @@ export const LawyerDashboard = () => {
                   </div>
                 </div>
 
-                {data.activeCases.length === 0 && (
+                {(!Array.isArray(data.activeCases) || data.activeCases.length === 0) && (
                   <div className="text-center py-8">
                     <GavelIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-600 mb-1">No active cases</h3>
