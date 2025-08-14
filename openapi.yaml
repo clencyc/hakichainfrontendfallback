@@ -1,0 +1,290 @@
+openapi: 3.0.3
+info:
+  title: HakiChain API
+  description: RESTful API for HakiChain legal services platform
+  version: 1.0.0
+  contact:
+    name: HakiChain API Support
+    email: api-support@hakichain.com
+    url: https://docs.hakichain.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3001/api
+    description: Development server
+  - url: https://api.hakichain.com/api
+    description: Production server (when deployed)
+
+paths:
+  /docs:
+    get:
+      summary: API Documentation Index
+      description: Get API documentation overview and available endpoints
+      operationId: getApiDocs
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: API documentation index
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiDocsResponse'
+
+  /docs/openapi.yaml:
+    get:
+      summary: OpenAPI Specification (YAML)
+      description: Get the OpenAPI specification in YAML format
+      operationId: getOpenApiYaml
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: OpenAPI specification in YAML
+          content:
+            application/x-yaml:
+              schema:
+                type: string
+                example: "openapi: 3.0.3\ninfo:\n  title: HakiChain API..."
+
+  /docs/openapi.json:
+    get:
+      summary: OpenAPI Specification (JSON)
+      description: Get the OpenAPI specification in JSON format
+      operationId: getOpenApiJson
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: OpenAPI specification in JSON
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /docs/swagger:
+    get:
+      summary: Swagger UI Documentation
+      description: Interactive API documentation using Swagger UI
+      operationId: getSwaggerUI
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: Swagger UI HTML page
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /docs/postman:
+    get:
+      summary: Postman Collection
+      description: Download Postman collection for API testing
+      operationId: getPostmanCollection
+      tags:
+        - Documentation
+      responses:
+        '200':
+          description: Postman collection JSON
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /send-sms-reminder:
+    post:
+      summary: Send SMS Reminder
+      description: Send SMS reminders to lawyers and clients about appointments or deadlines
+      operationId: sendSmsReminder
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsReminderRequest'
+            examples:
+              court_hearing:
+                summary: Court hearing reminder
+                value:
+                  lawyer_phone: "+1234567890"
+                  client_phone: "+0987654321"
+                  message: "Reminder: You have a court hearing tomorrow at 10:00 AM"
+              appointment:
+                summary: Appointment reminder
+                value:
+                  lawyer_phone: "+1234567890"
+                  client_phone: "+0987654321"
+                  message: "Reminder: Legal consultation scheduled for today at 2:00 PM"
+      responses:
+        '200':
+          description: SMS sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsReminderSuccessResponse'
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Missing required fields"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsReminderErrorResponse'
+
+components:
+  schemas:
+    ApiDocsResponse:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "HakiChain API Documentation"
+        version:
+          type: string
+          example: "1.0.0"
+        description:
+          type: string
+          example: "RESTful API for HakiChain legal services platform"
+        endpoints:
+          type: object
+          properties:
+            openapi_yaml:
+              type: string
+              example: "/api/docs/openapi.yaml"
+            openapi_json:
+              type: string
+              example: "/api/docs/openapi.json"
+            swagger_ui:
+              type: string
+              example: "/api/docs/swagger"
+            postman_collection:
+              type: string
+              example: "/api/docs/postman"
+        current_endpoints:
+          type: array
+          items:
+            type: object
+            properties:
+              method:
+                type: string
+              path:
+                type: string
+              description:
+                type: string
+        planned_endpoints:
+          type: array
+          items:
+            type: string
+
+    SmsReminderRequest:
+      type: object
+      required:
+        - lawyer_phone
+        - client_phone
+        - message
+      properties:
+        lawyer_phone:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          description: Lawyer's phone number in international format
+          example: "+1234567890"
+        client_phone:
+          type: string
+          pattern: '^\+[1-9]\d{1,14}$'
+          description: Client's phone number in international format
+          example: "+0987654321"
+        message:
+          type: string
+          maxLength: 1600
+          description: SMS message content
+          example: "Reminder: You have a court hearing tomorrow at 10:00 AM"
+
+    SmsReminderSuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "SMS sent successfully to both parties"
+        clientResult:
+          $ref: '#/components/schemas/SmsResult'
+        lawyerResult:
+          $ref: '#/components/schemas/SmsResult'
+
+    SmsReminderErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Failed to send SMS"
+        details:
+          type: string
+          example: "Invalid phone number format"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2025-08-10T12:00:00.000Z"
+
+    SmsResult:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+          example: "SUCCESS"
+        messageId:
+          type: string
+          example: "msg_123456"
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Missing required fields"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for API authentication
+
+# Note: Current implementation doesn't require authentication
+# security:
+#   - BearerAuth: []
+
+tags:
+  - name: Documentation
+    description: API documentation and specification endpoints
+  - name: Notifications
+    description: SMS and notification services
+  - name: Bounties
+    description: Legal bounty management (planned)
+  - name: Lawyers
+    description: Lawyer profile and application management (planned)
+  - name: Payments
+    description: Payment and transaction management (planned)
+  - name: Documents
+    description: Document management and e-signature (planned)
+
+externalDocs:
+  description: Full API Documentation
+  url: https://docs.hakichain.com/api

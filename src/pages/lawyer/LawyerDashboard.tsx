@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
+import AutomatedReminderDashboard from '../../components/common/AutomatedReminderDashboard';
 
 export const LawyerDashboard = () => {
   const { user } = useAuth();
@@ -298,6 +299,11 @@ export const LawyerDashboard = () => {
             </div>
             <p className="text-sm text-success-600">+12.5% from last month</p>
           </motion.div>
+        </div>
+
+        {/* Automated Reminder Dashboard */}
+        <div className="mb-6">
+          <AutomatedReminderDashboard />
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

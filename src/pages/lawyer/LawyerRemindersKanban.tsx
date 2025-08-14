@@ -265,7 +265,9 @@ export const LawyerRemindersKanban = () => {
       if (lawyerPhone && formData.client_phone) {
         try {
           console.log('Attempting to send SMS...');
-          const smsResponse = await fetch('/api/send-sms-reminder', {
+          const baseApi = (import.meta.env.DEV ? '' : '') as string; // use relative in dev
+          const smsUrl = baseApi + '/api/send-sms-reminder-v2';
+          const smsResponse = await fetch(smsUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -273,6 +275,18 @@ export const LawyerRemindersKanban = () => {
               client_phone: formData.client_phone,
               message: `Legal Reminder: ${formData.title}\n\nDetails: ${formData.description}\n\nDate: ${formData.reminder_date} at ${formData.reminder_time}\n\nClient: ${formData.client_name}`
             })
+          }).catch(async (err) => {
+            console.warn('Relative /api call failed, retrying on :3001', err);
+            // Retry directly to API server on 3001
+            return await fetch('http://localhost:3001/api/send-sms-reminder-v2', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                lawyer_phone: lawyerPhone,
+                client_phone: formData.client_phone,
+                message: `Legal Reminder: ${formData.title}\n\nDetails: ${formData.description}\n\nDate: ${formData.reminder_date} at ${formData.reminder_time}\n\nClient: ${formData.client_name}`
+              })
+            });
           });
 
           console.log('SMS Response status:', smsResponse.status);

@@ -13,6 +13,7 @@ import { LawyerCases } from './pages/lawyer/LawyerCasesList';
 import { LawyerCaseDetails } from './pages/lawyer/LawyerCaseDetails';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
 import { HakiLens } from './pages/lawyer/HakiLens';
+import HakiLensPythonIntegration from './components/hakilens/HakiLensPythonIntegration';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
 import { NGOLawyers } from './pages/ngo/NGOLawyers';
@@ -59,19 +60,49 @@ import LegalBounties from './pages/docs/LegalBounties';
 import MilestoneSystem from './pages/docs/MilestoneSystem';
 import LawyerMatching from './pages/docs/LawyerMatching';
 
+// Microsoft Clarity Analytics Service
+import clarityService from './services/clarityService';
+// Reminder System Manager
+import ReminderSystemManager from './services/reminderSystemManager';
 // Placeholder imports for new settings pages
 const PreferencesSettings = () => <div className="p-6">Preferences Settings (Coming soon)</div>;
 const DeleteAccountSettings = () => <div className="p-6">Delete Your Account (Coming soon)</div>;
 
+// dashboard imports
+
+
 function App() {
+  // Initialize Microsoft Clarity on app start
+  useEffect(() => {
+    clarityService.init();
+    
+    // Initialize the automated reminder system
+    ReminderSystemManager.initialize();
+    
+    // Test the system (optional, for development)
+    if (import.meta.env.DEV) {
+      setTimeout(() => {
+        ReminderSystemManager.testSystem();
+      }, 2000);
+    }
+
+    // Cleanup function
+    return () => {
+      ReminderSystemManager.shutdown();
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <div className="App">
+          <AppContent />
+        </div>
       </AuthProvider>
     </BrowserRouter>
   );
 }
+
 
 function AppContent() {
   const { isAuthenticated, userRole } = useAuth();
@@ -171,6 +202,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <HakiLens />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/hakilens-python" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <HakiLensPythonIntegration />
               </ProtectedRoute>
             } 
           />

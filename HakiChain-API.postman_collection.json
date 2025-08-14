@@ -1,0 +1,396 @@
+{
+  "info": {
+    "name": "HakiChain API Collection",
+    "description": "Complete API collection for HakiChain legal services platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": {
+      "major": 1,
+      "minor": 0,
+      "patch": 0
+    }
+  },
+  "item": [
+    {
+      "name": "Notifications",
+      "description": "SMS and notification services",
+      "item": [
+        {
+          "name": "Send SMS Reminder",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Set dynamic variables",
+                  "pm.environment.set('timestamp', new Date().toISOString());"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success property', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success');",
+                  "    pm.expect(responseJson.success).to.be.true;",
+                  "});",
+                  "",
+                  "pm.test('Response contains required fields', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('clientResult');",
+                  "    pm.expect(responseJson).to.have.property('lawyerResult');",
+                  "});",
+                  "",
+                  "pm.test('Client and lawyer results have status', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.clientResult).to.have.property('status');",
+                  "    pm.expect(responseJson.lawyerResult).to.have.property('status');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"lawyer_phone\": \"{{lawyer_phone}}\",\n  \"client_phone\": \"{{client_phone}}\",\n  \"message\": \"{{sms_message}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/send-sms-reminder",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "send-sms-reminder"
+              ]
+            },
+            "description": "Send SMS reminders to both lawyer and client about appointments or deadlines"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lawyer_phone\": \"+1234567890\",\n  \"client_phone\": \"+0987654321\",\n  \"message\": \"Reminder: You have a court hearing tomorrow at 10:00 AM\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:3000/api/send-sms-reminder",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "api",
+                    "send-sms-reminder"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": true,\n  \"message\": \"SMS sent successfully to both parties\",\n  \"clientResult\": {\n    \"status\": \"SUCCESS\",\n    \"messageId\": \"msg_123456\"\n  },\n  \"lawyerResult\": {\n    \"status\": \"SUCCESS\",\n    \"messageId\": \"msg_123457\"\n  }\n}"
+            },
+            {
+              "name": "Missing Fields Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lawyer_phone\": \"+1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:3000/api/send-sms-reminder",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "api",
+                    "send-sms-reminder"
+                  ]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"error\": \"Missing required fields\"\n}"
+            },
+            {
+              "name": "SMS Service Error",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"lawyer_phone\": \"invalid\",\n  \"client_phone\": \"+0987654321\",\n  \"message\": \"Test message\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "http://localhost:3000/api/send-sms-reminder",
+                  "protocol": "http",
+                  "host": [
+                    "localhost"
+                  ],
+                  "port": "3000",
+                  "path": [
+                    "api",
+                    "send-sms-reminder"
+                  ]
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"success\": false,\n  \"error\": \"Failed to send SMS\",\n  \"details\": \"Invalid phone number format\",\n  \"timestamp\": \"2025-08-10T12:00:00.000Z\"\n}"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Planned Endpoints",
+      "description": "Future API endpoints (not yet implemented)",
+      "item": [
+        {
+          "name": "Bounties",
+          "item": [
+            {
+              "name": "List Bounties (Planned)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{api_key}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/bounties?category=civil_rights&limit=10",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "bounties"
+                  ],
+                  "query": [
+                    {
+                      "key": "category",
+                      "value": "civil_rights"
+                    },
+                    {
+                      "key": "limit",
+                      "value": "10"
+                    }
+                  ]
+                },
+                "description": "Retrieve list of legal bounties (planned feature)"
+              }
+            },
+            {
+              "name": "Create Bounty (Planned)",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{api_key}}",
+                    "type": "text"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json",
+                    "type": "text"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"title\": \"Legal Consultation Required\",\n  \"description\": \"Need assistance with contract review\",\n  \"budget\": 1000,\n  \"category\": \"contract_law\",\n  \"deadline\": \"2025-12-31\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{base_url}}/bounties",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "bounties"
+                  ]
+                },
+                "description": "Create a new legal bounty (planned feature)"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lawyers",
+          "item": [
+            {
+              "name": "List Lawyers (Planned)",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{api_key}}",
+                    "type": "text"
+                  }
+                ],
+                "url": {
+                  "raw": "{{base_url}}/lawyers?specialization=civil_rights&rating=4.5",
+                  "host": [
+                    "{{base_url}}"
+                  ],
+                  "path": [
+                    "lawyers"
+                  ],
+                  "query": [
+                    {
+                      "key": "specialization",
+                      "value": "civil_rights"
+                    },
+                    {
+                      "key": "rating",
+                      "value": "4.5"
+                    }
+                  ]
+                },
+                "description": "Retrieve list of verified lawyers (planned feature)"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request script",
+          "console.log('Making request to HakiChain API...');"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test script",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response has valid JSON structure', function () {",
+          "    pm.response.to.be.json;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3001/api",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "your_api_key_here",
+      "type": "string"
+    },
+    {
+      "key": "lawyer_phone",
+      "value": "+1234567890",
+      "type": "string"
+    },
+    {
+      "key": "client_phone",
+      "value": "+0987654321",
+      "type": "string"
+    },
+    {
+      "key": "sms_message",
+      "value": "Reminder: You have a court hearing tomorrow at 10:00 AM",
+      "type": "string"
+    }
+  ]
+}

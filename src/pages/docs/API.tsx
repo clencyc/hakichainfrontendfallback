@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion';
 import { Code, Shield, Database, ArrowRight, CheckCircle, AlertTriangle, Globe, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '../../components/common/PageHeader';
@@ -36,7 +35,7 @@ export const API = () => {
             <SectionHeader
               title="Base URL & Authentication"
               subtitle="API endpoints and authentication methods"
-              icon={<Globe className="w-8 h-8" />}
+              icon={Globe}
             />
             
             <AlertBox
@@ -45,9 +44,9 @@ export const API = () => {
               icon={<Database className="w-6 h-6" />}
             >
               <p>
-                <strong>Production:</strong> https://api.hakichain.com/v1<br />
-                <strong>Staging:</strong> https://api-staging.hakichain.com/v1<br />
-                <strong>Development:</strong> https://api-dev.hakichain.com/v1
+                <strong>Development:</strong> http://localhost:3000/api<br />
+                <strong>Production:</strong> https://api.hakichain.com/api (when deployed)<br />
+                <em>Note: Currently in development phase</em>
               </p>
             </AlertBox>
 
@@ -96,23 +95,76 @@ export const API = () => {
             </div>
           </ContentSection>
 
-          {/* Bounties API */}
+          {/* Current API Endpoints */}
           <ContentSection delay={0.2}>
             <SectionHeader
-              title="Bounties API"
-              subtitle="Manage legal bounties and cases"
-              icon={<Zap className="w-8 h-8" />}
+              title="Current API Endpoints"
+              subtitle="Available endpoints in the current version"
+              icon={Zap}
+            />
+            
+            <AlertBox
+              title="Development Status"
+              type="info"
+              icon={<AlertTriangle className="w-6 h-6" />}
+            >
+              <p>
+                The API is currently in early development. Only the SMS reminder endpoint is 
+                implemented. Additional endpoints will be added in future releases.
+              </p>
+            </AlertBox>
+
+            <div className="grid md:grid-cols-1 gap-8 mt-6">
+              <InfoCard title="POST /send-sms-reminder">
+                <div className="space-y-4">
+                  <div className="p-4 bg-primary-50 rounded-lg">
+                    <h4 className="font-semibold text-primary-900 mb-2">Send SMS Reminder</h4>
+                    <p className="text-primary-800 text-sm">Send SMS reminders to lawyers and clients</p>
+                  </div>
+                  <div className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono">
+                    <pre>{`POST /api/send-sms-reminder
+Content-Type: application/json
+
+{
+  "lawyer_phone": "+1234567890",
+  "client_phone": "+0987654321", 
+  "message": "Court hearing reminder"
+}`}</pre>
+                  </div>
+                  <div className="p-4 bg-success-50 rounded-lg">
+                    <h4 className="font-semibold text-success-900 mb-2">Response (200)</h4>
+                    <div className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono">
+                      <pre>{`{
+  "success": true,
+  "message": "SMS sent successfully to both parties",
+  "clientResult": {"status": "SUCCESS"},
+  "lawyerResult": {"status": "SUCCESS"}
+}`}</pre>
+                    </div>
+                  </div>
+                </div>
+              </InfoCard>
+            </div>
+          </ContentSection>
+
+          {/* Planned API Endpoints */}
+          <ContentSection delay={0.3}>
+            <SectionHeader
+              title="Planned API Endpoints"
+              subtitle="Future endpoints in development"
+              icon={Code}
             />
             
             <div className="grid md:grid-cols-2 gap-8">
-              <InfoCard title="GET /bounties">
+              <InfoCard title="GET /bounties" variant="secondary">
                 <div className="space-y-4">
-                  <div className="p-4 bg-primary-50 rounded-lg">
-                    <h4 className="font-semibold text-primary-900 mb-2">List Bounties</h4>
-                    <p className="text-primary-800 text-sm">Retrieve all available legal bounties</p>
+                  <div className="p-4 bg-secondary-50 rounded-lg">
+                    <h4 className="font-semibold text-secondary-900 mb-2">List Bounties</h4>
+                    <p className="text-secondary-800 text-sm">Retrieve all available legal bounties</p>
+                    <span className="inline-block mt-2 px-2 py-1 bg-secondary-200 text-secondary-800 text-xs rounded">Coming Soon</span>
                   </div>
                   <div className="bg-gray-900 text-green-400 p-3 rounded text-sm font-mono">
-                    <pre>{`GET /api/v1/bounties
+                    <pre>{`GET /api/bounties
 Authorization: Bearer {api_key}`}</pre>
                   </div>
                 </div>
@@ -213,7 +265,7 @@ Authorization: Bearer {api_key}`}</pre>
             <SectionHeader
               title="Payments API"
               subtitle="Handle payments and transactions"
-              icon={<Shield className="w-8 h-8" />}
+              icon={Shield}
             />
             
             <AlertBox

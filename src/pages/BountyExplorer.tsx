@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Search, Filter, MapPin, Clock, Tag } from 'lucide-react';
 import { fetchBounties } from '../services/mockData';
 import { Bounty } from '../types';
+import { clarityService } from '../services/clarityService';
 
 export const BountyExplorer = () => {
   const [bounties, setBounties] = useState<Bounty[]>([]);
@@ -13,6 +14,9 @@ export const BountyExplorer = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   
   useEffect(() => {
+    // Track page view
+    clarityService.trackEvent('Page_View_BountyExplorer');
+    
     const loadBounties = async () => {
       try {
         const data = await fetchBounties();

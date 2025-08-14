@@ -26,10 +26,36 @@ The application follows a standard client-server architecture with a frontend, b
 *   **Backend:**
     *   Hardhat
     *   Ethers.js
-    *   Supabase
+    *   Supabase (Primary Backend)
+    *   Express.js (API Server for SMS and documentation)
 *   **Smart Contracts:**
     *   Solidity
     *   OpenZeppelin Contracts
+
+## 1.3. API Endpoints
+
+The HakiChain platform provides two types of API endpoints:
+
+### Supabase REST API (Primary Backend)
+- **Base URL**: `{VITE_SUPABASE_URL}/rest/v1/`
+- **Authentication**: Bearer token with Supabase anon key
+- **Auto-generated endpoints** based on database schema:
+  - `/users` - User management (lawyers, NGOs, donors)
+  - `/bounties` - Legal bounty management  
+  - `/milestones` - Bounty milestone tracking
+  - `/donations` - Donation tracking
+  - `/lawyer_reminders` - Lawyer appointment reminders
+- **Features**: Real-time subscriptions, Row Level Security, joins
+- **Documentation**: See `SUPABASE_API_DOCUMENTATION.md`
+
+### Express.js API Server
+- **Base URL**: `http://localhost:3001/api` (development)
+- **Current endpoints**:
+  - `POST /send-sms-reminder` - Send SMS notifications
+  - `GET /docs` - API documentation index
+  - `GET /docs/swagger` - Interactive Swagger UI
+  - `GET /docs/openapi.yaml` - OpenAPI specification
+- **Documentation**: See `API_DOCUMENTATION.md` and `openapi.yaml`
 
 ## 2. Smart Contracts
 
@@ -136,6 +162,55 @@ Supabase is used for:
 *   **Database:** A PostgreSQL database for storing user data, bounty information, and other application data.
 *   **Authentication:** User authentication and management.
 *   **Storage:** Storing user-uploaded files.
+*   **Real-time:** WebSocket connections for live updates.
+*   **Auto-generated REST API:** Automatic API endpoints based on database schema.
+
+#### Supabase API Endpoints
+
+The following endpoints are automatically generated:
+
+**Users Management:**
+- `GET /rest/v1/users` - List all users
+- `GET /rest/v1/users?role=eq.lawyer` - Get lawyers
+- `POST /rest/v1/users` - Create user
+- `PATCH /rest/v1/users?id=eq.{id}` - Update user
+
+**Bounties Management:**
+- `GET /rest/v1/bounties` - List bounties
+- `GET /rest/v1/bounties?status=eq.open` - Filter bounties
+- `POST /rest/v1/bounties` - Create bounty (NGO only)
+- `PATCH /rest/v1/bounties?id=eq.{id}` - Update bounty
+
+**Milestones:**
+- `GET /rest/v1/milestones?bounty_id=eq.{id}` - Get bounty milestones
+- `POST /rest/v1/milestones` - Create milestone
+- `PATCH /rest/v1/milestones?id=eq.{id}` - Update milestone
+
+**Donations:**
+- `GET /rest/v1/donations?bounty_id=eq.{id}` - Get bounty donations
+- `POST /rest/v1/donations` - Create donation
+
+**Lawyer Reminders:**
+- `GET /rest/v1/lawyer_reminders` - Get reminders
+- `POST /rest/v1/lawyer_reminders` - Create reminder
+- `PATCH /rest/v1/lawyer_reminders?id=eq.{id}` - Update reminder
+
+For complete API documentation, see `SUPABASE_API_DOCUMENTATION.md`.
+
+### 4.3. Express.js API Server
+
+A complementary Express.js server provides additional functionality:
+
+*   **SMS Services:** Integration with Tiara Connect for SMS notifications
+*   **API Documentation:** Swagger UI and OpenAPI specifications
+*   **Custom Business Logic:** Endpoints that require complex operations
+
+**Available Endpoints:**
+- `POST /api/send-sms-reminder` - Send SMS to lawyers and clients
+- `GET /api/docs` - API documentation overview
+- `GET /api/docs/swagger` - Interactive Swagger UI documentation
+- `GET /api/docs/openapi.yaml` - OpenAPI 3.0 specification
+- `GET /api/docs/postman` - Postman collection download
 
 ## 5. Database Schema
 
