@@ -218,7 +218,7 @@ HakiLens is an AI-powered legal research tool integrated into HakiChain. It prov
 ### Features
 
 1. **Case Scraping**: Extract legal cases from various court websites
-2. **Case Database**: Browse and search through scraped cases
+2. **Case Database**: Browse and search through Researchd cases
 3. **AI Assistant**: Ask questions about legal cases using AI
 4. **Case Chat**: Interactive AI chat for specific cases
 
@@ -249,7 +249,7 @@ HakiLens is an AI-powered legal research tool integrated into HakiChain. It prov
 ### Using HakiLens
 
 1. Navigate to `/lawyer/hakilens` in the application
-2. Use the **Scrape Cases** tab to extract cases from legal websites
+2. Use the **Research Cases** tab to extract cases from legal websites
 3. Browse cases in the **Case Database** tab
 4. Ask questions using the **AI Assistant** tab
 5. Click on any case to view detailed information and chat with AI

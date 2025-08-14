@@ -160,7 +160,7 @@ curl -X POST http://localhost:3001/api/hakilens/ai/chat/123 \
 #### HakiLens.tsx
 ```typescript
 // Main interface with three tabs:
-// 1. Scrape Cases - Extract cases from websites
+// 1. Research Cases - Extract cases from websites
 // 2. Case Database - Browse existing cases  
 // 3. AI Assistant - Ask questions about cases
 
