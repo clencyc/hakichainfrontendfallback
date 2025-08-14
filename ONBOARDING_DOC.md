@@ -1,6 +1,6 @@
 # HakiChain v2
 
-Justice Made Accessible Through Blockchain
+Justice Made Accessible Through Blockchain and AI
 
 ---
 

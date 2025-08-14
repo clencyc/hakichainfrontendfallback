@@ -585,7 +585,9 @@ export const AIReviewer = () => {
                   />
                 </div>
               ) : (
-                                 <div className="h-full overflow-auto bg-gray-50 rounded-lg">
+                                 <div className={`overflow-auto bg-gray-50 rounded-lg ${
+                                   isFullscreen ? 'h-[calc(100vh-200px)]' : 'h-full'
+                                 }`}>
                    {fileUrl && (
                      <div className="flex justify-center p-4">
                        {file?.type === 'application/pdf' ? (
