@@ -7,7 +7,7 @@ HakiChain is a decentralized platform for legal services and intellectual proper
 - **Document Registry**: Secure storage and verification of legal documents on the blockchain
 - **Legal Bounty System**: Post and claim legal tasks with transparent reward distribution
 - **Milestone Escrow**: Secure payment handling for legal services with milestone-based releases
-- **HakiToken**: Native utility token for platform operations
+- **HakiToken**: Native utility token for platform operations 
 
 ## 🛠️ Tech Stack
 
