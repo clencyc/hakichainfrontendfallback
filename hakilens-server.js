@@ -8,9 +8,33 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || process.env.HAKILENS_PORT || 8000;
 
+// CORS configuration
+const corsOptions = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://localhost:8080',
+    'https://f9e4cc818023.ngrok-free.app',
+    'https://hakichain.netlify.app',
+    'https://hakichain.vercel.app'
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'ngrok-skip-browser-warning'
+  ]
+};
+
 // Middleware
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
+
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
 // Initialize Supabase client
 const supabase = createClient(
@@ -307,6 +331,54 @@ app.get('/search_cases', async (req, res) => {
   }
 });
 
+// 5b. API route for HakiLens cases (for frontend dashboard)
+app.get('/api/hakilens/cases', async (req, res) => {
+  try {
+    const { limit = 20, offset = 0, search, court_name, case_type, year } = req.query;
+
+    let dbQuery = supabase
+      .from('cases')
+      .select('id, case_number, case_title, court_name, judge_name, hearing_date, case_type, status, ai_summary, created_at, source_url');
+
+    // Apply filters
+    if (search) {
+      dbQuery = dbQuery.or(`case_title.ilike.%${search}%,case_number.ilike.%${search}%,full_content.ilike.%${search}%,subject_matter.ilike.%${search}%`);
+    }
+    
+    if (court_name) {
+      dbQuery = dbQuery.ilike('court_name', `%${court_name}%`);
+    }
+    
+    if (case_type) {
+      dbQuery = dbQuery.ilike('case_type', `%${case_type}%`);
+    }
+    
+    if (year) {
+      dbQuery = dbQuery.ilike('hearing_date', `%${year}%`);
+    }
+
+    const { data: cases, error, count } = await dbQuery
+      .order('created_at', { ascending: false })
+      .range(parseInt(offset), parseInt(offset) + parseInt(limit) - 1);
+
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).json({ error: 'Failed to fetch cases', success: false });
+    }
+
+    res.json({ 
+      cases: cases || [], 
+      total: count || 0,
+      limit: parseInt(limit),
+      offset: parseInt(offset),
+      success: true 
+    });
+  } catch (error) {
+    console.error('API cases error:', error);
+    res.status(500).json({ error: error.message, success: false });
+  }
+});
+
 // 6. Get Case Details
 app.get('/case_details/:case_id', async (req, res) => {
   try {
@@ -326,6 +398,28 @@ app.get('/case_details/:case_id', async (req, res) => {
   } catch (error) {
     console.error('Case details error:', error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+// 6b. API route for case details (for frontend dashboard)
+app.get('/api/hakilens/cases/:case_id', async (req, res) => {
+  try {
+    const { case_id } = req.params;
+
+    const { data: caseData, error } = await supabase
+      .from('cases')
+      .select('*')
+      .eq('id', case_id)
+      .single();
+
+    if (error) {
+      return res.status(404).json({ error: 'Case not found', success: false });
+    }
+
+    res.json({ case: caseData, success: true });
+  } catch (error) {
+    console.error('API case details error:', error);
+    res.status(500).json({ error: error.message, success: false });
   }
 });
 

@@ -9,7 +9,6 @@ import {
   Wand2,
   Loader2,
   CheckCircle,
-  AlertCircle,
   Sparkles,
   Plus,
   X,
@@ -20,14 +19,32 @@ import {
 } from 'lucide-react';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { generateDocumentTemplate } from '../../lib/gemini';
+import { 
+  documentCategories, 
+  getDocumentTypesByCategory,
+  getCategoryById,
+  getDocumentTypeById,
+  DocumentCategory 
+} from '../../utils/documentTypes';
+import { 
+  initializeDocumentTypes,
+  fetchDocumentCategories,
+  fetchDocumentTypes,
+  DatabaseDocumentType
+} from '../../services/documentTypeService';
 
 export const LawyerAI = () => {
+  const [documentCategory, setDocumentCategory] = useState('');
   const [documentType, setDocumentType] = useState('');
+  const [dbCategories, setDbCategories] = useState<DocumentCategory[]>([]);
+  const [dbDocumentTypes, setDbDocumentTypes] = useState<DatabaseDocumentType[]>([]);
+  const [useStaticTypes, setUseStaticTypes] = useState(true); // Fallback to static types
   const [caseDetails, setCaseDetails] = useState({
     caseType: '',
     clientName: '',
     description: '',
-    jurisdiction: 'Kenya'
+    jurisdiction: 'Kenya',
+    jurisdictionList: [] as string[]
   });
   const [additionalPrompts, setAdditionalPrompts] = useState<string[]>(['']);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -38,18 +55,44 @@ export const LawyerAI = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const outputRef = useRef<HTMLDivElement>(null);
 
-  const documentTypes = [
-    'Affidavit',
-    'Contract Agreement',
-    'Power of Attorney',
-    'Lease Agreement',
-    'Employment Contract',
-    'Non-Disclosure Agreement',
-    'Court Application',
-    'Legal Notice',
-    'Memorandum of Understanding',
-    'Will and Testament'
-  ];
+  // Fetch document types from database when component mounts
+  useEffect(() => {
+    const loadDocumentData = async () => {
+      try {
+        // Initialize types if they don't exist
+        await initializeDocumentTypes();
+        
+        // Fetch categories and types
+        const [categories, fetchedTypes] = await Promise.all([
+          fetchDocumentCategories(),
+          fetchDocumentTypes()
+        ]);
+        
+        setDbCategories(categories);
+        // Map DocumentType to DatabaseDocumentType by adding required fields
+        const typesWithTimestamps: DatabaseDocumentType[] = fetchedTypes.map(type => ({
+          ...type,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }));
+        setDbDocumentTypes(typesWithTimestamps);
+        setUseStaticTypes(false); // Use database types
+      } catch (error) {
+        console.error('Error loading document data:', error);
+        // Keep useStaticTypes as true (fallback)
+      }
+    };
+
+    loadDocumentData();
+  }, []);  // Filter document types based on selected category
+  const filteredDocumentTypes = documentCategory
+    ? (useStaticTypes 
+        ? getDocumentTypesByCategory(documentCategory)
+        : dbDocumentTypes.filter(type => type.category_id === documentCategory))
+    : [];
+
+  // Get available categories - either from database or static
+  const availableCategories = useStaticTypes ? documentCategories : dbCategories;
 
   const formatContent = (content: string) => {
     return content
@@ -104,7 +147,17 @@ export const LawyerAI = () => {
       setProgress(20);
 
       const filteredPrompts = additionalPrompts.filter(p => p.trim());
-      const generator = await generateDocumentTemplate(documentType, caseDetails, filteredPrompts);
+      
+      // Get the document type information for better generation
+      const selectedDocType = useStaticTypes 
+        ? getDocumentTypeById(documentType)
+        : filteredDocumentTypes.find(t => t.name === documentType);
+      
+      const documentTypeName = useStaticTypes 
+        ? selectedDocType?.name || documentType
+        : documentType;
+
+      const generator = await generateDocumentTemplate(documentTypeName, caseDetails, filteredPrompts);
 
       setCurrentStep('Generating document...');
       setProgress(40);
@@ -132,11 +185,19 @@ export const LawyerAI = () => {
   };
 
   const handleDownload = () => {
+    const selectedDocType = useStaticTypes 
+      ? getDocumentTypeById(documentType)
+      : filteredDocumentTypes.find(t => t.name === documentType);
+    
+    const documentTypeName = useStaticTypes 
+      ? selectedDocType?.name || documentType
+      : documentType;
+
     const blob = new Blob([generatedContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${documentType}_${caseDetails.clientName}_${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `${documentTypeName.replace(/[^a-zA-Z0-9]/g, '_')}_${caseDetails.clientName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -148,7 +209,15 @@ export const LawyerAI = () => {
   };
 
   const handleEmailSend = () => {
-    const subject = encodeURIComponent(`Legal Document: ${documentType} for ${caseDetails.clientName}`);
+    const selectedDocType = useStaticTypes 
+      ? getDocumentTypeById(documentType)
+      : filteredDocumentTypes.find(t => t.name === documentType);
+    
+    const documentTypeName = useStaticTypes 
+      ? selectedDocType?.name || documentType
+      : documentType;
+
+    const subject = encodeURIComponent(`Legal Document: ${documentTypeName} for ${caseDetails.clientName}`);
     const body = encodeURIComponent(generatedContent);
     window.open(`mailto:?subject=${subject}&body=${body}`);
   };
@@ -197,20 +266,59 @@ export const LawyerAI = () => {
               </div>
 
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Document Type *
-                  </label>
-                  <select
-                    value={documentType}
-                    onChange={(e) => setDocumentType(e.target.value)}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  >
-                    <option value="">Select document type</option>
-                    {documentTypes.map(type => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Document Category *
+                    </label>
+                    <select
+                      value={documentCategory}
+                      onChange={(e) => {
+                        setDocumentCategory(e.target.value);
+                        setDocumentType(''); // Reset document type when category changes
+                      }}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                    >
+                      <option value="">Select document category</option>
+                      {availableCategories.map(category => (
+                        <option key={category.id} value={category.id}>
+                          {category.icon && `${category.icon} `}{category.name}
+                        </option>
+                      ))}
+                    </select>
+                    {documentCategory && getCategoryById(documentCategory) && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {getCategoryById(documentCategory)?.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Document Type *
+                    </label>
+                    <select
+                      value={documentType}
+                      onChange={(e) => setDocumentType(e.target.value)}
+                      disabled={!documentCategory}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50"
+                    >
+                      <option value="">Select document type</option>
+                      {filteredDocumentTypes.map(type => (
+                        <option key={type.id} value={useStaticTypes ? type.id : type.name}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                    {documentType && (
+                      <p className="mt-1 text-xs text-gray-500">
+                        {useStaticTypes 
+                          ? getDocumentTypeById(documentType)?.description
+                          : filteredDocumentTypes.find(t => t.name === documentType)?.description
+                        }
+                      </p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 space-y-4">

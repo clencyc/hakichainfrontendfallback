@@ -11,27 +11,26 @@ import {
   Award,
   Star,
   HelpCircle,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabase';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import AutomatedReminderDashboard from '../../components/common/AutomatedReminderDashboard';
+import HakiLensComprehensiveUI from '../../components/hakilens/HakiLensComprehensiveUI';
 
-export const LawyerDashboard = () => {
+export default function LawyerDashboard() {
   const { user } = useAuth();
-  const [showTourPrompt, setShowTourPrompt] = useState(false);
   const [data, setData] = useState<any>({
-    activeCases: [],
-    matchingBounties: [],
-    totalEarnings: 15900,
-    successRate: 92,
+    activeCases: [], // Fix: should be an array, not a number
+    completedCases: 45,
+    totalEarnings: 25000,
     rating: 4.8,
-    applications: [
-      { id: 1, status: 'accepted', bountyTitle: 'Land Rights Case', ngo: 'Justice Africa' },
-      { id: 2, status: 'pending', bountyTitle: 'Environmental Justice', ngo: 'EcoRights Kenya' }
-    ]
+    applications: [],
+    matchingBounties: []
   });
+  const [showTourPrompt, setShowTourPrompt] = useState(false);
 
   // Helper functions for table formatting
   const getPriorityColor = (priority?: string) => {
@@ -240,10 +239,10 @@ export const LawyerDashboard = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Active Cases</p>
-                <p className="text-2xl font-bold">{data.activeCases.length}</p>
+                <p className="text-2xl font-bold">{Array.isArray(data.activeCases) ? data.activeCases.length : 0}</p>
               </div>
             </div>
-            <p className="text-sm text-success-600">Managing {data.activeCases.length} cases</p>
+            <p className="text-sm text-success-600">Managing {Array.isArray(data.activeCases) ? data.activeCases.length : 0} cases</p>
           </motion.div>
 
           <motion.div
@@ -306,6 +305,28 @@ export const LawyerDashboard = () => {
           <AutomatedReminderDashboard />
         </div>
 
+        {/* HakiLens Case Scraper */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+          className="bg-white rounded-xl shadow-sm mb-6"
+        >
+          <div className="p-6 border-b border-gray-100">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Eye className="h-5 w-5 text-primary-600" />
+              HakiLens Legal Research Platform
+            </h2>
+            <p className="text-sm text-gray-600 mt-1">
+              Comprehensive case scraping, AI analysis, and legal research platform
+            </p>
+          </div>
+
+          <div className="p-6">
+            <HakiLensComprehensiveUI />
+          </div>
+        </motion.div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-xl shadow-sm">
@@ -338,7 +359,7 @@ export const LawyerDashboard = () => {
 
                   {/* Table Body */}
                   <div className="divide-y divide-gray-200">
-                    {data.activeCases.map((caseItem: any) => (
+                    {Array.isArray(data.activeCases) && data.activeCases.map((caseItem: any) => (
                       <Link
                         key={caseItem.id}
                         to={`/lawyer/cases/${caseItem.id}`}
@@ -396,7 +417,7 @@ export const LawyerDashboard = () => {
                   </div>
                 </div>
 
-                {data.activeCases.length === 0 && (
+                {(!Array.isArray(data.activeCases) || data.activeCases.length === 0) && (
                   <div className="text-center py-8">
                     <GavelIcon className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                     <h3 className="text-lg font-medium text-gray-600 mb-1">No active cases</h3>
