@@ -52,7 +52,18 @@ const AutomatedReminderDashboard: React.FC = () => {
   const loadReminderData = async () => {
     try {
       const response = await fetch('/api/automated-reminders');
-      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const text = await response.text();
+      if (!text) {
+        console.warn('Empty response from automated-reminders endpoint');
+        return;
+      }
+      
+      const data = JSON.parse(text);
       
       if (data.success) {
         setStats(data.stats);

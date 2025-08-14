@@ -20,25 +20,15 @@ import {
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 import { generateDocumentTemplate } from '../../lib/gemini';
 import { 
-  documentCategories, 
-  getDocumentTypesByCategory,
-  getCategoryById,
-  getDocumentTypeById,
-  DocumentCategory 
+  documentCategories,
+  getDocumentTypesByCategory, 
+  getDocumentTypeById, 
+  getCategoryById 
 } from '../../utils/documentTypes';
-import { 
-  initializeDocumentTypes,
-  fetchDocumentCategories,
-  fetchDocumentTypes,
-  DatabaseDocumentType
-} from '../../services/documentTypeService';
 
 export const LawyerAI = () => {
   const [documentCategory, setDocumentCategory] = useState('');
   const [documentType, setDocumentType] = useState('');
-  const [dbCategories, setDbCategories] = useState<DocumentCategory[]>([]);
-  const [dbDocumentTypes, setDbDocumentTypes] = useState<DatabaseDocumentType[]>([]);
-  const [useStaticTypes, setUseStaticTypes] = useState(true); // Fallback to static types
   const [caseDetails, setCaseDetails] = useState({
     caseType: '',
     clientName: '',
@@ -57,42 +47,20 @@ export const LawyerAI = () => {
 
   // Fetch document types from database when component mounts
   useEffect(() => {
-    const loadDocumentData = async () => {
-      try {
-        // Initialize types if they don't exist
-        await initializeDocumentTypes();
-        
-        // Fetch categories and types
-        const [categories, fetchedTypes] = await Promise.all([
-          fetchDocumentCategories(),
-          fetchDocumentTypes()
-        ]);
-        
-        setDbCategories(categories);
-        // Map DocumentType to DatabaseDocumentType by adding required fields
-        const typesWithTimestamps: DatabaseDocumentType[] = fetchedTypes.map(type => ({
-          ...type,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }));
-        setDbDocumentTypes(typesWithTimestamps);
-        setUseStaticTypes(false); // Use database types
-      } catch (error) {
-        console.error('Error loading document data:', error);
-        // Keep useStaticTypes as true (fallback)
-      }
-    };
+    // Using static document types - no need to fetch from database
+    console.log('Document types loaded:', {
+      categories: documentCategories.length,
+      types: documentCategories.reduce((total, cat) => total + getDocumentTypesByCategory(cat.id).length, 0)
+    });
+  }, []);
 
-    loadDocumentData();
-  }, []);  // Filter document types based on selected category
+  // Filter document types based on selected category
   const filteredDocumentTypes = documentCategory
-    ? (useStaticTypes 
-        ? getDocumentTypesByCategory(documentCategory)
-        : dbDocumentTypes.filter(type => type.category_id === documentCategory))
+    ? getDocumentTypesByCategory(documentCategory)
     : [];
 
-  // Get available categories - either from database or static
-  const availableCategories = useStaticTypes ? documentCategories : dbCategories;
+  // Get available categories - using static types
+  const availableCategories = documentCategories;
 
   const formatContent = (content: string) => {
     return content
@@ -149,13 +117,9 @@ export const LawyerAI = () => {
       const filteredPrompts = additionalPrompts.filter(p => p.trim());
       
       // Get the document type information for better generation
-      const selectedDocType = useStaticTypes 
-        ? getDocumentTypeById(documentType)
-        : filteredDocumentTypes.find(t => t.name === documentType);
+      const selectedDocType = getDocumentTypeById(documentType);
       
-      const documentTypeName = useStaticTypes 
-        ? selectedDocType?.name || documentType
-        : documentType;
+      const documentTypeName = selectedDocType?.name || documentType;
 
       const generator = await generateDocumentTemplate(documentTypeName, caseDetails, filteredPrompts);
 
@@ -185,13 +149,9 @@ export const LawyerAI = () => {
   };
 
   const handleDownload = () => {
-    const selectedDocType = useStaticTypes 
-      ? getDocumentTypeById(documentType)
-      : filteredDocumentTypes.find(t => t.name === documentType);
+    const selectedDocType = getDocumentTypeById(documentType);
     
-    const documentTypeName = useStaticTypes 
-      ? selectedDocType?.name || documentType
-      : documentType;
+    const documentTypeName = selectedDocType?.name || documentType;
 
     const blob = new Blob([generatedContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -209,13 +169,9 @@ export const LawyerAI = () => {
   };
 
   const handleEmailSend = () => {
-    const selectedDocType = useStaticTypes 
-      ? getDocumentTypeById(documentType)
-      : filteredDocumentTypes.find(t => t.name === documentType);
+    const selectedDocType = getDocumentTypeById(documentType);
     
-    const documentTypeName = useStaticTypes 
-      ? selectedDocType?.name || documentType
-      : documentType;
+    const documentTypeName = selectedDocType?.name || documentType;
 
     const subject = encodeURIComponent(`Legal Document: ${documentTypeName} for ${caseDetails.clientName}`);
     const body = encodeURIComponent(generatedContent);
@@ -305,17 +261,14 @@ export const LawyerAI = () => {
                     >
                       <option value="">Select document type</option>
                       {filteredDocumentTypes.map(type => (
-                        <option key={type.id} value={useStaticTypes ? type.id : type.name}>
+                        <option key={type.id} value={type.id}>
                           {type.name}
                         </option>
                       ))}
                     </select>
                     {documentType && (
                       <p className="mt-1 text-xs text-gray-500">
-                        {useStaticTypes 
-                          ? getDocumentTypeById(documentType)?.description
-                          : filteredDocumentTypes.find(t => t.name === documentType)?.description
-                        }
+                        {getDocumentTypeById(documentType)?.description}
                       </p>
                     )}
                   </div>

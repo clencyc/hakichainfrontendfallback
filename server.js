@@ -43,7 +43,7 @@ try {
 
 if (openApiSpec) {
   // Swagger UI for interactive API documentation
-  app.use('https://f9e4cc818023.ngrok-free.app/api/docs/swagger', swaggerUi.serve, swaggerUi.setup(openApiSpec, {
+  app.use('https://4281c3a98667.ngrok-free.app/api/docs/swagger', swaggerUi.serve, swaggerUi.setup(openApiSpec, {
     customSiteTitle: "HakiChain API Documentation",
     customCss: '.swagger-ui .topbar { display: none }',
     swaggerOptions: {
@@ -55,12 +55,12 @@ if (openApiSpec) {
   }));
 
   // API Documentation endpoints
-  app.get('https://f9e4cc818023.ngrok-free.app/api/docs/openapi.yaml', (req, res) => {
+  app.get('https://4281c3a98667.ngrok-free.app/api/docs/openapi.yaml', (req, res) => {
     res.setHeader('Content-Type', 'application/x-yaml');
     res.sendFile(path.join(__dirname, 'openapi.yaml'));
   });
 
-  app.get('https://f9e4cc818023.ngrok-free.app/api/docs/openapi.json', (req, res) => {
+  app.get('https://4281c3a98667.ngrok-free.app/api/docs/openapi.json', (req, res) => {
     try {
       const yamlContent = fs.readFileSync(path.join(__dirname, 'openapi.yaml'), 'utf8');
       const jsonContent = yaml.load(yamlContent);
@@ -70,17 +70,17 @@ if (openApiSpec) {
     }
   });
 
-  app.get('https://f9e4cc818023.ngrok-free.app/api/docs', (req, res) => {
+  app.get('https://4281c3a98667.ngrok-free.app/api/docs', (req, res) => {
     res.json({ title: "HakiChain API Documentation", version: "1.0.0" });
   });
 
-  app.get('https://f9e4cc818023.ngrok-free.app/api/docs/postman', (req, res) => {
+  app.get('https://4281c3a98667.ngrok-free.app/api/docs/postman', (req, res) => {
     res.sendFile(path.join(__dirname, 'HakiChain-API.postman_collection.json'));
   });
 }
 
 // Health check
-app.get('https://f9e4cc818023.ngrok-free.app/api/health', (_req, res) => {
+app.get('https://4281c3a98667.ngrok-free.app/api/health', (_req, res) => {
   res.json({ status: 'ok', port: PORT, time: new Date().toISOString() });
 });
 
@@ -92,12 +92,56 @@ app.post('/api/send-sms-reminder-v2', (req, res) => {
   return sendSmsReminderV2Handler(req, res);
 });
 
+// Automated reminders endpoint
+app.get('/api/automated-reminders', (req, res) => {
+  console.log('Automated reminders endpoint hit');
+  // Mock data for now - you can replace this with actual database queries
+  const mockData = {
+    success: true,
+    stats: {
+      total_active: 25,
+      due_today: 5,
+      upcoming: 8,
+      sent_today: 12
+    },
+    data: {
+      due_today: [
+        {
+          id: 1,
+          client_name: "John Doe",
+          type: "Court Hearing",
+          due_date: new Date().toISOString(),
+          priority: "high"
+        },
+        {
+          id: 2,
+          client_name: "Jane Smith",
+          type: "Document Submission",
+          due_date: new Date().toISOString(),
+          priority: "medium"
+        }
+      ],
+      upcoming: [
+        {
+          id: 3,
+          client_name: "Mike Wilson",
+          type: "Meeting",
+          due_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+          priority: "low"
+        }
+      ]
+    }
+  };
+  
+  res.json(mockData);
+});
+
 // HakiLens API Proxy - to solve CORS issues
 app.use('/api/hakilens', async (req, res) => {
   console.log('HakiLens proxy request:', req.method, req.originalUrl);
   
   try {
-    const hakilensBaseUrl = 'https://f9e4cc818023.ngrok-free.app';
+    const hakilensBaseUrl = 'https://4281c3a98667.ngrok-free.app';
     const targetPath = req.originalUrl.replace('/api/hakilens', '');
     const targetUrl = `${hakilensBaseUrl}${targetPath}`;
     

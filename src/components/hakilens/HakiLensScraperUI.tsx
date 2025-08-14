@@ -70,7 +70,7 @@ export default function HakiLensScraperUI() {
   const [summarizing, setSummarizing] = useState(false);
 
   // Base URL for the HakiLens API
-  const API_BASE = 'https://f9e4cc818023.ngrok-free.app';
+  const API_BASE = '/api/hakilens';
 
   useEffect(() => {
     checkHealth();

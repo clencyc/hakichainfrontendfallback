@@ -13,6 +13,7 @@ import { LawyerCases } from './pages/lawyer/LawyerCases';
 import { LawyerCaseDetails } from './pages/lawyer/LawyerCaseDetails';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
 import { HakiLens } from './pages/lawyer/HakiLens';
+import { HakiLensCaseDetails } from './pages/lawyer/HakiLensCaseDetails';
 import HakiLensPythonIntegration from './components/hakilens/HakiLensPythonIntegration';
 import { NGODashboard } from './pages/ngo/NGODashboard';
 import { NGOAnalytics } from './pages/ngo/NGOAnalytics';
@@ -202,6 +203,14 @@ function AppContent() {
             element={
               <ProtectedRoute allowed={userRole === 'lawyer'}>
                 <HakiLens />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="lawyer/hakilens/case/:caseId" 
+            element={
+              <ProtectedRoute allowed={userRole === 'lawyer'}>
+                <HakiLensCaseDetails />
               </ProtectedRoute>
             } 
           />
