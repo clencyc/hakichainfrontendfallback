@@ -1,13 +1,8 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-<<<<<<< HEAD
-import { motion } from 'framer-motion';
-import { GavelIcon, Home, LogOut, Brain, Bell, Search, FileCheck, FolderOpen, Settings, HelpCircle } from 'lucide-react';
-import Joyride from 'react-joyride';
-=======
 import { motion, AnimatePresence } from 'framer-motion';
-import { GavelIcon, Home, LogOut, Brain, Bell, Search, FileCheck, FolderOpen, Settings, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
->>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
+import { GavelIcon, Home, LogOut, Brain, Bell, Search, FileCheck, FolderOpen, Settings, Menu, X, ChevronLeft, ChevronRight, HelpCircle } from 'lucide-react';
+import Joyride from 'react-joyride';
 import { cn } from '../../utils/cn';
 import { useAuth } from '../../hooks/useAuth';
 import { useDashboardTour } from '../../hooks/useDashboardTour';
@@ -26,7 +21,6 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
   const { runTour, tourSteps, startTour, handleJoyrideCallback } = useDashboardTour();
 
   const sidebarLinks = [
-<<<<<<< HEAD
     { name: 'Overview', path: '/lawyer-dashboard', icon: Home, tourTarget: 'overview' },
     { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon, tourTarget: 'cases' },
     { name: 'HakiLens', path: '/lawyer/hakilens', icon: Search, tourTarget: 'hakilens' },
@@ -34,15 +28,6 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
     { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: FileCheck, tourTarget: 'hakireview' },
     { name: 'HakiReminders', path: '/lawyer/reminders-kanban', icon: Bell, tourTarget: 'hakireminders' },
     { name: 'Documents', path: '/lawyer/documents', icon: FolderOpen, tourTarget: 'documents' },
-=======
-    { name: 'Overview', path: '/lawyer-dashboard', icon: Home },
-    { name: 'Cases', path: '/lawyer/cases', icon: GavelIcon },
-    { name: 'HakiLens', path: '/lawyer/hakilens', icon: Search },
-    { name: 'HakiDraft', path: '/lawyer/ai', icon: Brain },
-    { name: 'HakiReview', path: '/lawyer/ai-document-reviewer', icon: FileCheck },
-    { name: 'HakiReminders', path: '/lawyer/reminders-kanban', icon: Bell },
-    { name: 'HakiDocs', path: '/lawyer/documents', icon: FolderOpen },
->>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
   ];
 
   const isSettings = location.pathname.startsWith('/settings');
@@ -92,11 +77,7 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
         <div className="flex flex-col h-full">
           {/* Logo and Toggle Button */}
           {!isSettings && (
-<<<<<<< HEAD
-            <div className="h-16 flex items-center px-6 border-b border-gray-200" data-tour="logo">
-              <Logo />
-=======
-            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
+            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200" data-tour="logo">
               <AnimatePresence mode="wait">
                 {isSidebarOpen ? (
                   <motion.div
@@ -139,7 +120,6 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
                   <X className="w-6 h-6" />
                 </button>
               </div>
->>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
             </div>
           )}
 
@@ -197,16 +177,12 @@ export const LawyerDashboardLayout = ({ children }: LawyerDashboardLayoutProps) 
               
               <Link
                 to="/settings"
-<<<<<<< HEAD
                 data-tour="settings"
-                className="flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100"
-=======
                 className={cn(
                   "flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 transition-all",
                   !isSidebarOpen && "justify-center"
                 )}
                 title={!isSidebarOpen ? "Settings" : undefined}
->>>>>>> 23ba7ae863478c1338b397b2ffa380354049c9cd
               >
                 <Settings className={cn("w-5 h-5 flex-shrink-0 min-w-[20px]", isSidebarOpen ? "mr-2" : "mx-auto")} />
                 <AnimatePresence mode="wait">
