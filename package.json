@@ -30,7 +30,6 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.2.1",
-    "openai": "^4.28.0",
     "@headlessui/react": "^1.7.18",
     "@hello-pangea/dnd": "^16.5.0",
     "@microsoft/clarity": "^1.0.0",
