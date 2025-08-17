@@ -1,4 +1,64 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, Sparkles, AlertCircle, X } from 'lucide-react';
+import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
+
+const HakiLens: React.FC = () => {
+  const [keywords, setKeywords] = useState('');
+  const [caseNumber, setCaseNumber] = useState('');
+  const [courtName, setCourtName] = useState('');
+  const [year, setYear] = useState('');
+  const [caseUrl, setCaseUrl] = useState('');
+  const [error, setError] = useState('');
+  const [urlError, setUrlError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSearchCases = useCallback(async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // TODO: Implement case search functionality
+      console.log('Searching cases with:', { keywords, caseNumber, courtName, year });
+    } catch (err) {
+      setError('Failed to search cases. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [keywords, caseNumber, courtName, year]);
+
+  const handleDeepScrapeCase = useCallback(async () => {
+    if (!caseUrl.trim()) {
+      setUrlError('Please enter a valid case URL');
+      return;
+    }
+
+    setIsLoading(true);
+    setError('');
+    setUrlError('');
+    
+    try {
+      // TODO: Implement deep case scraping functionality
+      console.log('Deep scraping case:', caseUrl);
+    } catch (err) {
+      setError('Failed to scrape case. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [caseUrl]);
+
+  return (
+    <LawyerDashboardLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">HakiLens</h1>
+            <p className="text-gray-600 mt-2">
+              Advanced legal case research and analysis powered by AI
+            </p>
+          </div>
+        </div>
+
         {/* Status Messages */}
         <AnimatePresence>
           {error && (
@@ -13,12 +73,14 @@ import React, { useState, useEffect, useCallback } from 'react';
               <button
                 onClick={() => setError('')}
                 className="ml-auto text-red-600 hover:text-red-800"
+                title="Close error message"
               >
                 <X size={16} />
               </button>
             </motion.div>
           )}
-=======
+        </AnimatePresence>
+
         {/* Search Cases Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -77,9 +139,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 
           <button
             onClick={handleSearchCases}
-            className="bg-[#008080] hover:bg-[#006666] text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            disabled={isLoading}
+            className="bg-[#008080] hover:bg-[#006666] disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors"
           >
-            Search Cases
+            {isLoading ? 'Searching...' : 'Search Cases'}
           </button>
         </div>
 
@@ -115,10 +178,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 
             <button
               onClick={handleDeepScrapeCase}
-              className="bg-[#008080] hover:bg-[#006666] text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
+              disabled={isLoading}
+              className="bg-[#008080] hover:bg-[#006666] disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center space-x-2"
             >
               <Sparkles className="w-5 h-5" />
-              <span>Deep Research Case</span>
+              <span>{isLoading ? 'Processing...' : 'Deep Research Case'}</span>
             </button>
           </div>
         </div>
@@ -126,3 +190,5 @@ import React, { useState, useEffect, useCallback } from 'react';
     </LawyerDashboardLayout>
   );
 };
+
+export default HakiLens;

@@ -12,7 +12,7 @@ import { LawyerRemindersKanban } from './pages/lawyer/LawyerRemindersKanban';
 import { LawyerCases } from './pages/lawyer/LawyerCases';
 import { LawyerCaseDetails } from './pages/lawyer/LawyerCaseDetails';
 import { LawyerDocuments } from './pages/lawyer/LawyerDocuments';
-import { HakiLens } from './pages/lawyer/HakiLens';
+import HakiLens from './pages/lawyer/HakiLens';
 import { HakiLensCaseDetails } from './pages/lawyer/HakiLensCaseDetails';
 import HakiLensPythonIntegration from './components/hakilens/HakiLensPythonIntegration';
 import { NGODashboard } from './pages/ngo/NGODashboard';

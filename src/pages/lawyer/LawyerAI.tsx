@@ -56,7 +56,7 @@ export const LawyerAI = () => {
     content: [{ type: "paragraph", content: [{ type: "text", text: "Start drafting your legal document..." }] }]
   });
   const [showHakiDocsModal, setShowHakiDocsModal] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState<any>(null);
+  // Removed unused selectedDocument state
 
   // Document management hook
   const { uploadDocuments } = useDocumentManagement();
@@ -78,6 +78,18 @@ export const LawyerAI = () => {
 
   // Get available categories - using static types
   const availableCategories = documentCategories;
+  
+  // Document types for simple generator
+  const documentTypes = [
+    'Non-Disclosure Agreement',
+    'Employment Contract',
+    'Service Agreement',
+    'Lease Agreement',
+    'Purchase Agreement',
+    'Partnership Agreement',
+    'Consulting Agreement',
+    'License Agreement'
+  ];
 
   // Predefined legal clauses for different document types
   const legalClauses: Clause[] = [
@@ -315,7 +327,7 @@ export const LawyerAI = () => {
 
     } catch (error) {
       console.error('Error generating document:', error);
-      setCurrentStep(`Error generating document: ${error.message}`);
+      setCurrentStep(`Error generating document: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setIsGenerating(false);
     }
   };
@@ -548,6 +560,7 @@ export const LawyerAI = () => {
                         setDocumentType(''); // Reset document type when category changes
                       }}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                      aria-label="Select document category"
                     >
                       <option value="">Select document category</option>
                       {availableCategories.map(category => (
@@ -572,6 +585,7 @@ export const LawyerAI = () => {
                       onChange={(e) => setDocumentType(e.target.value)}
                       disabled={!documentCategory}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 disabled:opacity-50"
+                      aria-label="Select document type"
                     >
                       <option value="">Select document type</option>
                       {filteredDocumentTypes.map(type => (
@@ -586,7 +600,6 @@ export const LawyerAI = () => {
                       </p>
                     )}
                   </div>
-                </div>
                 </div>
 
                 <div className="bg-gray-50 rounded-lg p-4 space-y-4">
@@ -702,8 +715,6 @@ export const LawyerAI = () => {
                     </>
                   )}
                 </button>
-
-
               </div>
             </motion.div>
 
