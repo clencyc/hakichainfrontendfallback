@@ -16,7 +16,7 @@ export const Home = () => {
               transition={{ duration: 0.6 }}
             >
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6">
-                Justice Made <span className="text-primary-400">Accessible</span> Through Blockchain and AI and AI
+                Justice Made <span className="text-primary-400">Accessible</span> Through Blockchain and AI
               </h1>
               <p className="text-lg md:text-xl text-gray-300 mb-8">
                 Connecting NGOs, donors, and lawyers to bring legal justice to those who need it most. Powered by transparent blockchain technology.
