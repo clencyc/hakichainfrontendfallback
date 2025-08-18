@@ -1,14 +1,17 @@
+
 # HakiChain v2.2.1
 
-HakiChain is a decentralized platform for legal services and intellectual property protection, built on blockchain technology. The platform enables secure document management, legal bounties, milestone-based escrow services for legal professionals.
+HakiChain is a decentralized platform for legal services and intellectual property protection, built on blockchain technology. The platform enables secure document management, legal bounties, milestone-based escrow services for legal professionals. There are AI-powered tools for lawyers. 
 
 ## 🌟 Features
 
 - **Document Registry**: Secure storage and verification of legal documents on the blockchain
 - **Legal Bounty System**: Post and claim legal tasks with transparent reward distribution
 - **Milestone Escrow**: Secure payment handling for legal services with milestone-based releases
-- **HakiToken**: Native utility token for platform operations
+- **HakiToken**: Native utility token for platform operations 
 
+
+hhh
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, TypeScript, TailwindCSS, Vite

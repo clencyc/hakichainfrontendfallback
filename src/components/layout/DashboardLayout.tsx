@@ -9,7 +9,9 @@ import {
   FileText, 
   Users, 
   BarChart3, 
-  LogOut
+  LogOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { cn } from '../../utils/cn';
@@ -38,7 +40,8 @@ const getLinksByRole = (role: string): SidebarLink[] => {
 };
 
 export const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,9 +60,10 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
       {/* Sidebar */}
       <aside 
         className={cn(
-          "fixed top-0 left-0 z-40 h-screen transition-transform bg-white border-r border-gray-200",
-          "w-64 md:translate-x-0",
-          !isSidebarOpen && "-translate-x-full",
+          "fixed top-0 left-0 z-40 h-screen transition-all duration-300 bg-white border-r border-gray-200",
+          isSidebarOpen ? "w-64" : "w-16",
+          "md:translate-x-0",
+          !isMobileMenuOpen && "-translate-x-full md:translate-x-0",
           sidebarClass
         )}
       >
@@ -67,19 +71,56 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           {/* Logo */}
           {!isSettings && (
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <Link to="/" className="flex items-center space-x-2">
-                <Logo />
-              </Link>
-              <button 
-                onClick={() => setIsSidebarOpen(false)}
-                className="md:hidden text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
+              <AnimatePresence mode="wait">
+                {isSidebarOpen ? (
+                  <motion.div
+                    key="logo"
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    className="flex items-center space-x-2"
+                  >
+                    <Link to="/" className="flex items-center space-x-2">
+                      <Logo />
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="logo-collapsed"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex items-center justify-center w-8 h-8"
+                  >
+                    <Link to="/" className="flex items-center justify-center w-8 h-8">
+                      <div className="w-8 h-8 bg-primary-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                        H
+                      </div>
+                    </Link>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                  className="hidden md:flex items-center justify-center w-8 h-8 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  title={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                  {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </button>
+                <button 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="md:hidden text-gray-500 hover:text-gray-700"
+                  title="Close menu"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
             </div>
           )}
 
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                     <nav className="flex-1 space-y-1 overflow-y-auto" style={{ padding: isSidebarOpen ? '1rem' : '0.5rem' }}>
             {links.map((link) => {
               const Icon = link.icon;
               return (
@@ -87,14 +128,29 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
                   key={link.path}
                   to={link.path}
                   className={cn(
-                    "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+                    "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors group",
                     location.pathname === link.path
                       ? "bg-primary-50 text-primary-700"
                       : "text-gray-700 hover:bg-gray-100"
                   )}
+                  title={!isSidebarOpen ? link.name : undefined}
                 >
-                  <Icon className="w-5 h-5 mr-3" />
-                  {link.name}
+                                     <Icon className={cn(
+                     "w-5 h-5 transition-colors flex-shrink-0 min-w-[20px]",
+                     isSidebarOpen ? "mr-3" : "mx-auto"
+                   )} />
+                  <AnimatePresence mode="wait">
+                    {isSidebarOpen && (
+                      <motion.span
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: "auto" }}
+                        exit={{ opacity: 0, width: 0 }}
+                        className="whitespace-nowrap"
+                      >
+                        {link.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
                 </Link>
               );
             })}
@@ -103,10 +159,25 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
           <div className="absolute bottom-0 left-0 w-full p-4">
             <Link
               to="/settings"
-              className="flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100"
+              className={cn(
+                "flex items-center px-4 py-2 text-sm font-medium rounded-lg text-gray-700 hover:bg-gray-100 transition-all",
+                !isSidebarOpen && "justify-center"
+              )}
+              title={!isSidebarOpen ? "Settings" : undefined}
             >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.5-3.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z" /></svg>
-              Settings
+                             <svg className={cn("w-5 h-5 flex-shrink-0 min-w-[20px]", isSidebarOpen ? "mr-2" : "mx-auto")} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7zm7.5-3.5a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0z" /></svg>
+              <AnimatePresence mode="wait">
+                {isSidebarOpen && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: "auto" }}
+                    exit={{ opacity: 0, width: 0 }}
+                    className="whitespace-nowrap"
+                  >
+                    Settings
+                  </motion.span>
+                )}
+              </AnimatePresence>
             </Link>
           </div>
         </div>
@@ -115,14 +186,18 @@ export const DashboardLayout = ({ children }: { children: React.ReactNode }) => 
       {/* Main Content */}
       <div className={cn(
         "transition-all duration-300 flex-1 flex flex-col",
-        "md:ml-64"
+        isSidebarOpen ? "md:ml-64" : "md:ml-16"
       )}>
         {/* Top Navigation */}
-        <header className="bg-white border-b border-gray-200 fixed right-0 left-0 md:left-64 z-30">
+        <header className={cn(
+          "bg-white border-b border-gray-200 fixed right-0 z-30 transition-all duration-300",
+          isSidebarOpen ? "md:left-64" : "md:left-16"
+        )}>
           <div className="flex items-center justify-between px-4 py-3">
             <button
-              onClick={() => setIsSidebarOpen(true)}
+              onClick={() => setIsMobileMenuOpen(true)}
               className="md:hidden text-gray-500 hover:text-gray-700"
+              title="Open menu"
             >
               <Menu className="w-6 h-6" />
             </button>

@@ -62,16 +62,16 @@ fi
 
 # Test scraping endpoint (with invalid URL to avoid actual scraping)
 echo ""
-echo "5. Testing scrape endpoint (error handling)..."
-scrape_response=$(curl -s -X POST "$API_BASE/scrape_case" \
+echo "5. Testing Research endpoint (error handling)..."
+Research_response=$(curl -s -X POST "$API_BASE/scrape_case" \
     -H "Content-Type: application/json" \
     -d '{"url": ""}')
 
 if [[ $scrape_response == *"error"* ]] && [[ $scrape_response == *"URL is required"* ]]; then
-    echo "✅ Scrape endpoint error handling working"
+    echo "✅ Research endpoint error handling working"
 else
-    echo "❌ Scrape endpoint error handling failed"
-    echo "   Response: $scrape_response"
+    echo "❌ Research endpoint error handling failed"
+    echo "   Response: $Research_response"
 fi
 
 # Test chat history endpoint
@@ -92,7 +92,7 @@ echo "✅ Server Health: OK"
 echo "✅ API Info: OK"
 echo "✅ Chat: OK"
 echo "✅ Search: OK"  
-echo "✅ Scrape Error Handling: OK"
+echo "✅ Research Error Handling: OK"
 echo "✅ Chat History: OK"
 
 echo ""
@@ -102,7 +102,7 @@ echo "📖 Available endpoints:"
 echo "   • Health Check: $API_BASE/health"
 echo "   • API Documentation: $API_BASE/"
 echo "   • Search Cases: GET $API_BASE/search_cases"
-echo "   • Scrape Case: POST $API_BASE/scrape_case"
+echo "   • Research Case: POST $API_BASE/scrape_case"
 echo "   • Chat: POST $API_BASE/chat"
 echo "   • Chat History: GET $API_BASE/chat_history"
 echo ""

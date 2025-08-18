@@ -10,7 +10,7 @@ export const Introduction = () => {
       <PageHeader
         icon={Book}
         title="Introduction to HakiChain"
-        subtitle="Revolutionizing Legal Access Through Blockchain Technology"
+        subtitle="Revolutionizing Legal Access Through Blockchain and AI Technology"
         description="Discover how HakiChain is democratizing legal services by connecting NGOs, donors, and lawyers through transparent blockchain technology and innovative bounty systems."
         gradient="primary"
       />
