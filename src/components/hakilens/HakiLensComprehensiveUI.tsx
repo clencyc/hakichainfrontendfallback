@@ -922,7 +922,7 @@ const HakiLensComprehensiveUI: React.FC = () => {
       {/* Tab Navigation */}
       <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
         {[
-          { id: 'scrape', label: 'Scrape Cases', icon: Search },
+          { id: 'scrape', label: 'Deep Research on Cases', icon: Search },
           { id: 'cases', label: 'Case Database', icon: Database },
           { id: 'ai', label: 'AI Assistant', icon: Brain },
           { id: 'settings', label: 'Settings', icon: Settings }

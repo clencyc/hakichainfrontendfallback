@@ -1,27 +1,47 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mail, Lock, AlertCircle } from 'lucide-react';
+import { Mail, Lock, XCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { getDashboardRoute, getRoleDisplayName } from '../utils/userRoutes';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setIsLoading(true);
 
     try {
       await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError('Invalid email or password');
+      
+      // Get user from localStorage to check their role
+      const userStr = localStorage.getItem('hakichain_user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        const dashboardRoute = getDashboardRoute(user.role);
+        const roleDisplay = getRoleDisplayName(user.role);
+        
+        setSuccess(`Welcome back! Redirecting to your ${roleDisplay} dashboard...`);
+        console.log(`Redirecting ${user.role} to ${dashboardRoute}`);
+        
+        // Small delay to show success message
+        setTimeout(() => {
+          navigate(dashboardRoute);
+        }, 1500);
+      } else {
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password');
     } finally {
       setIsLoading(false);
     }
@@ -37,13 +57,20 @@ export const Login = () => {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-serif font-bold text-gray-900 mb-2">Welcome Back</h1>
-          <p className="text-gray-600">Sign in to your HakiChain account</p>
+          <p className="text-gray-600">Sign in to access your HakiChain dashboard</p>
         </div>
 
-        {error && (
-          <div className="mb-6 p-3 bg-error-50 border border-error-200 rounded-md text-error-700 flex items-start">
-            <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-            <p className="text-sm">{error}</p>
+                {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-2">
+            <XCircle className="h-5 w-5 text-red-500" />
+            <span className="text-red-700">{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center space-x-2">
+            <CheckCircle className="h-5 w-5 text-green-500" />
+            <span className="text-green-700">{success}</span>
           </div>
         )}
 

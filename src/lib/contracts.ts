@@ -1,10 +1,19 @@
 import { ethers } from 'ethers';
-import HakiTokenABI from '../../artifacts/contracts/HakiToken.sol/HakiToken.json';
-import LegalBountyABI from '../../artifacts/contracts/LegalBounty.sol/LegalBounty.json';
-import DocumentRegistryABI from '../../artifacts/contracts/DocumentRegistry.sol/DocumentRegistry.json';
-import MilestoneEscrowABI from '../../artifacts/contracts/MilestoneEscrow.sol/MilestoneEscrow.json';
-import ReputationSystemABI from '../../artifacts/contracts/ReputationSystem.sol/ReputationSystem.json';
-// import ESignatureRegistryABI from '../../artifacts/contracts/ESignatureRegistry.sol/ESignatureRegistry.json';
+
+
+// import HakiTokenABI from '../../contracts/HakiToken.sol/HakiToken.json';
+// import LegalBountyABI from '../../contracts/LegalBounty.sol/LegalBounty.json';
+// import DocumentRegistryABI from '../../contracts/DocumentRegistry.sol/DocumentRegistry.json';
+// import MilestoneEscrowABI from '../../contracts/MilestoneEscrow.sol/MilestoneEscrow.json';
+// import ReputationSystemABI from '../../contracts/ReputationSystem.sol/ReputationSystem.json';
+// // import ESignatureRegistryABI from '../../artifacts/contracts/ESignatureRegistry.sol/ESignatureRegistry.json';
+
+const HakiTokenABI: any[] = [];
+const LegalBountyABI: any[] = [];
+const DocumentRegistryABI: any[] = [];
+const MilestoneEscrowABI: any[] = [];
+const ReputationSystemABI: any[] = [];
+const ESignatureRegistryABI: any[] = [];
 
 // Contract addresses (replace with actual deployed addresses)
 const HAKI_TOKEN_ADDRESS = '0x...';

@@ -859,7 +859,7 @@ export const HakiLens = () => {
         {/* Tab Navigation */}
         <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
           {[
-            { id: 'scrape', label: 'Scrape Cases', icon: Search },
+            { id: 'scrape', label: 'Deep Research on cases', icon: Search },
             { id: 'cases', label: 'Case Database', icon: Database },
             { id: 'ai', label: 'AI Assistant', icon: Brain }
           ].map((tab) => (
