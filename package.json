@@ -6,7 +6,10 @@
     "dev": "vite",
     "start": "vite",
     "api": "echo 'API endpoints are now handled by Vercel serverless functions'",
+    "hakilens": "node hakilens-server.js",
     "vercel-build": "npm install --legacy-peer-deps && npm run build",
+    "hakilens:dev": "nodemon hakilens-server.js",
+    "hakilens:test": "./test-python-backend.sh",
     "hakilens:python": "VITE_PYTHON_BACKEND_URL=http://localhost:5007 npm run dev",
     "dev:all": "concurrently \"npm run dev\" \"npm run hakilens:dev\"",
     "dev:python": "concurrently \"npm run hakilens:python\" \"echo 'Frontend with Python backend integration ready!'\"",
@@ -111,6 +114,8 @@
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
-    "vite": "^5.4.19"
+    "vite": "^5.4.19",
+    "hardhat-gas-reporter": "^1.0.8",
+    "solidity-coverage": "^0.8.1"
   }
 }
