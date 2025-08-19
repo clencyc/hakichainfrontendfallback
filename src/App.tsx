@@ -28,8 +28,12 @@ import { Waitlist } from './pages/Waitlist';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { useAuth } from './hooks/useAuth';
 import { LegalChatbot } from './components/chat/LegalChatbot';
+import { LawyerRegistration } from './components/auth/LawyerRegistration';
 import { Navbar } from './components/layout/Navbar';
+import { Navigation } from './components/layout/Navigation';
 import { AuthProvider } from './contexts/AuthContext';
+import { LawyerOnboarding } from './pages/LawyerOnboarding';
+import { LawyerPortal } from './pages/LawyerPortal';
 import { BountyDemoDetails } from './pages/BountyDemoDetails';
 import SettingsIndex from './pages/settings';
 import { GeneralSettings } from './pages/settings/GeneralSettings';
@@ -120,7 +124,7 @@ function AppContent() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Hide Navbar on dashboard routes
+  // Hide Navbar on dashboard routes and lawyer portal, show Navigation instead on auth pages
   const hideNavbar =
     location.pathname.startsWith('/lawyer-dashboard') ||
     location.pathname.startsWith('/lawyer/') ||
@@ -128,9 +132,17 @@ function AppContent() {
     location.pathname.startsWith('/ngo-') ||
     location.pathname.startsWith('/donor-dashboard');
 
+  const showCustomNavigation = 
+    location.pathname === '/lawyer-portal' ||
+    location.pathname === '/lawyer-join';
+
   return (
     <div className="min-h-screen bg-white">
-      {!hideNavbar && <Navbar scrolled={scrolled} />}
+      {showCustomNavigation ? (
+        <Navigation />
+      ) : !hideNavbar && (
+        <Navbar scrolled={scrolled} />
+      )}
       <Routes>
         <Route element={<Layout />}>
           {/* Public routes */}
@@ -141,6 +153,9 @@ function AppContent() {
           <Route path="bounties/:id" element={<BountyDetails />} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="lawyer/register" element={<LawyerRegistration />} />
+          <Route path="lawyer-join" element={<LawyerOnboarding />} />
+          <Route path="lawyer-portal" element={<LawyerPortal />} />
           <Route path="waitlist" element={<Waitlist />} />
           <Route path="documentation" element={<Documentation />} />
           <Route path="faq" element={<FAQ />} />
