@@ -9,86 +9,36 @@ export const Home = () => {
       {/* Hero Section */}
       <section className="pt-20 pb-12 md:pt-32 md:pb-24 bg-gradient-to-br from-primary-950 via-primary-900 to-secondary-900 text-white">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif font-bold leading-tight mb-6">
-                Justice Made <span className="text-primary-400">Accessible</span> Through Blockchain and AI
-              </h1>
-              <p className="text-lg md:text-xl text-gray-300 mb-8">
-                Connecting NGOs, donors, and lawyers to bring legal justice to those who need it most. Powered by transparent blockchain technology.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Link to="/bounties" className="btn btn-primary text-base px-6 py-3">
-                  Explore Bounties
-                </Link>
-                <Link to="/register" className="btn btn-primary text-base px-6 py-3">
-                  Join the Network
-                </Link>
-                <Link to="/waitlist" className="btn btn-primary text-base px-6 py-3">
-                  Join the Waitlist.
-                </Link>
-              </div>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative"
-            >
-              <div className="relative z-10 bg-gradient-to-br from-primary-800 to-secondary-800 rounded-xl p-8 shadow-2xl">
-                <div className="absolute inset-0 bg-white/5 rounded-xl"></div>
-                <h3 className="text-xl font-semibold mb-4">Latest Active Bounty</h3>
-                
-                <div className="bg-white/10 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium">Land Rights Dispute</h4>
-                    <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full">$2,500</span>
-                  </div>
-                  <p className="text-sm text-gray-300 mb-3">
-                    Representing indigenous community in Eastern Province fighting illegal land grabbing.
-                  </p>
-                  <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span>Nairobi, Kenya</span>
-                    <span>7 days left</span>
-                  </div>
-                </div>
-                
-                <div className="bg-white/10 rounded-lg p-4 mb-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-medium">Domestic Violence Case</h4>
-                    <span className="bg-accent-500 text-white text-xs px-2 py-1 rounded-full">$1,800</span>
-                  </div>
-                  <p className="text-sm text-gray-300 mb-3">
-                    Legal protection and representation for victim of domestic violence.
-                  </p>
-                  <div className="flex justify-between items-center text-xs text-gray-400">
-                    <span>Mombasa, Kenya</span>
-                    <span>3 days left</span>
-                  </div>
-                </div>
-                
-                <Link 
-                  to="/bounties" 
-                  className="flex items-center text-sm font-medium text-primary-300 hover:text-primary-200 transition-colors"
-                >
-                  <span>View All Bounties</span>
-                  <ArrowRight className="w-4 h-4 ml-1" />
-                </Link>
-              </div>
-              
-              {/* Network animation in background */}
-              <div className="absolute -top-4 -left-4 -right-4 -bottom-4 z-0">
-                <div className="network-node absolute top-1/4 left-1/4 w-3 h-3 bg-primary-500 rounded-full"></div>
-                <div className="network-node absolute top-3/4 left-1/2 w-3 h-3 bg-primary-500 rounded-full"></div>
-                <div className="network-node absolute top-1/3 right-1/4 w-3 h-3 bg-primary-500 rounded-full"></div>
-              </div>
-            </motion.div>
-          </div>
+          {/* Centered Hero */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex flex-col items-center justify-center text-center"
+          >
+            <h1 className="text-5xl md:text-6xl font-extrabold font-serif leading-tight mb-6 tracking-tight drop-shadow-lg">
+              Justice, <span className="text-primary-400">Accessible</span> for All
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-2xl mx-auto font-medium">
+              Empowering communities with <span className="text-primary-300 font-semibold">blockchain</span> and <span className="text-primary-300 font-semibold">AI</span>.<br />
+              Connect NGOs, donors, and lawyers to deliver legal justice where it's needed most.
+            </p>
+            <div className="flex flex-wrap gap-4 justify-center mb-8">
+              <Link to="/bounties" className="btn btn-primary text-base px-8 py-3 rounded-full shadow-lg">
+                Explore Bounties
+              </Link>
+              <Link to="/register" className="btn btn-primary text-base px-8 py-3 rounded-full shadow-lg">
+                Join the Network
+              </Link>
+              <Link to="/waitlist" className="btn btn-primary text-base px-8 py-3 rounded-full shadow-lg">
+                Join the Waitlist
+              </Link>
+            </div>
+            <div className="flex flex-col items-center gap-2 mt-4">
+              <span className="uppercase tracking-widest text-xs text-primary-200 font-semibold">Powered by Transparency</span>
+              <span className="h-1 w-16 bg-primary-400 rounded-full"></span>
+            </div>
+          </motion.div>
         </div>
       </section>
       
