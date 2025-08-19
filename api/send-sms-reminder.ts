@@ -120,4 +120,4 @@ async function sendSmsReminderHandler(req, res) {
   }
 }
 
-module.exports = sendSmsReminderHandler; 
+export default sendSmsReminderHandler; 

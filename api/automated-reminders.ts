@@ -1,4 +1,15 @@
+import { createClient } from '@supabase/supabase-js';
 import AutomatedReminderService from '../src/services/automatedReminderService';
+
+// Supabase configuration
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 /**
  * API endpoint for automated reminder processing
@@ -122,11 +133,3 @@ export default async function handler(req: any, res: any) {
     });
   }
 }
-
-// Import supabase for database access
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY || '';
-
-const supabase = createClient(supabaseUrl, supabaseKey);

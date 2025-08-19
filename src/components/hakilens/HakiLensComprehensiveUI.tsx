@@ -816,12 +816,12 @@ const HakiLensComprehensiveUI: React.FC = () => {
             <div className="flex gap-2">
               <input
                 type="url"
-                value="http://localhost:3001/api/hakilens"
+                value="/api/hakilens"
                 readOnly
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
               />
               <button
-                onClick={() => navigator.clipboard.writeText("http://localhost:3001/api/hakilens")}
+                onClick={() => navigator.clipboard.writeText("/api/hakilens")}
                 className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
                 title="Copy URL"
               >

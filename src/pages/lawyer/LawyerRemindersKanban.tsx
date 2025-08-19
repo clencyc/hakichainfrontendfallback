@@ -276,9 +276,9 @@ export const LawyerRemindersKanban = () => {
               message: `Legal Reminder: ${formData.title}\n\nDetails: ${formData.description}\n\nDate: ${formData.reminder_date} at ${formData.reminder_time}\n\nClient: ${formData.client_name}`
             })
           }).catch(async (err) => {
-            console.warn('Relative /api call failed, retrying on :3001', err);
-            // Retry directly to API server on 3001
-            return await fetch('http://localhost:3001/api/send-sms-reminder-v2', {
+                console.warn('Relative /api call failed, retrying with absolute URL', err);
+    // Retry with absolute URL
+    return await fetch('/api/send-sms-reminder-v2', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

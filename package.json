@@ -4,8 +4,8 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "vite",
-    "start": "ts-node server.js",
-    "api": "node server.js",
+    "start": "vite",
+    "api": "echo 'API endpoints are now handled by Vercel serverless functions'",
     "hakilens": "node hakilens-server.js",
     "hakilens:dev": "nodemon hakilens-server.js",
     "hakilens:test": "./test-python-backend.sh",

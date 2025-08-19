@@ -279,4 +279,3 @@ async function sendWelcomeEmailHandler(req: any, res: any) {
 }
 
 export default sendWelcomeEmailHandler;
-module.exports = sendWelcomeEmailHandler;
