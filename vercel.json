@@ -1,14 +1,14 @@
 {
     "functions": {
       "api/**/*.js": {
-        "runtime": "nodejs@20.x"
+        "runtime": "nodejs20.x"
       },
       "api/**/*.py": {
         "runtime": "@vercel/python@3.9"
       },
       "api/**/*.php": {
         "runtime": "@vercel/php@1.0.0"
-    }
+      }
     }
   }
   
