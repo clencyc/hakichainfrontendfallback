@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl = "https://zcozhagbhzkgylahvksq.supabase.co" ;
+const supabaseServiceKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpjb3poYWdiaHprZ3lsYWh2a3NxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIzMjg4MDAsImV4cCI6MjAxNzkwNDgwMH0.Pu-_JTjHXwYoqAM-J-DXV7LtGck7UZLHyQ9NJF_h3nE";
 
 if (!supabaseUrl || !supabaseServiceKey) {
   throw new Error('Missing Supabase environment variables for admin operations');
@@ -14,3 +14,4 @@ export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
     persistSession: false
   }
 });
+// 

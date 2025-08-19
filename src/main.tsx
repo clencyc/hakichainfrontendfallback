@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ClerkProvider } from '@clerk/clerk-react';
+// import { ClerkProvider } from '@clerk/clerk-react';
 import App from './App';
 import { WalletProvider } from './contexts/WalletContext';
 import { ToastProvider } from './components/common/Toaster';
@@ -16,17 +16,17 @@ const queryClient = new QueryClient({
   },
 });
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Clerk Publishable Key");
-}
+// const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+// if (!PUBLISHABLE_KEY) {
+//   throw new Error("Missing Clerk Publishable Key");
+// }
 
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Failed to find the root element');
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ClerkProvider 
+    {/* <ClerkProvider 
       publishableKey={PUBLISHABLE_KEY} 
       afterSignOutUrl="/"
       appearance={{
@@ -34,7 +34,7 @@ createRoot(rootElement).render(
           colorPrimary: '#2563eb', // Blue theme
         }
       }}
-    >
+    > */}
       <QueryClientProvider client={queryClient}>
         <WalletProvider>
           <ToastProvider>
@@ -42,6 +42,6 @@ createRoot(rootElement).render(
           </ToastProvider>
         </WalletProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+    {/* </ClerkProvider> */}
   </StrictMode>
 );

@@ -20,7 +20,7 @@ interface Case {
   judges?: string;
   date?: string;
   citation?: string;
-  title?: string;
+  title?: string;x
   summary?: string;
   content_text?: string;
   created_at: string;
@@ -100,7 +100,7 @@ export const HakiLens = () => {
   const [viewingSummary, setViewingSummary] = useState<{caseId: number, summary: string} | null>(null);
 
   // API Configuration
-  const API_BASE = '/api/hakilens'; // Use local proxy instead of direct ngrok URL
+  const API_BASE = 'https://hakilens.onrender.com'; // Use local proxy instead of direct ngrok URL
 
   // Utility functions
   const showError = useCallback((message: string) => {
@@ -292,8 +292,17 @@ export const HakiLens = () => {
         }
       });
       if (caseResponse.ok) {
-        const caseData = await caseResponse.json();
+        let caseData;
+        try {
+          caseData = await caseResponse.json();
+        } catch (jsonErr) {
+          showError('Error loading case: Invalid server response');
+          return;
+        }
         setSelectedCase(caseData);
+      } else {
+        showError(`Error loading case: ${caseResponse.status} ${caseResponse.statusText}`);
+        return;
       }
 
       // Load documents
@@ -303,8 +312,15 @@ export const HakiLens = () => {
         }
       });
       if (docsResponse.ok) {
-        const docsData = await docsResponse.json();
+        let docsData;
+        try {
+          docsData = await docsResponse.json();
+        } catch {
+          docsData = [];
+        }
         setCaseDocuments(docsData || []);
+      } else {
+        setCaseDocuments([]);
       }
 
       // Load images
@@ -314,8 +330,15 @@ export const HakiLens = () => {
         }
       });
       if (imagesResponse.ok) {
-        const imagesData = await imagesResponse.json();
+        let imagesData;
+        try {
+          imagesData = await imagesResponse.json();
+        } catch {
+          imagesData = [];
+        }
         setCaseImages(imagesData || []);
+      } else {
+        setCaseImages([]);
       }
     } catch (err) {
       console.error('Failed to load case details:', err);
@@ -580,7 +603,7 @@ export const HakiLens = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => navigate(`/lawyer/hakilens/case/${caseItem.id}`)}
+              onClick={() => loadCaseDetails(caseItem.id)}
             >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-medium text-gray-900 line-clamp-2 flex-1 mr-2">
