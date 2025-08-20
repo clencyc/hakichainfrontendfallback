@@ -76,6 +76,7 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.50.1",
     "react-joyride": "^2.9.3",
+    "react-markdown": "^10.1.0",
     "react-pdf": "^10.0.1",
     "react-router-dom": "^6.22.3",
     "react-toastify": "^11.0.5",
@@ -110,12 +111,12 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "ethereum-waffle": "^4.0.10",
     "hardhat": "^2.20.1",
+    "hardhat-gas-reporter": "^1.0.8",
     "mocha": "^10.2.0",
     "prettier": "^3.3.3",
+    "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.2",
-    "vite": "^5.4.19",
-    "hardhat-gas-reporter": "^1.0.8",
-    "solidity-coverage": "^0.8.1"
+    "vite": "^5.4.19"
   }
 }

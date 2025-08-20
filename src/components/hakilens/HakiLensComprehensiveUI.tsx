@@ -202,14 +202,14 @@ const HakiLensComprehensiveUI: React.FC = () => {
 
       const data = await response.json();
       setScrapeResult(data);
-      showSuccess(`Successfully scraped! ${data.case_ids?.length || 0} cases found.`);
+      showSuccess(`Successfully Retrieved! ${data.case_ids?.length || 0} cases found.`);
       
       // Refresh cases list
       if (activeTab === 'cases') {
         loadCases();
       }
     } catch (err) {
-      showError(err instanceof Error ? err.message : 'Failed to scrape URL');
+      showError(err instanceof Error ? err.message : 'Failed to retrieve URL');
     } finally {
       setLoading(false);
     }
@@ -410,7 +410,7 @@ const HakiLensComprehensiveUI: React.FC = () => {
           {[
             { id: 'auto', label: 'Auto Detect', desc: 'Automatically detects case or listing' },
             { id: 'listing', label: 'Listing Crawl', desc: 'Crawl a listing with pagination' },
-            { id: 'case', label: 'Single Case', desc: 'Scrape a single case detail page' }
+            { id: 'case', label: 'Single Case', desc: 'Deep Research a single case detail page' }
           ].map((option) => (
             <button
               key={option.id}
@@ -460,12 +460,12 @@ const HakiLensComprehensiveUI: React.FC = () => {
             {loading ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Scraping...
+                Thinking...
               </>
             ) : (
               <>
                 <Search size={16} />
-                Scrape
+                DeepResearch
               </>
             )}
           </button>
@@ -510,7 +510,7 @@ const HakiLensComprehensiveUI: React.FC = () => {
             onClick={() => setActiveTab('cases')}
             className="mt-3 text-blue-600 hover:text-blue-800 text-sm underline"
           >
-            View Scraped Cases
+            View Researched Cases
           </button>
         </motion.div>
       )}
@@ -804,80 +804,6 @@ const HakiLensComprehensiveUI: React.FC = () => {
     </div>
   );
 
-  const renderSettingsTab = () => (
-    <div className="space-y-6">
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-        <h3 className="font-medium text-gray-900 mb-2">API Configuration</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              HakiLens API Base URL (via Local Proxy)
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value="/api/hakilens"
-                readOnly
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600"
-              />
-              <button
-                onClick={() => navigator.clipboard.writeText("/api/hakilens")}
-                className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50"
-                title="Copy URL"
-              >
-                <Copy size={16} />
-              </button>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-              Using local proxy to avoid CORS issues. Original API: https://f9e4cc818023.ngrok-free.app
-            </p>
-          </div>
-          
-          <div className="text-sm text-gray-600">
-            <h4 className="font-medium mb-2">Available Endpoints:</h4>
-            <ul className="space-y-1 list-disc list-inside">
-              <li>POST /scrape/url - Auto-detect scraping</li>
-              <li>POST /scrape/listing - Crawl listings with pagination</li>
-              <li>POST /scrape/case - Scrape single case</li>
-              <li>GET /cases - List cases with search</li>
-              <li>GET /cases/{'{id}'} - Get case details</li>
-              <li>POST /ai/summarize/{'{id}'} - Summarize case</li>
-              <li>POST /ai/ask - Ask AI questions</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <h3 className="font-medium text-yellow-900 mb-2">Statistics</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div>
-            <div className="text-2xl font-bold text-yellow-800">{cases.length}</div>
-            <div className="text-sm text-yellow-700">Total Cases</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-800">
-              {cases.filter(c => c.summary).length}
-            </div>
-            <div className="text-sm text-yellow-700">Summarized</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-800">
-              {new Set(cases.map(c => c.court)).size}
-            </div>
-            <div className="text-sm text-yellow-700">Courts</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-yellow-800">
-              {cases.filter(c => c.created_at > new Date(Date.now() - 7*24*60*60*1000).toISOString()).length}
-            </div>
-            <div className="text-sm text-yellow-700">This Week</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="w-full">
       {/* Status Messages */}
@@ -922,10 +848,9 @@ const HakiLensComprehensiveUI: React.FC = () => {
       {/* Tab Navigation */}
       <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
         {[
-          { id: 'scrape', label: 'Deep Research on Cases', icon: Search },
+          { id: 'Deep Research', label: 'Deep Research on Cases', icon: Search },
           { id: 'cases', label: 'Case Database', icon: Database },
           { id: 'ai', label: 'AI Assistant', icon: Brain },
-          { id: 'settings', label: 'Settings', icon: Settings }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -944,7 +869,7 @@ const HakiLensComprehensiveUI: React.FC = () => {
 
       {/* Tab Content */}
       <div className="min-h-[400px]">
-        {activeTab === 'scrape' && renderScrapeTab()}
+        {activeTab === 'DeepResearch' && renderScrapeTab()}
         {activeTab === 'cases' && renderCasesTab()}
         {activeTab === 'ai' && renderAITab()}
         {activeTab === 'settings' && renderSettingsTab()}

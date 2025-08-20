@@ -11,6 +11,7 @@ interface User {
   role: UserRole;
   lsk_number?: string; // For lawyers only
   organization?: string; // For NGOs only
+  email_confirmed?: boolean; // New: track if email is confirmed
 }
 
 interface AuthContextType {
@@ -48,11 +49,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
+      console.log('[LOGIN] Attempting login with:', { email, passwordLength: password.length });
       // Use Supabase Auth signInWithPassword
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+      console.log('[LOGIN] Supabase response:', { data, error });
+      if (error) {
+        console.error('[LOGIN] Supabase error:', error);
+      }
+      if (!data.user) {
+        console.warn('[LOGIN] No user returned from Supabase:', data);
+      }
       if (error || !data.user) {
         throw new Error(error?.message || 'Login failed');
       }
@@ -65,13 +74,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         lsk_number: userMeta.lsk_number,
         organization: userMeta.organization,
       };
+      console.log('[LOGIN] User object created:', user);
       localStorage.setItem('hakichain_user', JSON.stringify(user));
       setUser(user);
       clarityService.identify(user.id, undefined, undefined, user.name);
       clarityService.setTag('userRole', user.role || 'unknown');
       clarityService.trackEvent('User_Login');
+      console.log('[LOGIN] Login successful, user set and tracked.');
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error('[LOGIN] Login failed:', error);
       throw error;
     }
   };
@@ -95,6 +106,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error(error?.message || 'Registration failed');
       }
       const userMeta = data.user.user_metadata || {};
+      // Check if email is confirmed (for new users, this will be false)
+      const email_confirmed = !!data.user.confirmed_at;
       const newUser: User = {
         id: data.user.id,
         name: userMeta.full_name || '',
@@ -102,12 +115,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         role: userMeta.user_type || null,
         lsk_number: userMeta.lsk_number,
         organization: userMeta.organization,
+        email_confirmed,
       };
       localStorage.setItem('hakichain_user', JSON.stringify(newUser));
       setUser(newUser);
       clarityService.identify(newUser.id, undefined, undefined, newUser.name);
       clarityService.setTag('userRole', newUser.role || 'unknown');
       clarityService.trackEvent('User_Registration');
+      if (!email_confirmed) {
+        // Log a message to prompt the user to confirm their email
+        console.warn('Registration successful! Please check your email and confirm your account to enable full access.');
+      }
       // Send welcome email after successful registration
       try {
         console.log('Sending welcome email to:', userData.email);

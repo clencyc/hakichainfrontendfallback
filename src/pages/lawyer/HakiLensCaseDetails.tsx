@@ -1,15 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
 import {
-  ArrowLeft, FileText, Download, Image as ImageIcon, 
-  Calendar, MapPin, Gavel, Users, ExternalLink,
-  BookOpen, Send, Bot, Loader2,
-  Brain, AlertCircle
+  Loader2, Brain, MessageSquare, Send, AlertCircle, CheckCircle, X, Gavel, Users, Calendar, BookOpen, Clock
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 
-// Types (matching HakiLens types)
+// Types
 interface Case {
   id: number;
   url: string;
@@ -26,562 +23,342 @@ interface Case {
   updated_at: string;
 }
 
-interface Document {
+interface AIChatMessage {
   id: number;
-  case_id: number;
-  file_path: string;
-  url?: string;
-  content_type?: string;
-  created_at: string;
+  question: string;
+  answer?: string;
+  error?: string;
+  isLoading: boolean;
 }
 
-interface CaseImage {
-  id: number;
-  case_id: number;
-  file_path: string;
-  url?: string;
-  alt_text?: string;
-  created_at: string;
-}
-
-interface ChatMessage {
-  id: string;
-  type: 'user' | 'ai';
-  content: string;
-  timestamp: Date;
-  isLoading?: boolean;
-}
+const API_BASE = 'https://hakilens.onrender.com';
 
 export const HakiLensCaseDetails = () => {
   const { caseId } = useParams<{ caseId: string }>();
-  const navigate = useNavigate();
-  
-  // State management
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [caseData, setCaseData] = useState<Case | null>(null);
-  const [documents, setDocuments] = useState<Document[]>([]);
-  const [images, setImages] = useState<CaseImage[]>([]);
-  
-  // Chat state
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: '1',
-      type: 'ai',
-      content: `Hello! I'm your AI assistant. I can help you analyze this case, answer questions about the legal content, suggest strategies, or help you understand complex legal concepts. What would you like to know about this case?`,
-      timestamp: new Date()
-    }
-  ]);
-  const [inputMessage, setInputMessage] = useState('');
-  const [isAiTyping, setIsAiTyping] = useState(false);
-  const chatEndRef = useRef<HTMLDivElement>(null);
-  
-  // API Configuration
-  const API_BASE = '/api/hakilens'; // Use local proxy instead of direct ngrok URL
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [chatMessages, setChatMessages] = useState<AIChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Utility functions
+  const showError = useCallback((message: string) => {
+    setError(message);
+    setTimeout(() => setError(''), 5000);
+  }, []);
+
+  const showSuccess = useCallback((message: string) => {
+    setSuccess(message);
+    setTimeout(() => setSuccess(''), 5000);
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   // Load case data
-  const loadCaseData = useCallback(async () => {
-    if (!caseId) return;
-    
+  const loadCaseData = useCallback(async (caseId: number) => {
     setLoading(true);
     try {
-      // Load case details
-      const caseResponse = await fetch(`${API_BASE}/cases/${caseId}`, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
+      const response = await fetch(`${API_BASE}/cases/${caseId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          // Add Authorization header if needed
+          // 'Authorization': `Bearer ${yourAuthToken}`,
+        },
       });
-      
-      if (caseResponse.ok) {
-        const data = await caseResponse.json();
-        setCaseData(data);
-      } else {
-        setError('Failed to load case details');
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
-
-      // Load documents
-      try {
-        const docsResponse = await fetch(`${API_BASE}/cases/${caseId}/documents`, {
-          headers: { 
-            'Content-Type': 'application/json'
-          }
-        });
-        if (docsResponse.ok) {
-          const docsData = await docsResponse.json();
-          setDocuments(docsData || []);
-        }
-      } catch (err) {
-        console.warn('Failed to load documents:', err);
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+        throw new Error('Invalid response format: Expected JSON');
       }
-
-      // Load images
-      try {
-        const imagesResponse = await fetch(`${API_BASE}/cases/${caseId}/images`, {
-          headers: { 
-            'Content-Type': 'application/json'
-          }
-        });
-        if (imagesResponse.ok) {
-          const imagesData = await imagesResponse.json();
-          setImages(imagesData || []);
-        }
-      } catch (err) {
-        console.warn('Failed to load images:', err);
-      }
-
+      const data: Case = await response.json();
+      setCaseData(data);
+      showSuccess('Case details loaded successfully');
     } catch (err) {
-      setError('Failed to load case data');
-      console.error('Error loading case:', err);
+      console.error('Failed to load case data:', err);
+      showError(`Failed to load case: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      setCaseData(null);
     } finally {
       setLoading(false);
     }
-  }, [caseId, API_BASE]);
+  }, [showError, showSuccess]);
 
+  // Handle AI chat submission
+  const handleAskAI = useCallback(async () => {
+    if (!chatInput.trim()) {
+      showError('Please enter a question');
+      return;
+    }
+    if (!caseId) {
+      showError('Case ID not found.');
+      return;
+    }
+
+    const newMessage: AIChatMessage = {
+      id: Date.now(),
+      question: chatInput,
+      isLoading: true,
+    };
+
+    setChatMessages((prev) => [...prev, newMessage]);
+    setChatInput('');
+    setChatLoading(true);
+
+    try {
+      // Use the documented /ai/chat/{case_id} endpoint
+      const response = await fetch(`https://hakilens.onrender.com/ai/chat/${caseId}?model=gpt-4o-mini`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          q: chatInput,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? { ...msg, answer: data.answer || 'No answer provided', isLoading: false }
+            : msg
+        )
+      );
+    } catch (err) {
+      console.error('Failed to get AI response:', err);
+      setChatMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === newMessage.id
+            ? { ...msg, error: 'Failed to get AI response', isLoading: false }
+            : msg
+        )
+      );
+      showError('Failed to get AI response');
+    } finally {
+      setChatLoading(false);
+    }
+  }, [chatInput, caseId, showError]);
+
+  // Load case data on mount
   useEffect(() => {
     if (caseId) {
-      loadCaseData();
+      loadCaseData(parseInt(caseId));
     }
   }, [caseId, loadCaseData]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim() || isAiTyping) return;
-
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'user',
-      content: inputMessage,
-      timestamp: new Date()
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    setInputMessage('');
-    setIsAiTyping(true);
-
-    try {
-      // Use the case-specific chat endpoint
-      const response = await fetch(`${API_BASE}/ai/chat/${caseId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: inputMessage
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const aiMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          type: 'ai',
-          content: data.response || data.answer || data.message || 'I apologize, but I could not generate a response at this time.',
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, aiMessage]);
-      } else {
-        throw new Error('Failed to get AI response');
-      }
-    } catch (err) {
-      console.error('Error sending message:', err);
-      const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        type: 'ai',
-        content: 'I apologize, but I encountered an error while processing your request. Please try again.',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsAiTyping(false);
-    }
-  };
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-  const formatDate = (dateString: string | undefined) => {
-    if (!dateString) return 'N/A';
-    try {
-      return new Date(dateString).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  if (loading) {
-    return (
-      <LawyerDashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-500" />
-            <p className="text-gray-600">Loading case details...</p>
-          </div>
-        </div>
-      </LawyerDashboardLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <LawyerDashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-500" />
-            <p className="text-red-600 mb-4">{error}</p>
-            <button
-              onClick={() => navigate('/lawyer/hakilens')}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Back to HakiLens
-            </button>
-          </div>
-        </div>
-      </LawyerDashboardLayout>
-    );
-  }
-
-  if (!caseData) {
-    return (
-      <LawyerDashboardLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <AlertCircle className="w-8 h-8 mx-auto mb-4 text-gray-500" />
-            <p className="text-gray-600 mb-4">Case not found</p>
-            <button
-              onClick={() => navigate('/lawyer/hakilens')}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Back to HakiLens
-            </button>
-          </div>
-        </div>
-      </LawyerDashboardLayout>
-    );
-  }
-
   return (
     <LawyerDashboardLayout>
-      <div className="max-w-7xl mx-auto mt-20 px-4">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/lawyer/hakilens')}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to HakiLens</span>
-          </button>
-          
-          <div className="flex items-center space-x-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
-              <Gavel className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                {caseData.title || caseData.case_number || `Case #${caseData.id}`}
-              </h1>
-              <p className="text-gray-600">Case Analysis & AI Assistant</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Case Details */}
-          <div className="space-y-6">
-            {/* Case Information Card */}
+      <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8">
+        {/* Status Messages */}
+        <AnimatePresence>
+          {error && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
             >
-              <div className="flex items-center space-x-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-500" />
-                <h2 className="text-lg font-semibold text-gray-900">Case Information</h2>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Case Number</label>
-                  <p className="text-gray-900">{caseData.case_number || 'N/A'}</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Court</label>
-                  <div className="flex items-center space-x-1">
-                    <MapPin className="w-4 h-4 text-gray-400" />
-                    <p className="text-gray-900">{caseData.court || 'N/A'}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="w-4 h-4 text-gray-400" />
-                    <p className="text-gray-900">{formatDate(caseData.date)}</p>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Parties</label>
-                  <div className="flex items-center space-x-1">
-                    <Users className="w-4 h-4 text-gray-400" />
-                    <p className="text-gray-900">{caseData.parties || 'N/A'}</p>
-                  </div>
-                </div>
-                
-                {caseData.judges && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Judges</label>
-                    <p className="text-gray-900">{caseData.judges}</p>
-                  </div>
-                )}
-                
-                {caseData.citation && (
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">Citation</label>
-                    <p className="text-gray-900">{caseData.citation}</p>
-                  </div>
-                )}
-              </div>
-              
-              {caseData.url && (
-                <div className="mt-4 pt-4 border-t border-gray-200">
-                  <a
-                    href={caseData.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-700"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>View Original Source</span>
-                  </a>
-                </div>
-              )}
+              <AlertCircle size={16} className="text-red-600" />
+              <span className="text-red-800">{error}</span>
+              <button
+                onClick={() => setError('')}
+                className="ml-auto text-red-600 hover:text-red-800"
+              >
+                <X size={16} />
+              </button>
             </motion.div>
-
-            {/* Summary Card */}
-            {caseData.summary && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          )}
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+            >
+              <CheckCircle size={16} className="text-green-600" />
+              <span className="text-green-800">{success}</span>
+              <button
+                onClick={() => setSuccess('')}
+                className="ml-auto text-green-600 hover:text-green-800"
               >
-                <div className="flex items-center space-x-2 mb-4">
-                  <BookOpen className="w-5 h-5 text-green-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Summary</h2>
+                <X size={16} />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Split Layout: Case Details (Left) and AI Chat (Right) */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Case Details Section */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Case Details
+            </h1>
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="animate-spin" size={32} />
+              </div>
+            ) : caseData ? (
+              <div className="space-y-4">
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    {caseData.title || `Case #${caseData.case_number || caseData.id}`}
+                  </h2>
                 </div>
-                <p className="text-gray-700 leading-relaxed">{caseData.summary}</p>
-              </motion.div>
-            )}
-
-            {/* Documents & Images */}
-            {(documents.length > 0 || images.length > 0) && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-              >
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Attachments</h2>
-                
-                {documents.length > 0 && (
-                  <div className="mb-4">
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Documents</h3>
-                    <div className="space-y-2">
-                      {documents.map((doc) => (
-                        <div key={doc.id} className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg">
-                          <FileText className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm text-gray-700 flex-1">{doc.file_path}</span>
-                          {doc.url && (
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:text-blue-700"
-                            >
-                              <Download className="w-4 h-4" />
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                {caseData.court && (
+                  <div className="flex items-center gap-2">
+                    <Gavel size={16} className="text-gray-600" />
+                    <span>Court: {caseData.court}</span>
                   </div>
                 )}
-                
-                {images.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500 mb-2">Images</h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {images.slice(0, 4).map((img) => (
-                        <div key={img.id} className="relative group">
-                          <div className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                            <ImageIcon className="w-8 h-8 text-gray-400" />
-                          </div>
-                          {img.url && (
-                            <a
-                              href={img.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              <ExternalLink className="w-5 h-5 text-white" />
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    {images.length > 4 && (
-                      <p className="text-sm text-gray-500 mt-2">
-                        +{images.length - 4} more images
-                      </p>
-                    )}
+                {caseData.parties && (
+                  <div className="flex items-center gap-2">
+                    <Users size={16} className="text-gray-600" />
+                    <span>Parties: {caseData.parties}</span>
                   </div>
                 )}
-              </motion.div>
-            )}
-
-            {/* Content Text */}
-            {caseData.content_text && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
-              >
-                <div className="flex items-center space-x-2 mb-4">
-                  <FileText className="w-5 h-5 text-purple-500" />
-                  <h2 className="text-lg font-semibold text-gray-900">Full Content</h2>
+                {caseData.date && (
+                  <div className="flex items-center gap-2">
+                    <Calendar size={16} className="text-gray-600" />
+                    <span>Date: {caseData.date}</span>
+                  </div>
+                )}
+                {caseData.citation && (
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={16} className="text-gray-600" />
+                    <span>Citation: {caseData.citation}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2">
+                  <Clock size={16} className="text-gray-600" />
+                  <span>Created: {formatDate(caseData.created_at)}</span>
                 </div>
-                <div className="max-h-96 overflow-y-auto">
-                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap text-sm">
-                    {caseData.content_text}
-                  </p>
-                </div>
-              </motion.div>
+                {caseData.summary && (
+                  <div className="mt-4">
+                    <h3 className="font-medium text-gray-900">Summary</h3>
+                    <p className="text-gray-600">{caseData.summary}</p>
+                  </div>
+                )}
+                {caseData.content_text && (
+                  <div className="mt-4">
+                    <h3 className="font-medium text-gray-900">Full Text</h3>
+                    <p className="text-gray-600 whitespace-pre-wrap">{caseData.content_text}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-gray-500">No case data available.</div>
             )}
           </div>
 
-          {/* Right Column - AI Chat */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col h-[calc(100vh-8rem)] sticky top-24"
-          >
-            {/* Chat Header */}
-            <div className="flex items-center space-x-3 p-4 border-b border-gray-200">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-                <Brain className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">AI Legal Assistant</h2>
-                <p className="text-sm text-gray-500">Ask questions about this case</p>
-              </div>
+          {/* AI Chat Section */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Brain size={24} className="text-purple-600" />
+              <h2 className="text-xl font-bold text-gray-900">AI Case Assistant</h2>
             </div>
-
-            {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
-                      message.type === 'user'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    <div className="flex items-start space-x-2">
-                      {message.type === 'ai' && (
-                        <Bot className="w-4 h-4 mt-0.5 text-purple-500" />
+            <p className="text-gray-600 mb-4">
+              Ask questions about this case. The AI will provide answers based on the case details.
+            </p>
+            <div className="flex flex-col h-[500px]">
+              {/* Chat Messages */}
+              <div className="flex-1 overflow-y-auto mb-4 p-4 bg-gray-50 rounded-lg">
+                <AnimatePresence>
+                  {chatMessages.length === 0 && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-gray-500 text-center"
+                    >
+                      Start a conversation about this case...
+                    </motion.div>
+                  )}
+                  {chatMessages.map((message) => (
+                    <motion.div
+                      key={message.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-4"
+                    >
+                      {/* User Question */}
+                      <div className="flex items-start gap-2">
+                        <MessageSquare size={16} className="text-blue-600" />
+                        <div className="bg-blue-100 p-3 rounded-lg">
+                          <p className="text-blue-900">{message.question}</p>
+                        </div>
+                      </div>
+                      {/* AI Response or Loading/Error */}
+                      {message.isLoading ? (
+                        <div className="flex items-center gap-2 mt-2 ml-6">
+                          <Loader2 size={16} className="animate-spin text-purple-600" />
+                          <span className="text-gray-600">Thinking...</span>
+                        </div>
+                      ) : message.error ? (
+                        <div className="flex items-center gap-2 mt-2 ml-6">
+                          <AlertCircle size={16} className="text-red-600" />
+                          <span className="text-red-600">{message.error}</span>
+                        </div>
+                      ) : (
+                        message.answer && (
+                          <div className="flex items-start gap-2 mt-2 ml-6">
+                            <Brain size={16} className="text-purple-600" />
+                            <div className="bg-purple-100 p-3 rounded-lg">
+                              <p className="text-purple-900 whitespace-pre-wrap">{message.answer}</p>
+                            </div>
+                          </div>
+                        )
                       )}
-                      <div className="flex-1">
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.type === 'user' ? 'text-blue-100' : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              
-              {isAiTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-lg p-3">
-                    <div className="flex items-center space-x-2">
-                      <Bot className="w-4 h-4 text-purple-500" />
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-
-            {/* Chat Input */}
-            <div className="p-4 border-t border-gray-200">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask about this case..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                  disabled={isAiTyping}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+              {/* Chat Input */}
+              <div className="flex gap-2">
+                <textarea
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask a question about this case..."
+                  rows={2}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
+                  disabled={chatLoading}
                 />
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isAiTyping}
-                  className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                  onClick={handleAskAI}
+                  disabled={chatLoading || !chatInput.trim()}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <Send className="w-4 h-4" />
+                  {chatLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Send size={16} />
+                  )}
+                  Send
                 </button>
               </div>
-              
-              <div className="mt-2 flex flex-wrap gap-2">
-                {[
-                  "Analyze the key legal issues",
-                  "What's the legal precedent?",
-                  "Summarize the court's reasoning",
-                  "Identify potential appeals grounds"
-                ].map((suggestion) => (
-                  <button
-                    key={suggestion}
-                    onClick={() => setInputMessage(suggestion)}
-                    className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors"
-                    disabled={isAiTyping}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </LawyerDashboardLayout>
   );
 };
+
+export default HakiLensCaseDetails;

@@ -224,7 +224,7 @@ function AppContent() {
           <Route 
             path="lawyer/hakilens/case/:caseId" 
             element={
-              <ProtectedRoute allowed={userRole === 'lawyer'}>
+              <ProtectedRoute allowed={!!userRole}>
                 <HakiLensCaseDetails />
               </ProtectedRoute>
             } 

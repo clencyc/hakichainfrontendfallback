@@ -305,27 +305,7 @@ export default function LawyerDashboard() {
           <AutomatedReminderDashboard />
         </div>
 
-        {/* HakiLens Case Scraper */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.6 }}
-          className="bg-white rounded-xl shadow-sm mb-6"
-        >
-          <div className="p-6 border-b border-gray-100">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Eye className="h-5 w-5 text-primary-600" />
-              HakiLens Legal Research Platform
-            </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              Comprehensive case scraping, AI analysis, and legal research platform
-            </p>
-          </div>
-
-          <div className="p-6">
-            <HakiLensComprehensiveUI />
-          </div>
-        </motion.div>
+        {/* ...removed HakiLensComprehensiveUI (deep research) from dashboard overview... */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
@@ -482,7 +462,7 @@ export default function LawyerDashboard() {
 
               <div className="p-6">
                 <div className="space-y-4">
-                  {data.matchingBounties.map((match) => (
+                  {data.matchingBounties.map((match: any) => (
                     <Link 
                       key={match.id}
                       to={`/bounties/${match.id}`}
@@ -509,7 +489,7 @@ export default function LawyerDashboard() {
 
               <div className="p-6">
                 <div className="space-y-4">
-                  {data.applications.map((app) => (
+                  {data.applications.map((app: any) => (
                     <div key={app.id} className="p-4 border border-gray-200 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-medium">{app.bountyTitle}</h3>

@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Database, Brain, Eye, FileText, 
-  Download, Image as ImageIcon, Calendar, MapPin, Gavel,
-  Users, Clock, AlertCircle, CheckCircle, X, Plus,
-  ChevronLeft, ChevronRight, Loader2, Trash2, Edit3,
-  ExternalLink, BookOpen, ArrowUpDown, RefreshCw
+  Search, Database, Brain, Eye, Calendar, Gavel,
+  Users, Clock, AlertCircle, CheckCircle, X,
+  ChevronLeft, ChevronRight, Loader2,
+  BookOpen, ArrowUpDown, RefreshCw, MessageSquare,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { LawyerDashboardLayout } from '../../components/layout/LawyerDashboardLayout';
 
-// Types based on your data models
+// Types
 interface Case {
   id: number;
   url: string;
@@ -20,29 +20,11 @@ interface Case {
   judges?: string;
   date?: string;
   citation?: string;
-  title?: string;x
+  title?: string;
   summary?: string;
   content_text?: string;
   created_at: string;
   updated_at: string;
-}
-
-interface Document {
-  id: number;
-  case_id: number;
-  file_path: string;
-  url?: string;
-  content_type?: string;
-  created_at: string;
-}
-
-interface CaseImage {
-  id: number;
-  case_id: number;
-  file_path: string;
-  url?: string;
-  alt_text?: string;
-  created_at: string;
 }
 
 interface ScrapeResponse {
@@ -63,24 +45,47 @@ interface AISummaryResponse {
   summary: string;
 }
 
+type ScrapeType = 'auto' | 'listing' | 'case';
+
+// Error Boundary
+class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please try again later.</div>;
+    }
+    return this.props.children;
+  }
+}
+
 export const HakiLens = () => {
   const navigate = useNavigate();
-  
+
   // State management
   const [activeTab, setActiveTab] = useState('scrape');
-  const [loading, setLoading] = useState(false);
+  const [isScraping, setIsScraping] = useState(false);
+  const [isLoadingCases, setIsLoadingCases] = useState(false);
+  const [isAskingAI, setIsAskingAI] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Scrape states
+  // Deep Research states
   const [scrapeUrl, setScrapeUrl] = useState('');
-  const [scrapeType, setScrapeType] = useState('auto'); // auto, listing, case
+  const [scrapeType, setScrapeType] = useState<ScrapeType>('auto');
   const [maxPages, setMaxPages] = useState(5);
   const [scrapeResult, setScrapeResult] = useState<ScrapeResponse | null>(null);
 
   // Cases states
   const [cases, setCases] = useState<Case[]>([]);
-  const [selectedCase, setSelectedCase] = useState<Case | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCases, setTotalCases] = useState(0);
@@ -88,19 +93,15 @@ export const HakiLens = () => {
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
 
-  // Case details states
-  const [caseDocuments, setCaseDocuments] = useState<Document[]>([]);
-  const [caseImages, setCaseImages] = useState<CaseImage[]>([]);
-
   // AI states
   const [aiQuestion, setAiQuestion] = useState('');
   const [aiResponse, setAiResponse] = useState<AIResponse | null>(null);
   const [summarizingCase, setSummarizingCase] = useState<number | null>(null);
-  const [aiSummaries, setAiSummaries] = useState<{[key: number]: string}>({});
-  const [viewingSummary, setViewingSummary] = useState<{caseId: number, summary: string} | null>(null);
+  const [aiSummaries, setAiSummaries] = useState<{ [key: number]: string }>({});
+  const [viewingSummary, setViewingSummary] = useState<{ caseId: number; summary: string } | null>(null);
 
   // API Configuration
-  const API_BASE = 'https://hakilens.onrender.com'; // Use local proxy instead of direct ngrok URL
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://hakilens.onrender.com';
 
   // Utility functions
   const showError = useCallback((message: string) => {
@@ -119,67 +120,28 @@ export const HakiLens = () => {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
     });
   };
 
   const formatAISummary = (summary: string) => {
-    // Remove markdown formatting and format for display
-    return summary
-      .replace(/\*\*/g, '') // Remove bold markdown
-      .replace(/\n\n/g, '\n') // Reduce double line breaks
-      .split('\n')
-      .map((line, index) => {
-        const trimmed = line.trim();
-        if (!trimmed) return null;
-        
-        // Handle numbered list items
-        if (trimmed.match(/^\d+\.\s+\*\*/)) {
-          const content = trimmed.replace(/^\d+\.\s+\*\*/, '').replace(/\*\*:?/, ':');
-          return (
-            <div key={index} className="mb-3">
-              <h4 className="font-semibold text-blue-900 mb-1">{content}</h4>
-            </div>
-          );
-        }
-        
-        // Handle sub-items with dash
-        if (trimmed.startsWith('   - ')) {
-          return (
-            <div key={index} className="ml-4 mb-1 text-gray-700">
-              • {trimmed.substring(5)}
-            </div>
-          );
-        }
-        
-        // Handle regular content
-        if (trimmed.length > 10) {
-          return (
-            <p key={index} className="mb-2 text-gray-800 leading-relaxed">
-              {trimmed}
-            </p>
-          );
-        }
-        
-        return null;
-      })
-      .filter(Boolean);
+    return <ReactMarkdown class="prose max-w-none">{summary}</ReactMarkdown>;
   };
 
   // API Functions
-  const handleScrapeUrl = async () => {
+  const handleDeepResearch = async () => {
     if (!scrapeUrl.trim()) {
       showError('Please enter a valid URL');
       return;
     }
 
-    setLoading(true);
+    setIsScraping(true);
     setScrapeResult(null);
 
     try {
       let endpoint = '';
       let params = new URLSearchParams();
-      
+
       if (scrapeType === 'auto') {
         endpoint = '/api/hakilens/scrape/url';
         params.append('url', scrapeUrl);
@@ -195,74 +157,82 @@ export const HakiLens = () => {
       const response = await fetch(`${API_BASE}${endpoint}?${params}`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      setScrapeResult(data);
-      showSuccess(`Successfully scraped! ${data.case_ids?.length || 0} cases found.`);
-      
-      // Refresh cases list
-      if (activeTab === 'cases') {
-        loadCases();
-      }
-    } catch (err) {
-      showError(err instanceof Error ? err.message : 'Failed to scrape URL');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadCases = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        limit: casesPerPage.toString(),
-        offset: ((currentPage - 1) * casesPerPage).toString()
-      });
-
-      if (searchQuery.trim()) {
-        params.append('q', searchQuery);
-      }
-
-      console.log('Making API call to:', `${API_BASE}/cases?${params}`);
-
-      const response = await fetch(`${API_BASE}/cases?${params}`, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
         throw new Error(`Error: ${response.status} - ${response.statusText}`);
       }
 
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+        throw new Error('Invalid response format: Expected JSON');
+      }
+
       const data = await response.json();
-      console.log('API Response:', data);
-      
-      // Handle different response formats
-      let casesArray = [];
+      setScrapeResult(data);
+      showSuccess(`Successfully researched! ${data.case_ids?.length || 0} cases found.`);
+
+      if (activeTab === 'cases') {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        loadCases();
+      }
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Failed to perform deep research');
+    } finally {
+      setIsScraping(false);
+    }
+  };
+
+  const loadCases = useCallback(async () => {
+    setIsLoadingCases(true);
+    try {
+      const params = new URLSearchParams({
+        limit: casesPerPage.toString(),
+        offset: ((currentPage - 1) * casesPerPage).toString(),
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      });
+
+      if (searchQuery.trim()) {
+        params.append('q', searchQuery);
+      }
+
+      const response = await fetch(`${API_BASE}/cases?${params}`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+        throw new Error('Invalid response format: Expected JSON');
+      }
+
+      const data = await response.json();
+
+      let casesArray: Case[] = [];
       let total = 0;
-      
+
       if (Array.isArray(data)) {
-        // Direct array response
         casesArray = data;
         total = data.length;
       } else if (data.items && Array.isArray(data.items)) {
-        // Wrapped in items property (your API format)
         casesArray = data.items;
         total = data.total || data.items.length;
       } else if (data.cases && Array.isArray(data.cases)) {
-        // Wrapped in cases property
         casesArray = data.cases;
         total = data.total || data.cases.length;
       } else if (data.data && Array.isArray(data.data)) {
-        // Wrapped in data property
         casesArray = data.data;
         total = data.total || data.data.length;
       } else {
@@ -270,8 +240,7 @@ export const HakiLens = () => {
         casesArray = [];
         total = 0;
       }
-      
-      console.log('Setting cases:', casesArray);
+
       setCases(casesArray);
       setTotalCases(total);
     } catch (err) {
@@ -279,72 +248,9 @@ export const HakiLens = () => {
       showError(`Failed to load cases: ${err instanceof Error ? err.message : 'Unknown error'}`);
       setCases([]);
     } finally {
-      setLoading(false);
+      setIsLoadingCases(false);
     }
-  }, [API_BASE, casesPerPage, currentPage, searchQuery, showError]);
-
-  const loadCaseDetails = async (caseId: number) => {
-    try {
-      // Load case details
-      const caseResponse = await fetch(`${API_BASE}/cases/${caseId}`, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
-      });
-      if (caseResponse.ok) {
-        let caseData;
-        try {
-          caseData = await caseResponse.json();
-        } catch (jsonErr) {
-          showError('Error loading case: Invalid server response');
-          return;
-        }
-        setSelectedCase(caseData);
-      } else {
-        showError(`Error loading case: ${caseResponse.status} ${caseResponse.statusText}`);
-        return;
-      }
-
-      // Load documents
-      const docsResponse = await fetch(`${API_BASE}/cases/${caseId}/documents`, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
-      });
-      if (docsResponse.ok) {
-        let docsData;
-        try {
-          docsData = await docsResponse.json();
-        } catch {
-          docsData = [];
-        }
-        setCaseDocuments(docsData || []);
-      } else {
-        setCaseDocuments([]);
-      }
-
-      // Load images
-      const imagesResponse = await fetch(`${API_BASE}/cases/${caseId}/images`, {
-        headers: { 
-          'Content-Type': 'application/json'
-        }
-      });
-      if (imagesResponse.ok) {
-        let imagesData;
-        try {
-          imagesData = await imagesResponse.json();
-        } catch {
-          imagesData = [];
-        }
-        setCaseImages(imagesData || []);
-      } else {
-        setCaseImages([]);
-      }
-    } catch (err) {
-      console.error('Failed to load case details:', err);
-      showError('Failed to load case details');
-    }
-  };
+  }, [API_BASE, casesPerPage, currentPage, searchQuery, sortBy, sortOrder, showError]);
 
   const handleSummarizeCase = async (caseId: number) => {
     setSummarizingCase(caseId);
@@ -352,28 +258,29 @@ export const HakiLens = () => {
       const response = await fetch(`${API_BASE}/ai/summarize/${caseId}?model=gpt-4o-mini`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+        throw new Error('Invalid response format: Expected JSON');
       }
 
       const data: AISummaryResponse = await response.json();
-      
-      // Store the summary in our state
-      setAiSummaries(prev => ({
+
+      setAiSummaries((prev) => ({
         ...prev,
-        [caseId]: data.summary
+        [caseId]: data.summary,
       }));
-      
+
       showSuccess('Case summarized successfully!');
-      
-      // Refresh the case details if it's currently selected
-      if (selectedCase?.id === caseId) {
-        loadCaseDetails(caseId);
-      }
     } catch (err) {
       console.error('Failed to summarize case:', err);
       showError('Failed to summarize case');
@@ -388,20 +295,27 @@ export const HakiLens = () => {
       return;
     }
 
-    setLoading(true);
+    setIsAskingAI(true);
     setAiResponse(null);
 
     try {
       const response = await fetch(`${API_BASE}/ai/ask`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ q: aiQuestion })
+        body: JSON.stringify({ q: aiQuestion }),
       });
 
       if (!response.ok) {
-        throw new Error(`Error: ${response.status}`);
+        throw new Error(`Error: ${response.status} - ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('Content-Type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const rawText = await response.text();
+        console.error('Non-JSON response:', rawText);
+        throw new Error('Invalid response format: Expected JSON');
       }
 
       const data = await response.json();
@@ -410,7 +324,7 @@ export const HakiLens = () => {
       console.error('Failed to get AI response:', err);
       showError('Failed to get AI response');
     } finally {
-      setLoading(false);
+      setIsAskingAI(false);
     }
   };
 
@@ -422,15 +336,15 @@ export const HakiLens = () => {
   }, [activeTab, loadCases]);
 
   // Render functions
-  const renderScrapeTab = () => (
+  const renderDeepResearchTab = () => (
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-medium text-blue-900 mb-2">Scraping Options</h3>
+        <h3 className="font-medium text-blue-900 mb-2">Deep Research Options</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           {[
-            { id: 'auto', label: 'Auto Detect', desc: 'Automatically detects case or listing' },
-            { id: 'listing', label: 'Listing Crawl', desc: 'Crawl a listing with pagination' },
-            { id: 'case', label: 'Single Case', desc: 'Scrape a single case detail page' }
+            { id: 'auto' as ScrapeType, label: 'Auto Detect', desc: 'Automatically detects case or listing' },
+            { id: 'listing' as ScrapeType, label: 'Listing Crawl', desc: 'Crawl a listing with pagination' },
+            { id: 'case' as ScrapeType, label: 'Single Case', desc: 'Research a single case detail page' },
           ].map((option) => (
             <button
               key={option.id}
@@ -449,9 +363,7 @@ export const HakiLens = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          URL to Scrape
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">URL to Deep Research</label>
         <div className="flex gap-3">
           <input
             type="url"
@@ -459,7 +371,7 @@ export const HakiLens = () => {
             onChange={(e) => setScrapeUrl(e.target.value)}
             placeholder="https://example.com/case-page-or-listing"
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            disabled={loading}
+            disabled={isScraping}
           />
           {scrapeType === 'listing' && (
             <input
@@ -473,19 +385,19 @@ export const HakiLens = () => {
             />
           )}
           <button
-            onClick={handleScrapeUrl}
-            disabled={loading || !scrapeUrl.trim()}
+            onClick={handleDeepResearch}
+            disabled={isScraping || !scrapeUrl.trim()}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {loading ? (
+            {isScraping ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
-                Scraping...
+                Deep Researching...
               </>
             ) : (
               <>
                 <Search size={16} />
-                Scrape
+                Deep Research
               </>
             )}
           </button>
@@ -500,9 +412,9 @@ export const HakiLens = () => {
         >
           <div className="flex items-center gap-2 text-green-800 mb-3">
             <CheckCircle size={16} />
-            <span className="font-medium">Scraping Completed</span>
+            <span className="font-medium">Deep Research Completed</span>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
             <div>
               <span className="font-medium text-gray-700">Status:</span>
@@ -530,7 +442,7 @@ export const HakiLens = () => {
             onClick={() => setActiveTab('cases')}
             className="mt-3 text-blue-600 hover:text-blue-800 text-sm underline"
           >
-            View Scraped Cases
+            View Researched Cases
           </button>
         </motion.div>
       )}
@@ -539,12 +451,6 @@ export const HakiLens = () => {
 
   const renderCasesTab = () => (
     <div className="space-y-6">
-      {/* Debug indicator */}
-      <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-        Debug: {cases.length} cases loaded, Loading: {loading.toString()}
-      </div>
-      
-      {/* Search and filters */}
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <div className="relative">
@@ -584,8 +490,7 @@ export const HakiLens = () => {
         </div>
       </div>
 
-      {/* Cases grid */}
-      {loading ? (
+      {isLoadingCases ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="animate-spin" size={32} />
         </div>
@@ -603,7 +508,7 @@ export const HakiLens = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => loadCaseDetails(caseItem.id)}
+              onClick={() => navigate(`/lawyer/hakilens/case/${caseItem.id}`)}
             >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-medium text-gray-900 line-clamp-2 flex-1 mr-2">
@@ -631,7 +536,7 @@ export const HakiLens = () => {
                         e.stopPropagation();
                         setViewingSummary({
                           caseId: caseItem.id,
-                          summary: aiSummaries[caseItem.id]
+                          summary: aiSummaries[caseItem.id],
                         });
                       }}
                       className="p-2 text-white bg-green-500 hover:bg-green-600 rounded-lg transition-colors"
@@ -668,7 +573,16 @@ export const HakiLens = () => {
                 </div>
               </div>
 
-              {/* Show status if AI summary exists */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  navigate(`/lawyer/hakilens/case/${caseItem.id}`);
+                }}
+                className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+              >
+                <MessageSquare className="w-4 h-4 inline-block mr-1" /> Chat about case
+              </button>
+
               {aiSummaries[caseItem.id] && (
                 <div className="mt-3 p-2 bg-green-50 border border-green-200 rounded text-sm">
                   <div className="flex items-center gap-2 text-green-800">
@@ -679,7 +593,7 @@ export const HakiLens = () => {
                         e.stopPropagation();
                         setViewingSummary({
                           caseId: caseItem.id,
-                          summary: aiSummaries[caseItem.id]
+                          summary: aiSummaries[caseItem.id],
                         });
                       }}
                       className="text-green-600 hover:text-green-800 underline"
@@ -690,7 +604,6 @@ export const HakiLens = () => {
                 </div>
               )}
 
-              {/* Legacy summary display */}
               {caseItem.summary && !aiSummaries[caseItem.id] && (
                 <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-800">
                   <div className="flex items-center gap-1 mb-1">
@@ -705,11 +618,11 @@ export const HakiLens = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {totalCases > casesPerPage && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            Showing {((currentPage - 1) * casesPerPage) + 1} to {Math.min(currentPage * casesPerPage, totalCases)} of {totalCases} cases
+            Showing {((currentPage - 1) * casesPerPage) + 1} to{' '}
+            {Math.min(currentPage * casesPerPage, totalCases)} of {totalCases} cases
           </p>
           <div className="flex gap-2">
             <button
@@ -745,9 +658,7 @@ export const HakiLens = () => {
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Ask a Legal Question
-        </label>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Ask a Legal Question</label>
         <div className="flex gap-3">
           <textarea
             value={aiQuestion}
@@ -755,14 +666,14 @@ export const HakiLens = () => {
             placeholder="e.g., What are the key precedents for contract disputes in commercial law?"
             rows={3}
             className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none"
-            disabled={loading}
+            disabled={isAskingAI}
           />
           <button
             onClick={handleAskAI}
-            disabled={loading || !aiQuestion.trim()}
+            disabled={isAskingAI || !aiQuestion.trim()}
             className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 self-start"
           >
-            {loading ? (
+            {isAskingAI ? (
               <>
                 <Loader2 size={16} className="animate-spin" />
                 Thinking...
@@ -789,9 +700,7 @@ export const HakiLens = () => {
                 <Brain size={16} />
                 <span className="font-medium">AI Answer</span>
               </div>
-              <div className="text-gray-800 whitespace-pre-wrap">
-                {aiResponse.answer}
-              </div>
+              <div className="text-gray-800 whitespace-pre-wrap">{aiResponse.answer}</div>
             </div>
           )}
 
@@ -811,9 +720,7 @@ export const HakiLens = () => {
                     <div className="font-medium text-gray-900">
                       {caseItem.title || `Case #${caseItem.case_number || caseItem.id}`}
                     </div>
-                    {caseItem.court && (
-                      <div className="text-sm text-gray-600">{caseItem.court}</div>
-                    )}
+                    {caseItem.court && <div className="text-sm text-gray-600">{caseItem.court}</div>}
                   </div>
                 ))}
               </div>
@@ -825,293 +732,152 @@ export const HakiLens = () => {
   );
 
   return (
-    <LawyerDashboardLayout>
-      <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#008080] to-[#006666] rounded-xl flex items-center justify-center">
-              <Search className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-serif font-bold text-gray-900">🔍 HakiLens - Comprehensive Legal Research Hub</h1>
-              <p className="text-lg text-gray-600">Advanced case scraping, database management, and AI-powered analysis</p>
+    <ErrorBoundary>
+      <LawyerDashboardLayout>
+        <div className="max-w-7xl mx-auto mt-20 px-4 sm:px-6 lg:px-8">
+          <div className="mb-8">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#008080] to-[#006666] rounded-xl flex items-center justify-center">
+                <Search className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-serif font-bold text-gray-900">
+                  🔍 HakiLens - Comprehensive Legal Research Hub
+                </h1>
+                <p className="text-lg text-gray-600">Advanced case deep research, database management, and AI-powered analysis</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Status Messages */}
-        <AnimatePresence>
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
-            >
-              <AlertCircle size={16} className="text-red-600" />
-              <span className="text-red-800">{error}</span>
-              <button
-                onClick={() => setError('')}
-                className="ml-auto text-red-600 hover:text-red-800"
-              >
-                <X size={16} />
-              </button>
-            </motion.div>
-          )}
-
-          {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
-            >
-              <CheckCircle size={16} className="text-green-600" />
-              <span className="text-green-800">{success}</span>
-              <button
-                onClick={() => setSuccess('')}
-                className="ml-auto text-green-600 hover:text-green-800"
-              >
-                <X size={16} />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Tab Navigation */}
-        <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
-          {[
-            { id: 'scrape', label: 'Deep Research on cases', icon: Search },
-            { id: 'cases', label: 'Case Database', icon: Database },
-            { id: 'ai', label: 'AI Assistant', icon: Brain }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md transition-all ${
-                activeTab === tab.id
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              <tab.icon size={16} />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="min-h-[400px]">
-          {activeTab === 'scrape' && renderScrapeTab()}
-          {activeTab === 'cases' && renderCasesTab()}
-          {activeTab === 'ai' && renderAITab()}
-        </div>
-
-        {/* Case Details Modal */}
-        <AnimatePresence>
-          {selectedCase && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-              onClick={() => setSelectedCase(null)}
-            >
+          <AnimatePresence>
+            {error && (
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
               >
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900">
-                        {selectedCase.title || `Case #${selectedCase.case_number || selectedCase.id}`}
-                      </h2>
-                      <p className="text-gray-600 mt-1">
-                        {selectedCase.court} • {selectedCase.date}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedCase(null)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                </div>
+                <AlertCircle size={16} className="text-red-600" />
+                <span className="text-red-800">{error}</span>
+                <button
+                  onClick={() => setError('')}
+                  className="ml-auto text-red-600 hover:text-red-800"
+                >
+                  <X size={16} />
+                </button>
+              </motion.div>
+            )}
 
-                <div className="p-6 max-h-[70vh] overflow-y-auto space-y-6">
-                  {/* Case Info */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {selectedCase.parties && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Parties</label>
-                        <p className="text-gray-900">{selectedCase.parties}</p>
+            {success && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+              >
+                <CheckCircle size={16} className="text-green-600" />
+                <span className="text-green-800">{success}</span>
+                <button
+                  onClick={() => setSuccess('')}
+                  className="ml-auto text-green-600 hover:text-green-800"
+                >
+                  <X size={16} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1" role="tablist">
+            {[
+              { id: 'scrape', label: 'Deep Research', icon: Search },
+              { id: 'cases', label: 'Case Database', icon: Database },
+              { id: 'ai', label: 'AI Assistant', icon: Brain },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-md transition-all ${
+                  activeTab === tab.id ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'
+                }`}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                aria-controls={`panel-${tab.id}`}
+                id={`tab-${tab.id}`}
+              >
+                <tab.icon size={16} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="min-h-[400px]">
+            <div
+              id="panel-scrape"
+              role="tabpanel"
+              aria-labelledby="tab-scrape"
+              className={activeTab === 'scrape' ? 'block' : 'hidden'}
+            >
+              {renderDeepResearchTab()}
+            </div>
+            <div
+              id="panel-cases"
+              role="tabpanel"
+              aria-labelledby="tab-cases"
+              className={activeTab === 'cases' ? 'block' : 'hidden'}
+            >
+              {renderCasesTab()}
+            </div>
+            <div
+              id="panel-ai"
+              role="tabpanel"
+              aria-labelledby="tab-ai"
+              className={activeTab === 'ai' ? 'block' : 'hidden'}
+            >
+              {renderAITab()}
+            </div>
+          </div>
+
+          <AnimatePresence>
+            {viewingSummary && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+                onClick={() => setViewingSummary(null)}
+              >
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="p-6 border-b border-gray-200">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <Brain className="text-blue-600" size={24} />
+                        <div>
+                          <h2 className="text-xl font-bold text-gray-900">AI Case Summary</h2>
+                          <p className="text-gray-600 mt-1">Case ID: {viewingSummary.caseId}</p>
+                        </div>
                       </div>
-                    )}
-                    {selectedCase.judges && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Judges</label>
-                        <p className="text-gray-900">{selectedCase.judges}</p>
-                      </div>
-                    )}
-                    {selectedCase.citation && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Citation</label>
-                        <p className="text-gray-900">{selectedCase.citation}</p>
-                      </div>
-                    )}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Source URL</label>
-                      <a
-                        href={selectedCase.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      <button
+                        onClick={() => setViewingSummary(null)}
+                        className="p-2 hover:bg-gray-100 rounded-lg"
                       >
-                        <ExternalLink size={14} />
-                        View Original
-                      </a>
+                        <X size={20} />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Summary */}
-                  {selectedCase.summary && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">AI Summary</label>
-                      <div className="p-4 bg-blue-50 rounded-lg">
-                        <p className="text-gray-800 whitespace-pre-wrap">{selectedCase.summary}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Content */}
-                  {selectedCase.content_text && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Case Content</label>
-                      <div className="p-4 bg-gray-50 rounded-lg max-h-60 overflow-y-auto">
-                        <p className="text-gray-800 whitespace-pre-wrap text-sm">
-                          {selectedCase.content_text}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Documents */}
-                  {caseDocuments.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Documents</label>
-                      <div className="space-y-2">
-                        {caseDocuments.map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <FileText size={16} className="text-gray-400" />
-                              <div>
-                                <p className="font-medium text-gray-900">
-                                  {doc.file_path.split('/').pop()}
-                                </p>
-                                <p className="text-sm text-gray-600">{doc.content_type}</p>
-                              </div>
-                            </div>
-                            <a
-                              href={`${API_BASE}/files/pdf/${doc.file_path.split('/').pop()}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="p-2 text-blue-600 hover:text-blue-800"
-                            >
-                              <Download size={16} />
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Images */}
-                  {caseImages.length > 0 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Images</label>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {caseImages.map((img) => (
-                          <div key={img.id} className="border border-gray-200 rounded-lg p-2">
-                            <div className="aspect-square bg-gray-100 rounded flex items-center justify-center mb-2">
-                              <ImageIcon size={24} className="text-gray-400" />
-                            </div>
-                            <p className="text-xs text-gray-600 truncate">
-                              {img.file_path.split('/').pop()}
-                            </p>
-                            <a
-                              href={`${API_BASE}/files/image/${img.file_path.split('/').pop()}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:text-blue-800"
-                            >
-                              View
-                            </a>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <div className="p-6 max-h-[70vh] overflow-y-auto">{formatAISummary(viewingSummary.summary)}</div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* AI Summary Modal */}
-        <AnimatePresence>
-          {viewingSummary && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
-              onClick={() => setViewingSummary(null)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-3">
-                      <Brain className="text-blue-600" size={24} />
-                      <div>
-                        <h2 className="text-xl font-bold text-gray-900">AI Case Summary</h2>
-                        <p className="text-gray-600 mt-1">Case ID: {viewingSummary.caseId}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => setViewingSummary(null)}
-                      className="p-2 hover:bg-gray-100 rounded-lg"
-                    >
-                      <X size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="p-6 max-h-[70vh] overflow-y-auto">
-                  <div className="prose max-w-none">
-                    {formatAISummary(viewingSummary.summary)}
-                  </div>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </LawyerDashboardLayout>
+            )}
+          </AnimatePresence>
+        </div>
+      </LawyerDashboardLayout>
+    </ErrorBoundary>
   );
 };
 

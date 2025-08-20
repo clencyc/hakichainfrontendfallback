@@ -636,7 +636,7 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     description: 'AI-powered legal case search and analysis platform',
     endpoints: {
-      'POST /scrape_case': 'Scrape and analyze legal cases',
+      'POST /scrape_case': 'Research and analyze legal cases',
       'POST /chat': 'General AI chat interface',
       'POST /case_chat/:case_id': 'Case-specific chat',
       'GET /generate_summary/:case_id': 'Generate case summary',

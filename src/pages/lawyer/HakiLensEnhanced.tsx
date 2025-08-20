@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Search, 
@@ -42,6 +43,7 @@ import {
 } from '../../services/hakiLensAPI';
 
 export const HakiLensEnhanced = () => {
+  const navigate = useNavigate();
   // Search and scraping state
   const [searchFilters, setSearchFilters] = useState<SearchFilters>({});
   const [searchResults, setSearchResults] = useState<CaseData[]>([]);
@@ -132,7 +134,6 @@ export const HakiLensEnhanced = () => {
       }
 
       const result = await response.json();
-      const result = await response.json();
       
       console.log('Python backend response:', result);
       
@@ -173,30 +174,31 @@ export const HakiLensEnhanced = () => {
           case_type: caseData.case_type || 'General',
           status: caseData.status || 'Active',
           legal_representation: caseData.legal_representation || 'N/A',
-          subject_matter: caseData.subject_matter || 'Scraped from Kenya Law',
+          subject_matter: caseData.subject_matter || 'Deep Reasearch from Kenya Law',
           additional_details: caseData.additional_details || '',
           source_url: scrapingUrl,
           scraped_at: comprehensiveData.scraped_at || new Date().toISOString(),
           full_content: comprehensiveData.content?.full_text || comprehensiveData.content || '',
           comprehensive_data: comprehensiveData,
           ai_analysis: result.ai_analysis || {},
-          ai_summary: result.summary || 'Case scraped successfully. AI analysis may be limited due to backend configuration.',
+          ai_summary: result.summary || 'Case Researched successfully. AI analysis may be limited due to backend configuration.',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         };
         
         setSearchResults(prev => [newCase, ...prev]);
-        setSelectedCase(newCase);
-        setActiveTab('case-details');
+        // setSelectedCase(newCase);
+        // setActiveTab('case-details');
+        // Only navigate to the dedicated case details page from the case list UI
         
         // Clear the input
         setScrapingUrl('');
         
         // Show success message with warning if there was an AI error
         if (basicInfo?.error) {
-          alert(`Case scraped successfully! Note: AI analysis is limited due to backend configuration (${basicInfo.error.substring(0, 100)}...)`);
+          alert(`Case retrieved successfully! Note: AI analysis is limited due to backend configuration (${basicInfo.error.substring(0, 100)}...)`);
         } else {
-          alert(`Case "${newCase.case_title}" scraped successfully!`);
+          alert(`Case "${newCase.case_title}" researched successfully!`);
         }
       } else if (result.success && result.case_data) {
         // Convert Python backend response to our CaseData format
@@ -205,7 +207,7 @@ export const HakiLensEnhanced = () => {
         const newCase: CaseData = {
           id: Date.now(), // Use timestamp as ID since Python backend might not return database_id
           case_number: caseData.case_number || 'N/A',
-          case_title: caseData.case_title || result.title || 'Scraped Case',
+          case_title: caseData.case_title || result.title || 'Researched Case',
           court_name: caseData.court_name || 'N/A',
           judge_name: caseData.judge_name || 'N/A',
           hearing_date: caseData.hearing_date || 'N/A',
@@ -226,21 +228,28 @@ export const HakiLensEnhanced = () => {
         };
         
         setSearchResults(prev => [newCase, ...prev]);
-        setSelectedCase(newCase);
-        setActiveTab('case-details');
+        // setSelectedCase(newCase);
+        // setActiveTab('case-details');
+        // Only navigate to the dedicated case details page from the case list UI
         
         // Clear the input
         setScrapingUrl('');
         
         // Show success message
-        alert(`Case "${newCase.case_title}" scraped successfully!`);
+        alert(`Case "${newCase.case_title}" Researched successfully!`);
       } else {
         // Handle different response formats from Python backend
-        setScrapingError(result.error || result.message || 'Failed to scrape case data');
+        setScrapingError(result.error || result.message || 'Failed to retrieve case data');
       }
     } catch (error) {
-      console.error('Scraping error:', error);
-      setScrapingError(`Scraping failed: ${error.message}`);
+      console.error('thinking error:', error);
+      setScrapingError(
+        `thinking failed: ${
+          typeof error === 'object' && error !== null && 'message' in error
+            ? (error as { message: string }).message
+            : String(error)
+        }`
+      );
     } finally {
       setIsScraping(false);
     }
@@ -407,7 +416,7 @@ export const HakiLensEnhanced = () => {
             <nav className="-mb-px flex space-x-8">
               {[
                 { id: 'search', label: 'Search Cases', icon: Search },
-                { id: 'scrape', label: 'Scrape Case', icon: FileText },
+                { id: 'scrape', label: 'Research Case', icon: FileText },
                 { id: 'chat', label: 'AI Assistant', icon: Brain },
                 { id: 'case-details', label: 'Case Details', icon: Eye, disabled: !selectedCase }
               ].map(tab => (
@@ -525,10 +534,7 @@ export const HakiLensEnhanced = () => {
                       <div
                         key={caseData.id}
                         className="border border-gray-200 rounded-lg p-4 hover:border-[#008080] transition-colors cursor-pointer"
-                        onClick={() => {
-                          setSelectedCase(caseData);
-                          setActiveTab('case-details');
-                        }}
+                        onClick={() => navigate(`/lawyer/hakilens/case/${caseData.id}`)}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -562,6 +568,15 @@ export const HakiLensEnhanced = () => {
                                 {caseData.ai_summary.substring(0, 200)}...
                               </p>
                             )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/lawyer/hakilens/case/${caseData.id}`);
+                              }}
+                              className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                            >
+                              <MessageSquare className="w-4 h-4 inline-block mr-1" /> Chat about case
+                            </button>
                           </div>
                           <div className="flex flex-col space-y-2 ml-4">
                             <button
@@ -610,7 +625,7 @@ export const HakiLensEnhanced = () => {
                 <div className="w-8 h-8 bg-[#008080]/10 rounded-lg flex items-center justify-center">
                   <FileText className="w-5 h-5 text-[#008080]" />
                 </div>
-                <h2 className="text-xl font-semibold text-gray-900">Comprehensive Case Scraper</h2>
+                <h2 className="text-xl font-semibold text-gray-900">Comprehensive Case Deep Research</h2>
               </div>
 
               <div className="mb-4">
@@ -646,12 +661,12 @@ export const HakiLensEnhanced = () => {
                 {isScraping ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>Scraping Case...</span>
+                    <span>Thinking on Case...</span>
                   </>
                 ) : (
                   <>
                     <Sparkles className="w-5 h-5" />
-                    <span>Deep Scrape Case</span>
+                    <span>Deep Research Case</span>
                   </>
                 )}
               </button>
