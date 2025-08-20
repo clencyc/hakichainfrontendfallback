@@ -1,48 +1,28 @@
 // API endpoint to handle Clerk webhooks
 // This will sync user data between Clerk and your database
 
-import { NextApiRequest, NextApiResponse } from 'next';
-import { Webhook } from 'svix';
-import { supabase } from '../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase-server';
 
-const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+// Simple Node.js/Express style handler (no Clerk/Svix verification)
+export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!webhookSecret) {
-    return res.status(500).json({ error: 'Missing webhook secret' });
+  // Expect Clerk event type and data in the body
+  const { type, data } = req.body || {};
+  if (!type || !data) {
+    return res.status(400).json({ error: 'Missing event type or data' });
   }
-
-  const payload = JSON.stringify(req.body);
-  const headers = req.headers;
-
-  const wh = new Webhook(webhookSecret);
-  let evt;
-
-  try {
-    evt = wh.verify(payload, headers as any);
-  } catch (err) {
-    console.error('Error verifying webhook:', err);
-    return res.status(400).json({ error: 'Invalid webhook signature' });
-  }
-
-  const { type, data } = evt;
 
   switch (type) {
     case 'user.created':
     case 'user.updated':
-      // Handle user creation/update
       await handleUserEvent(data, type);
       break;
-    
     case 'user.deleted':
-      // Handle user deletion
       await handleUserDeletion(data);
       break;
-      
     default:
       console.log(`Unhandled webhook type: ${type}`);
   }
