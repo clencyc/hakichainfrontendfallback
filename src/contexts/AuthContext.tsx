@@ -65,14 +65,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (error || !data.user) {
         throw new Error(error?.message || 'Login failed');
       }
-      const userMeta = data.user.user_metadata || {};
+
+      // Fetch user profile from custom users table
+      const { data: profileData, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', data.user.email)
+        .single();
+
+      if (profileError) {
+        console.warn('[LOGIN] Could not fetch user profile from users table:', profileError.message);
+      }
+
+      // Merge Auth user and profile data
       const user: User = {
         id: data.user.id,
-        name: userMeta.full_name || '',
+        name: profileData?.full_name || data.user.user_metadata?.full_name || '',
         email: data.user.email || '',
-        role: userMeta.user_type || null,
-        lsk_number: userMeta.lsk_number,
-        organization: userMeta.organization,
+        role: profileData?.user_type || data.user.user_metadata?.user_type || null,
+        lsk_number: profileData?.lsk_number || data.user.user_metadata?.lsk_number,
+        organization: profileData?.organization || data.user.user_metadata?.organization,
+        email_confirmed: !!data.user.confirmed_at,
       };
       console.log('[LOGIN] User object created:', user);
       localStorage.setItem('hakichain_user', JSON.stringify(user));
@@ -117,6 +130,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         organization: userMeta.organization,
         email_confirmed,
       };
+
+      // Call the custom function to insert into your users table
+      try {
+        const { error: profileError } = await supabase.rpc('create_user_profile', {
+          user_email: newUser.email,
+          user_full_name: newUser.name,
+          p_user_type_param: newUser.role,
+          user_lsk_number: newUser.lsk_number || null,
+        });
+        if (profileError) {
+          console.warn('User profile not created in users table:', profileError.message);
+        } else {
+          console.log('User profile created in users table');
+        }
+      } catch (profileError) {
+        console.error('Error calling create_user_profile:', profileError);
+      }
+
       localStorage.setItem('hakichain_user', JSON.stringify(newUser));
       setUser(newUser);
       clarityService.identify(newUser.id, undefined, undefined, newUser.name);
@@ -126,30 +157,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Log a message to prompt the user to confirm their email
         console.warn('Registration successful! Please check your email and confirm your account to enable full access.');
       }
-      // Send welcome email after successful registration
-      try {
-        console.log('Sending welcome email to:', userData.email);
-        const emailResponse = await fetch('/api/send-welcome-email', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email: userData.email,
-            name: userData.name,
-            role: userData.role,
-            lsk_number: userData.lsk_number,
-          }),
-        });
-        const emailResult = await emailResponse.json();
-        if (emailResult.success) {
-          console.log('Welcome email sent successfully:', emailResult);
-        } else {
-          console.warn('Welcome email failed:', emailResult);
-        }
-      } catch (emailError) {
-        console.error('Error sending welcome email:', emailError);
-      }
+      // ...welcome email logic removed...
     } catch (error) {
       console.error('Registration failed:', error);
       throw new Error('Registration failed');
