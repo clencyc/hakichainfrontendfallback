@@ -68,11 +68,10 @@ export const HakiLensCaseDetails = () => {
   const loadCaseData = useCallback(async (caseId: number) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/cases/${caseId}`, {
+      const response = await fetch(`${API_BASE}/api/hakilens/cases/${caseId}`, {
         headers: {
           'Content-Type': 'application/json',
-          // Add Authorization header if needed
-          // 'Authorization': `Bearer ${yourAuthToken}`,
+          'ngrok-skip-browser-warning': 'true'
         },
       });
       if (!response.ok) {
@@ -119,7 +118,7 @@ export const HakiLensCaseDetails = () => {
 
     try {
       // Use the documented /ai/chat/{case_id} endpoint
-      const response = await fetch(`https://hakilens.onrender.com/ai/chat/${caseId}?model=gpt-4o-mini`, {
+      const response = await fetch(`${API_BASE}/api/hakilens/ai/chat/${caseId}?model=gpt-4o-mini`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

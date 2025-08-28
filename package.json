@@ -7,7 +7,7 @@
     "start": "vite",
     "api": "echo 'API endpoints are now handled by Vercel serverless functions'",
     "hakilens": "node hakilens-server.js",
-    "vercel-build": "npm install --legacy-peer-deps && npm run build",
+    "vercel-build": "npm install && npm run build",
     "hakilens:dev": "nodemon hakilens-server.js",
     "hakilens:test": "./test-python-backend.sh",
     "hakilens:python": "VITE_PYTHON_BACKEND_URL=http://localhost:5007 npm run dev",
