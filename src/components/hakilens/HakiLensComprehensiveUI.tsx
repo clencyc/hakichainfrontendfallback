@@ -96,7 +96,7 @@ const HakiLensComprehensiveUI: React.FC = () => {
   const [viewingSummary, setViewingSummary] = useState<{caseId: number, summary: string} | null>(null);
 
   // API Configuration
-  const API_BASE = 'http://localhost:8000'; // Use local proxy instead of direct ngrok URL
+  const API_BASE = 'https://hakilens-v77g.onrender.com'; // Use local proxy instead of direct ngrok URL
 
   // Utility functions
   const showError = useCallback((message: string) => {

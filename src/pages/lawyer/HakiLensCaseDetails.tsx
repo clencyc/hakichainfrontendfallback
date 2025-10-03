@@ -31,7 +31,7 @@ interface AIChatMessage {
   isLoading: boolean;
 }
 
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'https://hakilens-v77g.onrender.com';
 
 export const HakiLensCaseDetails = () => {
   const { caseId } = useParams<{ caseId: string }>();

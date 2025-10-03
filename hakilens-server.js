@@ -12,6 +12,7 @@ const PORT = process.env.PORT || process.env.HAKILENS_PORT || 8000;
 const corsOptions = {
   origin: [
     'http://localhost:3000',
+    'https://hakilens-v77g.onrender.com',
     'http://localhost:5173',
     'http://localhost:8080',
     'https://f9e4cc818023.ngrok-free.app',

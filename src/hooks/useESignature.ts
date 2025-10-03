@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
+import { ethers, id, getBytes, verifyMessage } from 'ethers';
 import { useWallet } from './useWallet';
 import { useContracts } from './useContracts';
 
@@ -278,8 +278,8 @@ export const useESignature = () => {
     if (!signer) throw new Error('Wallet not connected');
     
     try {
-      const messageHash = ethers.utils.id(message);
-      const messageHashBytes = ethers.utils.arrayify(messageHash);
+      const messageHash = id(message);
+      const messageHashBytes = getBytes(messageHash);
       const signature = await signer.signMessage(messageHashBytes);
       return signature;
     } catch (err) {
@@ -295,9 +295,9 @@ export const useESignature = () => {
     expectedSigner: string
   ): Promise<boolean> => {
     try {
-      const messageHash = ethers.utils.id(message);
-      const messageHashBytes = ethers.utils.arrayify(messageHash);
-      const recoveredAddress = ethers.utils.verifyMessage(messageHashBytes, signature);
+      const messageHash = id(message);
+      const messageHashBytes = getBytes(messageHash);
+      const recoveredAddress = verifyMessage(messageHashBytes, signature);
       return recoveredAddress.toLowerCase() === expectedSigner.toLowerCase();
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to verify signature offline';
@@ -312,7 +312,7 @@ export const useESignature = () => {
       metadata,
       timestamp: Date.now()
     });
-    return ethers.utils.id(data);
+    return id(data);
   }, []);
 
   return {

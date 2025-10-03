@@ -6,7 +6,7 @@
 echo "🧪 HakiLens API Test Suite"
 echo "=========================="
 
-API_BASE="http://localhost:8000"
+API_BASE="https://hakilens-v77g.onrender.com"
 
 # Check if server is running
 echo ""
