@@ -101,7 +101,7 @@ export const HakiLens = () => {
   const [viewingSummary, setViewingSummary] = useState<{ caseId: number; summary: string } | null>(null);
 
   // API Configuration
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'https://hakilens.onrender.com';
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
   // Utility functions
   const showError = useCallback((message: string) => {

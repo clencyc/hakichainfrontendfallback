@@ -249,7 +249,7 @@ export function LawyerRegistration() {
               {/* Bar Number */}
               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  LSK Number (Kenya Law Society)*
+                  Practicing Certificate (Kenya Law Society)*
                 </label>
                 <input
                   type="text"

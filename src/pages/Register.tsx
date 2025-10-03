@@ -181,7 +181,7 @@ export const Register = () => {
 
             {registrationType === 'lawyer' && (
               <div className="mb-5">
-                <label htmlFor="lsk_number" className="label">LSK Number</label>
+                <label htmlFor="lsk_number" className="label">Practicing Certificate</label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <GavelIcon className="h-5 w-5 text-gray-400" />

@@ -123,7 +123,7 @@ export const Waitlist = () => {
 
                 <div>
                   <label htmlFor="lsk_number" className="block text-sm font-medium text-gray-700 mb-1">
-                    LSK Number *
+                    Practicing Certificate *
                   </label>
                   <input
                     id="lsk_number"
@@ -132,7 +132,7 @@ export const Waitlist = () => {
                       errors.lsk_number ? 'border-red-300' : 'border-gray-300'
                     } focus:outline-none focus:ring-2 focus:ring-primary-500`}
                     placeholder="P/12345/2023"
-                    {...register('lsk_number', { required: 'LSK number is required' })}
+                    {...register('lsk_number', { required: 'Practicing Certificate is required' })}
                   />
                   {errors.lsk_number && (
                     <p className="mt-1 text-sm text-red-600">{errors.lsk_number.message}</p>

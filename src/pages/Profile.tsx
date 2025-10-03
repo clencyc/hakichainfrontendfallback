@@ -155,7 +155,7 @@ export const Profile = () => {
                   
                   {user.role === 'lawyer' && (
                     <div>
-                      <label htmlFor="lsk_number" className="label">LSK Number</label>
+                      <label htmlFor="lsk_number" className="label">Practicing Certificate</label>
                       <input
                         type="text"
                         id="lsk_number"
@@ -165,7 +165,7 @@ export const Profile = () => {
                         className="input"
                         disabled
                       />
-                      <p className="mt-1 text-xs text-gray-500">LSK Number cannot be changed</p>
+                      <p className="mt-1 text-xs text-gray-500">Practicing Certificate cannot be changed</p>
                     </div>
                   )}
                   
@@ -276,7 +276,7 @@ export const Profile = () => {
                         <FileText className="w-5 h-5 text-gray-500 flex-shrink-0" />
                         <div>
                           <p className="font-medium">LSK Certification</p>
-                          <p className="text-sm text-gray-500 mb-1">LSK Number: {user.lsk_number || 'LSK12345'}</p>
+                          <p className="text-sm text-gray-500 mb-1">Practicing Certificate: {user.lsk_number || 'LSK12345'}</p>
                           <p className="text-sm text-success-600 flex items-center">
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Verified

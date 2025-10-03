@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/hakilens/(.*)",
-      "destination": "https://hakilens.onrender.com/api/hakilens/$1"
+      "destination": "http://localhost:8000/api/hakilens/$1"
     },
     {
       "source": "/api/(.*)",

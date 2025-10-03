@@ -79,7 +79,7 @@ export function LawyerPortal() {
                         <p className="text-gray-900">{lawyerData?.email}</p>
                       </div>
                       <div>
-                        <span className="font-medium text-gray-700">LSK Number:</span>
+                        <span className="font-medium text-gray-700">Practicing Certificate:</span>
                         <p className="text-gray-900">{lawyerData?.lsk_number}</p>
                       </div>
                       <div>

@@ -1,8 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDSmcctwb094ifsM1Dgb8B01brcVaNtq2Y';
-const genAI = new GoogleGenerativeAI(API_KEY);
-
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -14,46 +9,100 @@ export const generateChatResponse = async (
   message: string,
   chatHistory: ChatMessage[]
 ): Promise<AsyncGenerator<string, void, unknown>> => {
-  // Update model name to the current version
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
+  
   // Build conversation context
   const context = chatHistory
-    .slice(-10) // Keep last 10 messages for context
+    .slice(-10)
     .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
     .join('\n');
 
-  const prompt = `
-    You are HakiBot, an AI legal assistant specialized in Kenyan law and general legal guidance. You help users understand legal concepts, processes, and provide general legal information.
+  const requestBody = {
+    message,
+    context,
+    chatHistory: chatHistory.slice(-10) // Send last 10 messages for context
+  };
 
-    IMPORTANT GUIDELINES:
-    1. Always provide helpful, accurate legal information
-    2. Clearly state when advice should come from a qualified lawyer
-    3. Reference Kenyan law when applicable
-    4. Be conversational but professional
-    5. If unsure, recommend consulting a legal professional
-    6. Keep responses concise but informative
-    7. Use simple language to explain complex legal concepts
-    8. Suggest relevant legal services from HakiChain when appropriate
+  try {
+    const response = await fetch('http://localhost:8000/api/chatbot', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
 
-    Conversation History:
-    ${context}
-
-    Current User Question: ${message}
-
-    Please provide a helpful response as HakiBot:
-  `;
-
-  const result = await model.generateContentStream(prompt);
-  
-  async function* streamResponse() {
-    for await (const chunk of result.stream) {
-      const chunkText = chunk.text();
-      yield chunkText;
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-  }
 
-  return streamResponse();
+    // Check if the response supports streaming
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    async function* streamResponse() {
+      const decoder = new TextDecoder();
+      
+      try {
+        while (true) {
+          const { done, value } = await reader!.read();
+          
+          if (done) {
+            break;
+          }
+          
+          const chunk = decoder.decode(value, { stream: true });
+          
+          // Handle Server-Sent Events (SSE) format if your backend uses it
+          if (chunk.startsWith('data: ')) {
+            const data = chunk.slice(6).trim();
+            if (data && data !== '[DONE]') {
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.content) {
+                  yield parsed.content;
+                }
+              } catch {
+                // If not JSON, yield as plain text
+                yield data;
+              }
+            }
+          } else {
+            // Handle JSON response format
+            try {
+              const jsonResponse = JSON.parse(chunk);
+              if (jsonResponse.response) {
+                // Return the markdown content from the response
+                yield jsonResponse.response;
+              } else if (jsonResponse.content) {
+                yield jsonResponse.content;
+              } else {
+                yield chunk;
+              }
+            } catch {
+              // Handle plain text streaming
+              yield chunk;
+            }
+          }
+        }
+      } finally {
+        reader!.releaseLock();
+      }
+    }
+
+    return streamResponse();
+    
+  } catch (error) {
+    console.error('Error calling local API:', error);
+    
+    // Fallback: return error message as a stream
+    async function* errorResponse() {
+      yield "I'm sorry, I'm having trouble connecting to the chat service. Please try again later.";
+    }
+    
+    return errorResponse();
+  }
 };
 
 export const generateQuickSuggestions = (userInput: string): string[] => {
