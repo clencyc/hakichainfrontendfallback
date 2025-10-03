@@ -22,8 +22,23 @@ export const generateChatResponse = async (
     chatHistory: chatHistory.slice(-10) // Send last 10 messages for context
   };
 
+  // Use environment variables with fallback to production URL
+  const API_BASE_URL = import.meta.env.VITE_NODEJS_BACKEND_URL || 
+                       import.meta.env.VITE_HAKILENS_API_URL || 
+                       'https://hakilens-v77g.onrender.com';
+  
+  const API_ENDPOINT = `${API_BASE_URL}/api/chatbot`;
+
+  // Debug logging to track what URL is being used
+  console.log('🔍 API Debug Info:');
+  console.log('  VITE_NODEJS_BACKEND_URL:', import.meta.env.VITE_NODEJS_BACKEND_URL);
+  console.log('  VITE_HAKILENS_API_URL:', import.meta.env.VITE_HAKILENS_API_URL);
+  console.log('  Final API_ENDPOINT:', API_ENDPOINT);
+  console.log('  Environment MODE:', import.meta.env.MODE);
+  console.log('  Is PROD:', import.meta.env.PROD);
+
   try {
-    const response = await fetch('https://hakilens-v77g.onrender.com/api/chatbot', {
+    const response = await fetch(API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -94,11 +109,18 @@ export const generateChatResponse = async (
     return streamResponse();
     
   } catch (error) {
-    console.error('Error calling local API:', error);
+    console.error('❌ Error calling API:', error);
+    console.error('🔗 Failed endpoint:', API_ENDPOINT);
+    console.error('🌍 Environment:', {
+      MODE: import.meta.env.MODE,
+      PROD: import.meta.env.PROD,
+      VITE_NODEJS_BACKEND_URL: import.meta.env.VITE_NODEJS_BACKEND_URL,
+      VITE_HAKILENS_API_URL: import.meta.env.VITE_HAKILENS_API_URL
+    });
     
     // Fallback: return error message as a stream
     async function* errorResponse() {
-      yield "I'm sorry, I'm having trouble connecting to the chat service. Please try again later.";
+      yield `I'm sorry, I'm having trouble connecting to the chat service at ${API_ENDPOINT}. Please try again later.`;
     }
     
     return errorResponse();
