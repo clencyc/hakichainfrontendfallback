@@ -19,10 +19,6 @@ export const Home = () => {
             <h1 className="text-5xl md:text-6xl font-extrabold font-serif leading-tight mb-6 tracking-tight drop-shadow-lg">
               Professional <span className="text-primary-400">Legal Tools</span> for Modern Lawyers
             </h1>
-            <p className="text-xl md:text-2xl text-gray-200 mb-10 max-w-3xl mx-auto font-medium">
-              Manage cases, connect with clients, and access funding through our <span className="text-primary-300 font-semibold">blockchain-powered platform</span>.<br />
-              Everything you need to run a successful legal practice.
-            </p>
             <div className="flex flex-wrap gap-4 justify-center mb-8">
               <Link to="/lawyer/dashboard" className="btn btn-primary text-lg px-10 py-4 rounded-full shadow-lg bg-primary-500 hover:bg-primary-400 transform hover:scale-105 transition-all duration-200">
                 Access Lawyer Dashboard
